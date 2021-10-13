@@ -17,6 +17,5 @@
 
 .list {
     max-height: 70vh;
-    position: relative;
     overflow-y: auto;
 }

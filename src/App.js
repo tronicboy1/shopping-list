@@ -47,8 +47,14 @@ function App() {
     }
   }, [postHandler.data]);
 
+  const clearListName = () => {
+    setListName(null);
+    window.localStorage.removeItem("listName");
+    setList([]);
+  };
+
   const addItem = (itemName) => {
-    setList((prev) => [...prev, {id:"PENDING", item: itemName}]);
+    setList((prev) => [...prev, { id: "PENDING", item: itemName }]);
     setHttpConfig((prev) => {
       return { ...prev, method: "POST", body: { item: itemName } };
     });
@@ -60,9 +66,15 @@ function App() {
   };
 
   const removeClicked = (name) => {
-    setList(prev => {return prev.filter(item => item.id !== name)});
+    setList((prev) => {
+      return prev.filter((item) => item.id !== name);
+    });
     delete postHandler.data[name];
-    setHttpConfig(prev => ({...prev, method: "PUT", body: postHandler.data}));
+    setHttpConfig((prev) => ({
+      ...prev,
+      method: "PUT",
+      body: postHandler.data,
+    }));
   };
 
   return (
@@ -70,7 +82,7 @@ function App() {
       {postHandler.errors && <p>{postHandler.errors}</p>}
       {listName ? (
         <List
-          setListName={setListName}
+          clearListName={clearListName}
           listName={listName}
           items={list}
           addItem={addItem}

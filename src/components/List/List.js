@@ -10,10 +10,6 @@ import Settings from "../Settings/Settings";
 
 const List = (props) => {
   const [showSettings, setShowSettings] = useState(false);
-  const changeList = () => {
-    props.setListName(null);
-    window.localStorage.removeItem("listName");
-  };
 
   const onListItemClick = (id) => {
     props.removeClicked(id);
@@ -27,7 +23,7 @@ const List = (props) => {
       {showSettings && (
         <Settings
           listName={props.listName}
-          changeList={changeList}
+          changeList={props.clearListName}
           deleteAll={props.deleteAll}
           toggleShowSettings={toggleShowSettings}
         />
