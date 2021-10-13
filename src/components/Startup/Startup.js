@@ -17,11 +17,13 @@ const Startup = (props) => {
   const submitHandler = (e) => {
     e.preventDefault();
 
-    const inputListName = listName.value.trim();
+    if (listName.isValid) {
+      const inputListName = listName.value.trim();
 
-    props.setListName(inputListName);
+      props.setListName(inputListName);
 
-    window.localStorage.setItem("listName", inputListName);
+      window.localStorage.setItem("listName", inputListName);
+    }
   };
 
   return (
