@@ -6,13 +6,15 @@ import "./App.css";
 import List from "./components/List/List";
 import Startup from "./components/Startup/Startup";
 
+const defaultHttpConfig = {
+  uri: null,
+  method: null,
+  body: null,
+};
+
 function App() {
   const [listName, setListName] = useState(null);
-  const [httpConfig, setHttpConfig] = useState({
-    uri: null,
-    method: null,
-    body: null,
-  });
+  const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
   const [list, setList] = useState([]);
   const postHandler = useHttp(httpConfig);
 
@@ -49,6 +51,7 @@ function App() {
 
   const clearListName = () => {
     setListName(null);
+    setHttpConfig(defaultHttpConfig);
     window.localStorage.removeItem("listName");
     setList([]);
   };

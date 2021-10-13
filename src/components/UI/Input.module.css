@@ -50,3 +50,20 @@
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
+
+.input-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+.input-bar button {
+    margin: 0;
+    height: 100%;
+    width: 20%;
+}
+
+.input-bar input {
+    width: 80%;
+}

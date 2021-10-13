@@ -24,26 +24,14 @@ const AddItem = (props) => {
     <Card>
       <form onSubmit={addItemHandler} className={styles["new-item__input"]}>
         <Input
-          style={{ marginTop: "0", marginBottom: "0", width: "80%" }}
+          style={{ marginTop: "0", marginBottom: "0", width: "100%" }}
           borderRadius="left"
           id="new-item"
           label="New Item"
           onChange={newItem.inputHandler}
           value={newItem.value}
+          button={props.loading ? "Sending" : "Add"}
         />
-        <Button
-          style={{
-            marginTop: "auto",
-            marginBottom: "0",
-            padding: "0",
-            height: "39px",
-            width: "20%",
-          }}
-          type="submit"
-          borderRadius="right"
-        >
-          {props.loading ? "Sending" : "Add"}
-        </Button>
       </form>
     </Card>
   );
