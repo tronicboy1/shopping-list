@@ -5,7 +5,6 @@ import useInput from "../../hooks/use-input";
 import styles from "./AddItem.module.css";
 
 import Card from "../UI/Card";
-import Button from "../UI/Button";
 import Input from "../UI/Input";
 
 const AddItem = (props) => {

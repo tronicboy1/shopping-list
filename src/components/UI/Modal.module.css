@@ -4,8 +4,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    animation: fadeIn forwards 0.5s;
+    background: rgba(0, 0, 0, 0.637);
+    animation: fadeIn forwards 0.3s;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
