@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import useHttp from "./hooks/use-http";
 
@@ -14,19 +14,14 @@ function App() {
     body: null,
   });
   const [list, setList] = useState([]);
-  const getConfig = useMemo(
-    () => ({ uri: httpConfig.uri, method: "GET" }),
-    [httpConfig.uri]
-  );
   const postHandler = useHttp(httpConfig);
-  const getHandler = useHttp(getConfig);
 
   //check local cache for account info
   useEffect(() => {
     setListName(window.localStorage.getItem("listName"));
   }, []);
 
-  //load list Data
+  //set uri
   useEffect(() => {
     if (listName) {
       const newUri =
@@ -39,36 +34,52 @@ function App() {
     }
   }, [listName]);
 
+  //load Data to list
   useEffect(() => {
-    if (getHandler.data) {
+    if (postHandler.data) {
       const newList = [];
 
-      for (const name in getHandler.data) {
-        newList.push({ id: name, item: getHandler.data[name].item });
+      for (const name in postHandler.data) {
+        newList.push({ id: name, item: postHandler.data[name].item });
       }
 
       setList(newList);
     }
-  }, [getHandler.data]);
+  }, [postHandler.data]);
 
   const addItem = (itemName) => {
     console.log(itemName);
+    setList((prev) => [...prev, {id:"PENDING", item: itemName}]);
     setHttpConfig((prev) => {
       return { ...prev, method: "POST", body: { item: itemName } };
     });
   };
 
+  const deleteAll = () => {
+    setList([]);
+    fetch(httpConfig.uri, { method: "DELETE" });
+  };
+
+  const removeClicked = (name) => {
+    console.log(name);
+    setList(prev => {return prev.filter(item => item.id !== name)});
+    delete postHandler.data[name];
+    setHttpConfig(prev => ({...prev, method: "PUT", body: postHandler.data}));
+  };
+
   return (
     <div className="App">
-      {getHandler.errors && <p>{getHandler.errors}</p>}
+      {postHandler.errors && <p>{postHandler.errors}</p>}
       {listName ? (
         <List
           setListName={setListName}
           listName={listName}
           items={list}
           addItem={addItem}
-          addItemLoading={postHandler.loading}
-          listLoading={getHandler.loading}
+          deleteAll={deleteAll}
+          removeClicked={removeClicked}
+          addItemLoading={postHandler.loading && httpConfig.method}
+          listLoading={postHandler.loading}
         />
       ) : (
         <Startup setListName={setListName} />

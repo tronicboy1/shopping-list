@@ -11,17 +11,24 @@ const useHttp = (config, setConfig) => {
     setErrors(null);
 
     try {
-      const result = await fetch(config.uri, {
-        method: config.method,
-        headers: { "Content-type": "application/json" },
-        body: config.body ? JSON.stringify(config.body) : null,
-      });
-
-      if (!result.ok) {
-        throw new Error(result.status);
+      if (config.method === "POST" || config.method === "PUT") {
+        const post = await fetch(config.uri, {
+          method: config.method,
+          headers: { "Content-type": "application/json" },
+          body: JSON.stringify(config.body),
+        });
+        if (!post.ok) {
+          throw new Error(post.status);
+        }
       }
 
-      const data = await result.json();
+      const get = await fetch(config.uri, { method: "GET" });
+
+      if (!get.ok) {
+        throw new Error(get.status);
+      }
+
+      const data = await get.json();
       setData(data);
     } catch (e) {
       setErrors(e);
@@ -30,8 +37,8 @@ const useHttp = (config, setConfig) => {
   }, []);
 
   useEffect(() => {
-    if (config.uri && (config.body || config.method === "GET")) {
-      console.log("http request sent");
+    console.log("http request sent");
+    if (config.uri) {
       httpHandler(config);
     }
   }, [config, httpHandler]);

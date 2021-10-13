@@ -13,4 +13,5 @@
     border-radius: 10px;
     box-shadow: 1px 3px 3px 1px rgba(0, 0, 0, 0.151);
     padding: 1rem;
+    overflow-y: auto;
 }

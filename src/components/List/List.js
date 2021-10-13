@@ -12,17 +12,21 @@ const List = (props) => {
     props.setListName(null);
     window.localStorage.removeItem("listName");
   };
+
+  const onListItemClick = (id) => {
+      props.removeClicked(id);
+  };
   return (
     <>
       <AddItem addItem={props.addItem} loading={props.addItemLoading} />
-      <Card>
-        {props.listLoading ? (
+      <Card style={{maxHeight: "60%"}}>
+        {props.listLoading && props.items.length === 0 ? (
           <p style={{textAlign: "center"}}>Loading...</p>
         ) : (
           <ul className={styles.list}>
-            {props.items ? (
+            {props.items.length > 0 ? (
               props.items.map((item) => (
-                <ListItem key={item.id}>{item.item}</ListItem>
+                <ListItem onClick={onListItemClick} id={item.id} key={item.id}>{item.item}</ListItem>
               ))
             ) : (
               <li>No items in shopping list</li>
@@ -35,6 +39,7 @@ const List = (props) => {
         <Button style={{ height: "45px" }} onClick={changeList}>
           Change List
         </Button>
+        <Button style={{ height: "45px" }} onClick={props.deleteAll}>Delete All</Button>
       </Card>
     </>
   );
