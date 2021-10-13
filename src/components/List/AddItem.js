@@ -29,7 +29,7 @@ const AddItem = (props) => {
           label="New Item"
           onChange={newItem.inputHandler}
           value={newItem.value}
-          button={props.loading ? "Sending" : "Add"}
+          button={props.loading ? "..." : "Add"}
         />
       </form>
     </Card>
