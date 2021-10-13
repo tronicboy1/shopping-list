@@ -11,6 +11,6 @@
 }
 
 .list-item:hover {
-    border: 1px rgb(109, 109, 255) solid;
+    border: 1px rgb(165, 165, 255) solid;
     cursor: pointer;
 }

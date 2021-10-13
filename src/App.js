@@ -48,7 +48,6 @@ function App() {
   }, [postHandler.data]);
 
   const addItem = (itemName) => {
-    console.log(itemName);
     setList((prev) => [...prev, {id:"PENDING", item: itemName}]);
     setHttpConfig((prev) => {
       return { ...prev, method: "POST", body: { item: itemName } };
@@ -61,7 +60,6 @@ function App() {
   };
 
   const removeClicked = (name) => {
-    console.log(name);
     setList(prev => {return prev.filter(item => item.id !== name)});
     delete postHandler.data[name];
     setHttpConfig(prev => ({...prev, method: "PUT", body: postHandler.data}));
