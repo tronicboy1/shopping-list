@@ -57,10 +57,12 @@ function App() {
   };
 
   const addItem = (itemName) => {
-    setList((prev) => [...prev, { id: "PENDING", item: itemName }]);
-    setHttpConfig((prev) => {
-      return { ...prev, method: "POST", body: { item: itemName } };
-    });
+    if (itemName.length > 0) {
+      setList((prev) => [...prev, { id: "PENDING", item: itemName }]);
+      setHttpConfig((prev) => {
+        return { ...prev, method: "POST", body: { item: itemName } };
+      });
+    }
   };
 
   const deleteAll = () => {
