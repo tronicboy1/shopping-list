@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-const useHttp = (config) => {
+const useHttp = (config, setConfig) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState(null);
   const [data, setData] = useState(null);
@@ -30,7 +30,8 @@ const useHttp = (config) => {
   }, []);
 
   useEffect(() => {
-    if (config.body) {
+    if (config.uri && (config.body || config.method === "GET")) {
+      console.log("http request sent");
       httpHandler(config);
     }
   }, [config, httpHandler]);

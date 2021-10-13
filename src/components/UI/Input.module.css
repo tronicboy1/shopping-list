@@ -33,7 +33,7 @@
 }
 
 .form-control input:focus {
-    background: rgb(217, 217, 255);
+    background: rgb(241, 241, 255);
     border-color: rgb(63, 63, 255);
 }
 
@@ -44,4 +44,9 @@
 .form-control.invalid input {
     background: rgb(255, 210, 210);
     border-color: rgb(255, 97, 97);
+}
+
+.form-control.left input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }

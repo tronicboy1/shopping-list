@@ -1,13 +1,52 @@
 import React from "react";
 
+import useInput from "../../hooks/use-input";
+
+import styles from "./AddItem.module.css";
+
 import Card from "../UI/Card";
 import Button from "../UI/Button";
 import Input from "../UI/Input";
 
-const AddItem = props => {
-    return (
-        <></>
-    );
+const AddItem = (props) => {
+  const newItem = useInput((value) => {
+    return true;
+  });
+
+  const addItemHandler = (e) => {
+    e.preventDefault();
+
+    props.addItem(newItem.value.trim());
+
+    newItem.reset()
+  };
+  return (
+    <Card>
+      <form onSubmit={addItemHandler} className={styles["new-item__input"]}>
+        <Input
+          style={{ marginTop: "0", marginBottom: "0", width: "80%" }}
+          borderRadius="left"
+          id="new-item"
+          label="New Item"
+          onChange={newItem.inputHandler}
+          value={newItem.value}
+        />
+        <Button
+          style={{
+            marginTop: "auto",
+            marginBottom: "0",
+            padding: "0",
+            height: "39px",
+            width: "20%",
+          }}
+          type="submit"
+          borderRadius="right"
+        >
+          {props.loading ? "Sending" : "Add"}
+        </Button>
+      </form>
+    </Card>
+  );
 };
 
 export default AddItem;

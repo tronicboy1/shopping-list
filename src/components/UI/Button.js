@@ -3,7 +3,9 @@ import styles from "./Button.module.css";
 const Button = (props) => {
   return (
     <button
-      className={`${styles.button} ${styles[props.className]}`}
+      className={`${styles.button} ${styles[props.borderRadius]} ${
+        styles[props.className]
+      }`}
       onClick={props.onClick}
       type={props.type}
       style={props.style}
