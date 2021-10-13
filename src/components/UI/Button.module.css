@@ -1,15 +1,23 @@
 .button {
-    height: 30px;
+    height: 35px;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     margin-top: 0.5rem;
-    background: rgb(0, 0, 151);
-    border: 1px rgb(0, 0, 151) solid;
+    background: rgb(0, 0, 88);
+    border: 1px rgb(0, 0, 88) solid;
     border-radius: 8px;
     cursor: pointer;
+    color: white;
+    transition: 0.2s;
 }
 
 .button:hover {
     background: rgb(0, 0, 204);
     border-color: rgb(0, 0, 204);
+}
+
+.button:disabled {
+    background: grey;
+    border-color: grey;
+    cursor: default;
 }

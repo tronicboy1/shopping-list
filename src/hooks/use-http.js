@@ -24,12 +24,16 @@ const useHttp = (config) => {
       const data = await result.json();
       setData(data);
     } catch (e) {
-        setErrors(e);
+      setErrors(e);
     }
     setLoading(false);
   }, []);
 
-  useEffect(httpHandler(config), [config]);
+  useEffect(() => {
+    if (config.body) {
+      httpHandler(config);
+    }
+  }, [config, httpHandler]);
 
   return { loading, errors, data };
 };

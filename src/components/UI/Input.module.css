@@ -13,11 +13,12 @@
     border-radius: 8px;
     padding-left: 0.6rem;
     height: 35px;
-    width: 100%;
+    transition: all 0.2s;
 }
 
 .form-control label {
     margin-bottom: 0.25rem;
+    font-size: large;
     color: white;
 }
 
@@ -33,11 +34,11 @@
 
 .form-control input:focus {
     background: rgb(217, 217, 255);
-    border: rgb(63, 63, 255);
+    border-color: rgb(63, 63, 255);
 }
 
 .form-control.invalid label {
-    color: rgb(168, 0, 0);
+    color: rgb(255, 167, 167);
 }
 
 .form-control.invalid input {
