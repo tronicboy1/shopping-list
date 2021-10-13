@@ -21,10 +21,10 @@
     border-radius: 10px;
     padding: 1rem;
     width: 70%;
-    max-width: 600px;
+    max-width: 450px;
     max-height: 60%;
     margin: auto;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 @keyframes fadeIn {
