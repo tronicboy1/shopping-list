@@ -8,7 +8,6 @@ import Card from "../UI/Card";
 import Button from "../UI/Button";
 import AddItem from "./AddItem";
 import ListItem from "./ListItem";
-import Settings from "../Settings/Settings";
 
 const defaultHttpConfig = { uri: null, method: null, body: null };
 

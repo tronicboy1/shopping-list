@@ -1,5 +1,5 @@
-import React, { useContext, useState } from "react";
-import AppContext from "../../helpers/AppContext";
+import React, { useState } from "react";
+
 import Button from "../UI/Button";
 import Settings from "./Settings";
 
@@ -7,7 +7,6 @@ import styles from "./SettingsButton.module.css";
 
 const SettingsButton = () => {
     const [showSettings, setShowSettings] = useState(false);
-    const context = useContext(AppContext);
 
     const toggleSettings = () => {
         setShowSettings(prev => !prev);
