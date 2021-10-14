@@ -4,11 +4,5 @@
 }
 
 .container {
-    position: fixed;
-    top: 11vh;
-    left: 0;
-    right: 0;
-    margin: auto;
-    height: 78vh;
-    overflow-y: auto;
+    margin-bottom: 6rem;
 }

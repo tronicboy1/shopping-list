@@ -71,9 +71,7 @@ const List = (props) => {
             {shoppingList.length > 0 ? (
               shoppingList.map((item) => (
                 <ListItem
-                  onClick={(name) => {
-                    removeClicked(name);
-                  }}
+                  onClick={removeClicked.bind(null, item.id)}
                   id={item.id}
                   key={item.id}
                 >
@@ -86,7 +84,7 @@ const List = (props) => {
           </ul>
         )}
       </Card>
-      <Card className="clear-all">
+      <Card>
         <Button
           style={{ height: "50px", marginTop: "0" }}
           onClick={deleteAll}
