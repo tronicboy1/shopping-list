@@ -7,7 +7,7 @@ import styles from "./List.module.css";
 import Card from "../UI/Card";
 import Button from "../UI/Button";
 import AddItem from "./AddItem";
-import ListItem from "./ListItem";
+import ListLogic from "./ListLogic";
 
 const defaultHttpConfig = { uri: null, method: null, body: null };
 
@@ -15,10 +15,12 @@ const List = (props) => {
   const context = useContext(AppContext);
   const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
   const { loading, errors, data } = useHttp(httpConfig);
-  const [shoppingList, setShoppingList] = useState([]);
+
+  const { setShoppingList } = props;
 
   //make changes to states here depending on data content
   useEffect(() => {
+    console.log("list re renderered");
     if (data) {
       const newList = [];
 
@@ -28,7 +30,7 @@ const List = (props) => {
 
       setShoppingList(newList);
     }
-  }, [data]);
+  }, [setShoppingList,data]);
 
   //set uri
   useEffect(() => {
@@ -36,7 +38,10 @@ const List = (props) => {
   }, [context.uri]);
 
   const addItem = (itemName) => {
-    setShoppingList((prev) => [...prev, { id: "PENDING", item: itemName }]);
+    setShoppingList((prev) => [
+      ...prev,
+      { id: "PENDING", item: itemName },
+    ]);
     setHttpConfig((prev) => {
       return { ...prev, method: "POST", body: { item: itemName } };
     });
@@ -64,25 +69,12 @@ const List = (props) => {
       <AddItem addItem={addItem} loading={loading} />
       <Card className="list">
         {errors && <p>{errors}</p>}
-        {loading && shoppingList.length === 0 ? (
-          <p style={{ textAlign: "center" }}>Loading...</p>
-        ) : (
-          <ul className={styles.list}>
-            {shoppingList.length > 0 ? (
-              shoppingList.map((item) => (
-                <ListItem
-                  onClick={removeClicked.bind(null, item.id)}
-                  id={item.id}
-                  key={item.id}
-                >
-                  {item.item}
-                </ListItem>
-              ))
-            ) : (
-              <li style={{ textAlign: "center" }}>No items in shopping list</li>
-            )}
-          </ul>
-        )}
+        <ListLogic
+          list={props.shoppingList}
+          removeClicked={removeClicked}
+          loading={loading}
+          styles={styles}
+        />
       </Card>
       <Card>
         <Button style={{ height: "50px", marginTop: "0" }} onClick={deleteAll}>

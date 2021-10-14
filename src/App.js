@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import "./App.css";
 import Startup from "./components/Startup/Startup";
 import AppContext from "./helpers/AppContext";
@@ -10,11 +10,16 @@ import SettingsButton from "./components/Settings/SettingsButton";
 
 const AppWithContext = () => {
   const context = useContext(AppContext);
+  const [shoppingList, setShoppingList] = useState([]);
   if (context.appMode) {
     return (
       <>
         <Header />
-          {context.appMode === "SHOPPING" ? <List /> : <Chores />}
+        {context.appMode === "SHOPPING" ? (
+          <List shoppingList={shoppingList} setShoppingList={setShoppingList} />
+        ) : (
+          <Chores />
+        )}
         <SettingsButton />
       </>
     );

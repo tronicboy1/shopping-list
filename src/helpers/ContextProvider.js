@@ -9,11 +9,13 @@ const ContextProvider = (props) => {
   const [houseName, setHouseName] = useState(null);
   const [appMode, setAppMode] = useState("START");
   const [uri, setUri] = useState(null);
+  const [timeZone, setTimeZone] = useState("Asia/Tokyo");
 
   //check local cache for account info
   useEffect(() => {
     setHouseName(window.localStorage.getItem("houseName"));
     setAppMode(window.localStorage.getItem('appMode'));
+    setTimeZone(window.localStorage.getItem('timeZone'));
   }, []);
 
   //set uri
@@ -30,7 +32,8 @@ const ContextProvider = (props) => {
   useEffect(() => {
       window.localStorage.setItem('appMode', appMode);
       window.localStorage.setItem('houseName', houseName);
-  }, [appMode,houseName]);
+      window.localStorage.setItem('timeZone', timeZone);
+  }, [appMode,houseName,timeZone]);
 
   const clearHouse = () => {
     setHouseName("");
@@ -43,7 +46,9 @@ const ContextProvider = (props) => {
     appMode: appMode,
     setAppMode: setAppMode,
     uri: uri,
-    clearHouse: clearHouse
+    clearHouse: clearHouse,
+    timeZone: timeZone,
+    setTimeZone: setTimeZone
   };
   return (
     <AppContext.Provider value={setContext}>

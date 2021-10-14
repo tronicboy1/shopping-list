@@ -2,11 +2,13 @@ import React from "react";
 
 const AppContext = React.createContext({
   houseName: "",
-  setHouseName: () => {},
+  setHouseName: (name) => {},
   appMode: "",
-  setAppMode: () => {},
+  setAppMode: (mode) => {},
   uri: "",
-  clearHouse: () => {}
+  clearHouse: () => {},
+  timeZone: "",
+  setTimeZone: (timezone) => {}
 });
 
 export default AppContext;
