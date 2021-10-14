@@ -20,7 +20,11 @@ const Input = (props) => {
           type={props.type}
         />
         {props.button && (
-          <Button type="submit" borderRadius="right">
+          <Button
+            disabled={props.buttonDisabled}
+            type="submit"
+            borderRadius="right"
+          >
             {props.button}
           </Button>
         )}

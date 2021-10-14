@@ -9,15 +9,17 @@ import Input from "../UI/Input";
 
 const AddItem = (props) => {
   const newItem = useInput((value) => {
-    return true;
+    return value.trim().length > 0;
   });
 
   const addItemHandler = (e) => {
     e.preventDefault();
 
-    props.addItem(newItem.value.trim());
+    if (!props.loading) {
+      props.addItem(newItem.value.trim());
 
-    newItem.reset()
+      newItem.reset();
+    }
   };
   return (
     <Card>
@@ -30,6 +32,7 @@ const AddItem = (props) => {
           onChange={newItem.inputHandler}
           value={newItem.value}
           button={props.loading ? "..." : "Add"}
+          buttonDisabled={!newItem.isValid || props.loading}
         />
       </form>
     </Card>
