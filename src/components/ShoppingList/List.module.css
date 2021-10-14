@@ -2,3 +2,13 @@
     list-style-type: none;
     padding: 0;
 }
+
+.container {
+    position: fixed;
+    top: 11vh;
+    left: 0;
+    right: 0;
+    margin: auto;
+    height: 78vh;
+    overflow-y: auto;
+}

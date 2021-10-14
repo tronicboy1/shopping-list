@@ -5,7 +5,8 @@ const AppContext = React.createContext({
   setHouseName: () => {},
   appMode: "",
   setAppMode: () => {},
-  uri: ""
+  uri: "",
+  clearHouse: () => {}
 });
 
 export default AppContext;

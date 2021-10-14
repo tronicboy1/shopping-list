@@ -36,8 +36,8 @@ const useHttp = (config) => {
   }, []);
 
   useEffect(() => {
-    console.log("http request sent");
     if (config.uri) {
+      console.log("http request sent");
       httpHandler(config);
     }
   }, [config, httpHandler]);

@@ -14,20 +14,21 @@ const defaultHttpConfig = { uri: null, method: null, body: null };
 
 const List = (props) => {
   const context = useContext(AppContext);
-  const [showSettings, setShowSettings] = useState(false);
   const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
   const { loading, errors, data } = useHttp(httpConfig);
   const [shoppingList, setShoppingList] = useState([]);
 
   //make changes to states here depending on data content
   useEffect(() => {
-    const newList = [];
+    if (data) {
+      const newList = [];
 
-    for (const name in data) {
-      newList.push({ id: name, item: data[name].item });
+      for (const name in data) {
+        newList.push({ id: name, item: data[name].item });
+      }
+
+      setShoppingList(newList);
     }
-
-    setShoppingList(newList);
   }, [data]);
 
   //set uri
@@ -59,27 +60,8 @@ const List = (props) => {
     }));
   };
 
-  const clearHouse = () => {
-    context.setHouseName("");
-    context.setAppMode("");
-    setHttpConfig(defaultHttpConfig);
-    setShoppingList([]);
-  };
-
-  const toggleShowSettings = () => {
-    setShowSettings((prev) => !prev);
-  };
-
   return (
-    <>
-      {showSettings && (
-        <Settings
-          houseName={context.houseName}
-          changeHouse={clearHouse}
-          deleteAll={deleteAll}
-          toggleShowSettings={toggleShowSettings}
-        />
-      )}
+    <div className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
       <Card className="list">
         {errors && <p>{errors}</p>}
@@ -105,12 +87,15 @@ const List = (props) => {
           </ul>
         )}
       </Card>
-      <Card>
-        <Button style={{ height: "50px" }} onClick={toggleShowSettings}>
-          Settings
+      <Card className="clear-all">
+        <Button
+          style={{ height: "50px", marginTop: "0" }}
+          onClick={deleteAll}
+        >
+          Clear All
         </Button>
       </Card>
-    </>
+    </div>
   );
 };
 

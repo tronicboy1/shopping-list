@@ -22,7 +22,7 @@ const AddItem = (props) => {
     }
   };
   return (
-    <Card>
+    <Card className="add-new">
       <form onSubmit={addItemHandler} className={styles["new-item__input"]}>
         <Input
           style={{ marginTop: "0", marginBottom: "0", width: "100%" }}

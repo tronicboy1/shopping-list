@@ -2,28 +2,41 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 90%;
+    width: 80%;
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
+    margin-top: 0.75rem;
     background: rgb(104, 104, 104);
     border: 1px rgb(104, 104, 104) solid;
     border-radius: 10px;
     box-shadow: 1px 3px 3px 1px rgba(0, 0, 0, 0.151);
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .list {
-    max-height: 50vh;
+    position: absolute;
+    top: 20%;
+    left: 0;
+    right: 0;
+    max-height: 60%;
     overflow-y: auto;
     padding-top: 0;
     padding-bottom: 0;
 }
 
-@media screen and (max-width: 400px) {
-    .card {
-        width: 85%;
-    }
+.clear-all {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+.add-new {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 }

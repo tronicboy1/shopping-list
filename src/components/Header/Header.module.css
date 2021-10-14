@@ -1,0 +1,39 @@
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    height: 10vh;
+    width: 90vw;
+    margin: auto;
+    background: rgb(104, 104, 104);
+    border: rgb(104, 104, 104) 1px solid;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    z-index: 2;
+}
+
+.nav button {
+    background-color: rgb(59, 59, 59);
+    border-color: rgb(59, 59, 59);
+    border-radius: 0;
+    height: 90%;
+    width: 100%;
+    margin-top: 0;
+    overflow-wrap: break-word;
+}
+
+.nav button:hover {
+    background-color: rgb(39, 39, 39);
+    border-color: rgb(39, 39, 39);
+}
+
+.button-bar {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    padding-left: 8px;
+    padding-right: 8px;
+}

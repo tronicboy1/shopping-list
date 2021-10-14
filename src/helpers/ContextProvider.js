@@ -21,6 +21,8 @@ const ContextProvider = (props) => {
     if (houseName && appMode) {
       const newUri = firebaseUri + houseName + "/" + appMode + ".json";
       setUri(newUri);
+    } else {
+      setUri(null);
     }
   }, [houseName, appMode]);
 
@@ -30,14 +32,18 @@ const ContextProvider = (props) => {
       window.localStorage.setItem('houseName', houseName);
   }, [appMode,houseName]);
 
-  console.log(uri);
+  const clearHouse = () => {
+    setHouseName("");
+    setAppMode("");
+  };
 
   const setContext = {
     houseName: houseName,
     setHouseName: setHouseName,
     appMode: appMode,
     setAppMode: setAppMode,
-    uri: uri
+    uri: uri,
+    clearHouse: clearHouse
   };
   return (
     <AppContext.Provider value={setContext}>
