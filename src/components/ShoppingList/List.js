@@ -79,16 +79,13 @@ const List = (props) => {
                 </ListItem>
               ))
             ) : (
-              <li>No items in shopping list</li>
+              <li style={{ textAlign: "center" }}>No items in shopping list</li>
             )}
           </ul>
         )}
       </Card>
       <Card>
-        <Button
-          style={{ height: "50px", marginTop: "0" }}
-          onClick={deleteAll}
-        >
+        <Button style={{ height: "50px", marginTop: "0" }} onClick={deleteAll}>
           Clear All
         </Button>
       </Card>
