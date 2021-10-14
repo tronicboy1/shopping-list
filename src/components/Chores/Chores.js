@@ -17,8 +17,6 @@ const Chores = (props) => {
     ]);
   }, []);
 
-  console.log(choresList[0]);
-
   return (
     <>
       <Card>Add chore</Card>
