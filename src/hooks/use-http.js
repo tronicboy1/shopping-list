@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 
-const useHttp = (config, setConfig) => {
+const useHttp = (config) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState(null);
   const [data, setData] = useState(null);
 
   const httpHandler = useCallback(async (config) => {
     setLoading(true);
-    setData(null);
     setErrors(null);
 
     try {

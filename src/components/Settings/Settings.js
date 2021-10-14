@@ -6,13 +6,14 @@ import Button from "../UI/Button";
 const Settings = (props) => {
   return (
     <Modal onClick={props.toggleShowSettings}>
-      <h1 style={{marginTop: "0"}}>Settings</h1>
-      <h3>Current list name: {props.listName}</h3>
-      <Button style={{ height: "45px" }} onClick={props.changeList}>
-        Change List
-      </Button>
+      <h1 style={{ marginTop: "0" }}>Settings</h1>
+      <h3>Your house name: {props.houseName}</h3>
+
       <Button style={{ height: "45px" }} onClick={props.deleteAll}>
-        Delete All
+        Empty List
+      </Button>
+      <Button style={{ height: "45px" }} onClick={props.changeHouse}>
+        Change House
       </Button>
     </Modal>
   );

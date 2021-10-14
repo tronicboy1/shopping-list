@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import useInput from "../../hooks/use-input";
 
 import Card from "../UI/Card";
 import Input from "../UI/Input";
 import Button from "../UI/Button";
+import AppContext from "../../helpers/AppContext";
 
-const Startup = (props) => {
-  const listName = useInput((value) => {
+const Startup = () => {
+  const context = useContext(AppContext);
+  const houseName = useInput((value) => {
     return (
       !"!#$%&'*+-/=?^_`{|}~ \"(),:;<>@[\\]"
         .split("")
@@ -17,12 +19,11 @@ const Startup = (props) => {
   const submitHandler = (e) => {
     e.preventDefault();
 
-    if (listName.isValid) {
-      const inputListName = listName.value.trim();
+    if (houseName.isValid) {
+      const inputHouseName = houseName.value.trim();
 
-      props.setListName(inputListName);
-
-      window.localStorage.setItem("listName", inputListName);
+      context.setHouseName(inputHouseName);
+      context.setAppMode("SHOPPING");
     }
   };
 
@@ -30,28 +31,29 @@ const Startup = (props) => {
     <>
       <Card>
         <h1 style={{ marginBottom: "0.25rem", textAlign: "center" }}>
-          Shared Shopping List App
+          The House App
         </h1>
         <p style={{ marginTop: "0.25rem", textAlign: "center" }}>
-          Enter a new list or existing list to get started.
+          Enter your house name to get started!
         </p>
       </Card>
       <Card>
         <form onSubmit={submitHandler}>
           <Input
-            className={!listName.isValid && listName.touched && "invalid"}
+            className={!houseName.isValid && houseName.touched && "invalid"}
             type="text"
-            label="List name"
-            value={listName.value}
-            onChange={listName.inputHandler}
-            onBlur={listName.blurHandler}
+            label="House name"
+            placeholder="Gryffindor"
+            value={houseName.value}
+            onChange={houseName.inputHandler}
+            onBlur={houseName.blurHandler}
             description={
-              !listName.isValid &&
-              listName.touched &&
+              !houseName.isValid &&
+              houseName.touched &&
               "Must not include spaces or special characters"
             }
           />
-          <Button disabled={!listName.isValid}>Submit</Button>
+          <Button disabled={!houseName.isValid}>Submit</Button>
         </form>
       </Card>
     </>
