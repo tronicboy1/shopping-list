@@ -28,7 +28,6 @@ const AddItem = (props) => {
           style={{ marginTop: "0", marginBottom: "0", width: "100%" }}
           borderRadius="left"
           id="new-item"
-          label="New Item"
           onChange={newItem.inputHandler}
           value={newItem.value}
           button={props.loading ? "..." : "Add"}

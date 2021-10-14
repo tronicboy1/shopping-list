@@ -1,6 +1,6 @@
 import React from "react";
 
-import ListItem from "./ListItem";
+import ListItem from "../UI/ListItem";
 
 const ListLogic = (props) => {
   if (props.loading && props.list.length === 0) {

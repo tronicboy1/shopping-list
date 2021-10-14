@@ -11,6 +11,7 @@ import SettingsButton from "./components/Settings/SettingsButton";
 const AppWithContext = () => {
   const context = useContext(AppContext);
   const [shoppingList, setShoppingList] = useState([]);
+  const [choresList, setChoresList] = useState([]);
   if (context.appMode) {
     return (
       <>
@@ -18,7 +19,7 @@ const AppWithContext = () => {
         {context.appMode === "SHOPPING" ? (
           <List shoppingList={shoppingList} setShoppingList={setShoppingList} />
         ) : (
-          <Chores />
+          <Chores choresList={choresList} setChoresList={setChoresList} />
         )}
         <SettingsButton />
       </>
