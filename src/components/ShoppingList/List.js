@@ -1,6 +1,7 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import AppContext from "../../helpers/AppContext";
 import useHttp from "../../hooks/use-http";
+import useDoubleClick from "../../hooks/use-double-click";
 
 import styles from "./List.module.css";
 
@@ -13,10 +14,33 @@ const defaultHttpConfig = { uri: null, method: null, body: null };
 
 const List = (props) => {
   const context = useContext(AppContext);
+  const { setShoppingList } = props;
   const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
   const { loading, errors, data } = useHttp(httpConfig);
+  //handle double click
+  const removeClicked = useCallback(
+    (name) => {
+      setShoppingList((prev) => {
+        return prev.filter((item) => item.id !== name);
+      });
+      delete data[name];
+      setHttpConfig((prev) => ({
+        ...prev,
+        method: "PUT",
+        body: data,
+      }));
+    },
+    [data, setShoppingList]
+  );
 
-  const { setShoppingList } = props;
+  const onTileClicked = useDoubleClick(removeClicked);
+
+  const deleteAll = () => {
+    setShoppingList([]);
+    fetch(httpConfig.uri, { method: "DELETE" });
+  };
+
+  const onDeleteButtonClicked = useDoubleClick(deleteAll);
 
   //make changes to states here depending on data content
   useEffect(() => {
@@ -30,7 +54,7 @@ const List = (props) => {
 
       setShoppingList(newList);
     }
-  }, [setShoppingList,data]);
+  }, [setShoppingList, data]);
 
   //set uri
   useEffect(() => {
@@ -38,30 +62,10 @@ const List = (props) => {
   }, [context.uri]);
 
   const addItem = (itemName) => {
-    setShoppingList((prev) => [
-      ...prev,
-      { id: "PENDING", item: itemName },
-    ]);
+    setShoppingList((prev) => [...prev, { id: "PENDING", item: itemName }]);
     setHttpConfig((prev) => {
       return { ...prev, method: "POST", body: { item: itemName } };
     });
-  };
-
-  const deleteAll = () => {
-    setShoppingList([]);
-    fetch(httpConfig.uri, { method: "DELETE" });
-  };
-
-  const removeClicked = (name) => {
-    setShoppingList((prev) => {
-      return prev.filter((item) => item.id !== name);
-    });
-    delete data[name];
-    setHttpConfig((prev) => ({
-      ...prev,
-      method: "PUT",
-      body: data,
-    }));
   };
 
   return (
@@ -71,13 +75,16 @@ const List = (props) => {
         {errors && <p>{errors}</p>}
         <ListLogic
           list={props.shoppingList}
-          removeClicked={removeClicked}
+          removeClicked={onTileClicked}
           loading={loading}
           styles={styles}
         />
       </Card>
       <Card>
-        <Button style={{ height: "50px", marginTop: "0" }} onClick={deleteAll}>
+        <Button
+          style={{ height: "50px", marginTop: "0" }}
+          onClick={onDeleteButtonClicked.bind(null, "delete")}
+        >
           Clear All
         </Button>
       </Card>
