@@ -1,39 +1,72 @@
-import React, { useContext } from "react";
-import { useEffect } from "react/cjs/react.development";
+import React, { useContext, useEffect, useState } from "react";
 import AppContext from "../../helpers/AppContext";
+import useHttp from "../../hooks/use-http";
+import Button from "../UI/Button";
+
 import Card from "../UI/Card";
 import ListItem from "../UI/ListItem";
+import AddChore from "./AddChore";
+import ChoresLogic from "./ChoresLogic";
+
+const defaultHttpConfig = { uri: null, method: null, body: null };
 
 const Chores = (props) => {
   const context = useContext(AppContext);
   const { choresList, setChoresList } = props;
+  const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
+  const { loading, errors, data } = useHttp(httpConfig);
 
+  //set uri to chores
   useEffect(() => {
-    setChoresList([
-      {
-        title: "Clean Toilet",
-        lastCompleted: new Date("2021-10-14"),
-      },
+    setHttpConfig((prev) => ({ ...prev, uri: context.uri }));
+  }, [context.uri]);
+
+  //load chores from firebase
+  useEffect(() => {
+    if (data) {
+      const newChores = [];
+
+      for (const name in data) {
+        newChores.push({
+          id: name,
+          title: data[name].title,
+          lastCompleted: new Date(data[name].lastCompleted),
+        });
+
+        setChoresList(newChores);
+      }
+    }
+  }, [data]);
+
+  const addChore = (title, lastCompleted) => {
+    setChoresList((prev) => [
+      ...prev,
+      { id: "PENDING", title: title, lastCompleted: lastCompleted },
     ]);
-  }, []);
+    setHttpConfig((prev) => ({
+      ...prev,
+      method: "POST",
+      body: { title: title, lastCompleted: lastCompleted.toJSON() },
+    }));
+  };
 
   return (
-    <>
-      <Card>Add chore</Card>
+    <div style={{ marginBottom: "6rem" }}>
+      <AddChore addChore={addChore} />
       <Card>
-        <ul style={{listStyleType: "none", padding: "0"}}>
-          {choresList.map((chore) => (
-            <ListItem>
-              <p>{chore.title}</p>
-              <small>{chore.lastCompleted.toLocaleString({timeZone: context.timeZone})}</small>
-            </ListItem>
-          ))}
-        </ul>
+        <ChoresLogic
+          list={choresList}
+          loading={loading}
+          onClick={(id) => {
+            console.log(id);
+          }}
+          context={context}
+        />
       </Card>
       <Card>
-          Delete Mode
+        <Button style={{ margin: "0", height: "50px" }}>Delete Mode</Button>
       </Card>
-    </>
+    </div>
   );
 };
 

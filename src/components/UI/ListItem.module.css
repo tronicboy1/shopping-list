@@ -1,4 +1,6 @@
 .list-item {
+    display: flex;
+    flex-direction: column;
     border: 1px white solid;
     background: white;
     border-radius: 15px;
@@ -28,4 +30,11 @@
 
 .list-item p {
     margin: 0;
+    padding: 0;
+}
+
+.list-item small {
+    font-size: medium;
+    margin: 0;
+    padding: 0;
 }
