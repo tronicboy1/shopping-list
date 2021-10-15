@@ -17,10 +17,10 @@ const Chores = (props) => {
 
   //set uri to chores
   useEffect(() => {
-    if (context.appMode === "CHORES") {
+    if (context.uri) {
       setHttpConfig((prev) => ({
         ...prev,
-        uri: context.uri + "CHORES" + ".json",
+        uri: `${context.uri}CHORES.json`,
       }));
     }
   }, [context.uri, context.appMode]);
@@ -54,12 +54,11 @@ const Chores = (props) => {
     }));
   };
 
-  console.log(httpConfig.uri);
-
   return (
     <div style={{ marginBottom: "6rem" }}>
       <AddChore addChore={addChore} />
       <Card>
+          {errors && <p>{errors}</p>}
         <ChoresLogic
           list={choresList}
           loading={loading}

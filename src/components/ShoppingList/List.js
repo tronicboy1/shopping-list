@@ -58,8 +58,9 @@ const List = (props) => {
 
   //set uri
   useEffect(() => {
-    const newUri = context.uri + "SHOPPING" + ".json";
-    setHttpConfig((prev) => ({ ...prev, uri: newUri }));
+    if (context.uri) {
+      setHttpConfig((prev) => ({ ...prev, uri: `${context.uri}SHOPPING.json` }));
+    }
   }, [context.uri]);
 
   const addItem = (itemName) => {
