@@ -30,7 +30,7 @@ const useHttp = (config) => {
       const data = await get.json();
       setData(data);
     } catch (e) {
-      setErrors(e);
+      setErrors(e.message);
     }
     setLoading(false);
   }, []);

@@ -4,7 +4,6 @@ import useHttp from "../../hooks/use-http";
 import Button from "../UI/Button";
 
 import Card from "../UI/Card";
-import ListItem from "../UI/ListItem";
 import AddChore from "./AddChore";
 import ChoresLogic from "./ChoresLogic";
 
@@ -18,8 +17,13 @@ const Chores = (props) => {
 
   //set uri to chores
   useEffect(() => {
-    setHttpConfig((prev) => ({ ...prev, uri: context.uri }));
-  }, [context.uri]);
+    if (context.appMode === "CHORES") {
+      setHttpConfig((prev) => ({
+        ...prev,
+        uri: context.uri + "CHORES" + ".json",
+      }));
+    }
+  }, [context.uri, context.appMode]);
 
   //load chores from firebase
   useEffect(() => {
@@ -36,7 +40,7 @@ const Chores = (props) => {
         setChoresList(newChores);
       }
     }
-  }, [data]);
+  }, [data, setChoresList]);
 
   const addChore = (title, lastCompleted) => {
     setChoresList((prev) => [
@@ -49,6 +53,8 @@ const Chores = (props) => {
       body: { title: title, lastCompleted: lastCompleted.toJSON() },
     }));
   };
+
+  console.log(httpConfig.uri);
 
   return (
     <div style={{ marginBottom: "6rem" }}>

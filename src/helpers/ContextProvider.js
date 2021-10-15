@@ -21,7 +21,7 @@ const ContextProvider = (props) => {
   //set uri
   useEffect(() => {
     if (houseName && appMode) {
-      const newUri = firebaseUri + houseName + "/" + appMode + ".json";
+      const newUri = firebaseUri + houseName + "/";
       setUri(newUri);
     } else {
       setUri(null);

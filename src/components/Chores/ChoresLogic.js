@@ -7,7 +7,7 @@ const ChoresLogic = (props) => {
     return <p style={{ textAlign: "center" }}>Loading...</p>;
   }
   if (props.list.length === 0) {
-    return <p style={{ textAlign: "center" }}>No items in shopping list</p>;
+    return <p style={{ textAlign: "center" }}>No chores added</p>;
   }
   return (
     <ul style={{ listStyleType: "none", padding: "0" }}>
