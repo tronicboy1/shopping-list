@@ -46,6 +46,7 @@ const AddChore = (props) => {
             onChange={inputDate.inputHandler}
             onBlur={inputDate.blurHandler}
             value={inputDate.value}
+            placeholder="Date"
           />
         </div>
         <div className={styles["button-box"]}>
