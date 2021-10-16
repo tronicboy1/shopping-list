@@ -23,6 +23,7 @@ const AddChore = (props) => {
       const date = new Date(inputDate.value);
       const choreName = name.value;
       props.addChore(choreName, date);
+      name.reset();
     }
   };
 

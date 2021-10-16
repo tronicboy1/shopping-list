@@ -79,7 +79,9 @@ const Chores = (props) => {
   };
 
   const toggleDeleteMode = () => {
-    setDeleteMode((prev) => !prev);
+    if (choresList.length > 0) {
+      setDeleteMode((prev) => !prev);
+    }
   };
 
   return (
@@ -104,11 +106,12 @@ const Chores = (props) => {
       <Card>
         <Button
           onClick={toggleDeleteMode}
+          disabled={!choresList.length > 0}
           style={{
             margin: "0",
             height: "50px",
             background: deleteMode && "rgb(59, 59, 59)",
-            borderColor: deleteMode && "rgb(59, 59, 59)"
+            borderColor: deleteMode && "rgb(59, 59, 59)",
           }}
         >
           Delete Mode

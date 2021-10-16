@@ -25,7 +25,7 @@ const ChoresLogic = (props) => {
         <ListItem className={weekOld(chore.lastCompleted) && "warning"} onClick={props.onClick.bind(null, chore.id)} key={chore.id}>
           <p>{chore.title}</p>
           <small>
-            {chore.lastCompleted.toLocaleString({
+            {chore.lastCompleted.toLocaleDateString({
               timeZone: props.context.timeZone,
             })}
           </small>
