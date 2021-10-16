@@ -7,7 +7,8 @@ import styles from "./Header.module.css";
 const Header = () => {
   const context = useContext(AppContext);
 
-  const selectedBGColor = "rgb(0, 0, 88)";
+  const selectedBGColor = "rgb(0, 59, 5)";
+  const choresColor = "#270053";
 
   const listButtonStyle = {
     borderBottomLeftRadius: "8px",
@@ -18,8 +19,8 @@ const Header = () => {
 
   const choresButtonStyle = {
     borderBottomRightRadius: "8px",
-    background: context.appMode === "CHORES" && selectedBGColor,
-    borderColor: context.appMode === "CHORES" && selectedBGColor,
+    background: context.appMode === "CHORES" && choresColor,
+    borderColor: context.appMode === "CHORES" && choresColor,
     cursor: context.appMode === "CHORES" && "default",
   };
 

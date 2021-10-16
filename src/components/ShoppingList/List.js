@@ -72,7 +72,7 @@ const List = (props) => {
   return (
     <div className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
-      <Card className="list">
+      <Card className="shopping-list">
         {errors && <p>{errors}</p>}
         <ListLogic
           list={props.shoppingList}
