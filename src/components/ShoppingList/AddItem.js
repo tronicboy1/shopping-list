@@ -30,7 +30,7 @@ const AddItem = (props) => {
           id="new-item"
           onChange={newItem.inputHandler}
           value={newItem.value}
-          button={props.loading ? "..." : "Add"}
+          button="Add"
           buttonDisabled={!newItem.isValid || props.loading}
         />
       </form>
