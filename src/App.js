@@ -24,6 +24,8 @@ const AppWithContext = () => {
   if (context.appMode) {
     return (
       <div
+        className="swipe-div"
+        onClick={() => {console.log("Click")}}
         onTouchStart={swipeHandler.handleTouchStart}
         onTouchMove={swipeHandler.handelTouchMove}
         onTouchEnd={swipeHandler.handleTouchEnd}
