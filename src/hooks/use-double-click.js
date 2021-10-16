@@ -16,7 +16,7 @@ const useDoubleClick = (action) => {
   useEffect(() => {
     setTimeout(() => {
       setClicked(null);
-    }, 250);
+    }, 400);
   }, [clicked]);
 
   return onTileClicked;
