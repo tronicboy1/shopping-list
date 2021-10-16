@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import AppContext from "../../helpers/AppContext";
+import useDoubleClick from "../../hooks/use-double-click";
 import useHttp from "../../hooks/use-http";
 import Button from "../UI/Button";
 
@@ -14,6 +15,31 @@ const Chores = (props) => {
   const { choresList, setChoresList } = props;
   const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
   const { loading, errors, data } = useHttp(httpConfig);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const doubleClickHandler = useCallback(
+    (id) => {
+      if (deleteMode) {
+        delete data[id];
+        setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
+        setChoresList((prev) => prev.filter((chore) => chore.id !== id));
+        setDeleteMode(false);
+      } else {
+        data[id].lastCompleted = new Date().toJSON();
+        setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
+        setChoresList((prev) =>
+          prev.map((item) => {
+            if (item.id === id) {
+              item.lastCompleted = new Date();
+              return item;
+            }
+            return item;
+          })
+        );
+      }
+    },
+    [data, deleteMode, setChoresList]
+  );
+  const onTileClicked = useDoubleClick(doubleClickHandler);
 
   //set uri to chores
   useEffect(() => {
@@ -23,20 +49,18 @@ const Chores = (props) => {
         uri: `${context.uri}CHORES.json`,
       }));
     }
-  }, [context.uri, context.appMode]);
+  }, [context.uri]);
 
   //load chores from firebase
   useEffect(() => {
     if (data) {
       const newChores = [];
-
       for (const name in data) {
         newChores.push({
           id: name,
           title: data[name].title,
           lastCompleted: new Date(data[name].lastCompleted),
         });
-
         setChoresList(newChores);
       }
     }
@@ -54,22 +78,41 @@ const Chores = (props) => {
     }));
   };
 
+  const toggleDeleteMode = () => {
+    setDeleteMode((prev) => !prev);
+  };
+
   return (
     <div style={{ marginBottom: "6rem" }}>
       <AddChore addChore={addChore} />
-      <Card>
-          {errors && <p>{errors}</p>}
+      <Card className={deleteMode && "delete-mode"}>
+        {errors && <p>{errors}</p>}
+        {deleteMode && (
+          <Card
+            style={{ textAlign: "center", color: "black", background: "white" }}
+          >
+            Double click to delete
+          </Card>
+        )}
         <ChoresLogic
           list={choresList}
           loading={loading}
-          onClick={(id) => {
-            console.log(id);
-          }}
+          onClick={onTileClicked}
           context={context}
         />
       </Card>
       <Card>
-        <Button style={{ margin: "0", height: "50px" }}>Delete Mode</Button>
+        <Button
+          onClick={toggleDeleteMode}
+          style={{
+            margin: "0",
+            height: "50px",
+            background: deleteMode && "rgb(59, 59, 59)",
+            borderColor: deleteMode && "rgb(59, 59, 59)"
+          }}
+        >
+          Delete Mode
+        </Button>
       </Card>
     </div>
   );

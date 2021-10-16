@@ -6,7 +6,6 @@ const useDoubleClick = (action) => {
   //handle click for double tap/click
   const onTileClicked = (item) => {
     if (clicked === item) {
-        console.log("Action");
       action(item);
       setClicked(null);
     } else {

@@ -44,7 +44,6 @@ const List = (props) => {
 
   //make changes to states here depending on data content
   useEffect(() => {
-    console.log("list re renderered");
     if (data) {
       const newList = [];
 

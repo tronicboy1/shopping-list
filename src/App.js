@@ -16,9 +16,10 @@ const AppWithContext = () => {
     return (
       <>
         <Header />
-        {context.appMode === "SHOPPING" ? (
+        {context.appMode === "SHOPPING" && (
           <List shoppingList={shoppingList} setShoppingList={setShoppingList} />
-        ) : (
+        )}
+        {context.appMode === "CHORES" && (
           <Chores choresList={choresList} setChoresList={setChoresList} />
         )}
         <SettingsButton />

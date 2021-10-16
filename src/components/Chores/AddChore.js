@@ -22,7 +22,6 @@ const AddChore = (props) => {
     if (formValid) {
       const date = new Date(inputDate.value);
       const choreName = name.value;
-      console.log(date);
       props.addChore(choreName, date);
     }
   };
@@ -31,8 +30,8 @@ const AddChore = (props) => {
 
   return (
     <Card>
-      <form className={styles['form-control']} onSubmit={submitHandler}>
-        <div className={styles['input-box']}>
+      <form className={styles["form-control"]} onSubmit={submitHandler}>
+        <div className={styles["input-box"]}>
           <Input
             className={!name.isValid && name.touched && "invalid"}
             type="text"
@@ -48,10 +47,10 @@ const AddChore = (props) => {
             value={inputDate.value}
           />
         </div>
-        <div className={styles['button-box']}>
-        <Button style={{ margin: "0" }} disabled={!formValid} type="submit">
-          Add
-        </Button>
+        <div className={styles["button-box"]}>
+          <Button style={{ margin: "0" }} disabled={!formValid} type="submit">
+            Add
+          </Button>
         </div>
       </form>
     </Card>

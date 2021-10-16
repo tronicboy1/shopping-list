@@ -20,13 +20,13 @@ const ContextProvider = (props) => {
 
   //set uri
   useEffect(() => {
-    if (houseName && appMode) {
+    if (houseName) {
       const newUri = firebaseUri + houseName + "/";
       setUri(newUri);
     } else {
       setUri(null);
     }
-  }, [houseName, appMode]);
+  }, [houseName]);
 
   //change local cache settings
   useEffect(() => {

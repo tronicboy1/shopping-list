@@ -12,6 +12,7 @@
     border-radius: 10px;
     box-shadow: 1px 3px 3px 1px rgba(0, 0, 0, 0.151);
     padding: 0.75rem;
+    animation: fade 0.6s linear;
 }
 
 .list {
@@ -33,4 +34,48 @@
     left: 0;
     right: 0;
     margin: auto;
+}
+
+.delete-mode {
+    -webkit-animation: pulse 2s ease-in-out infinite alternate;
+    animation: pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes fade {
+    0% {
+        opacity: 0
+    }
+    100% {
+        opacity: 1
+    }
+}
+
+@-webkit-keyframes pulse {
+    0% {
+        background: rgb(104, 104, 104);
+        border-color: rgb(104, 104, 104);
+    }
+    50% {
+        background: rgb(124, 0, 0);
+        border-color: rgb(124, 0, 0);
+    }
+    100% {
+        background: rgb(104, 104, 104);
+        border-color: rgb(104, 104, 104);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        background: rgb(104, 104, 104);
+        border-color: rgb(104, 104, 104);
+    }
+    50% {
+        background: rgb(124, 0, 0);
+        border-color: rgb(124, 0, 0);
+    }
+    100% {
+        background: rgb(104, 104, 104);
+        border-color: rgb(104, 104, 104);
+    }
 }
