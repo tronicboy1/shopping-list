@@ -9,20 +9,21 @@ const useSwipe = (actionLeft, actionRight) => {
   };
 
   const handelTouchMove = (e) => {
-      setTouchEnd(e.targetTouches[0].clientX);
+      setTouchEnd(touchStart - e.targetTouches[0].clientX);
   };
 
   const handleTouchEnd = (e) => {
-      if (touchStart - touchEnd > 150) {
+      if (touchEnd > 150) {
           actionLeft();
       }
 
-      if (touchStart - touchEnd < -150) {
+      if (touchEnd < -150) {
           actionRight();
       }
+      setTouchEnd(0);
   };
 
-  return { handleTouchStart, handelTouchMove, handleTouchEnd };
+  return { handleTouchStart, handelTouchMove, handleTouchEnd, touchEnd };
 };
 
 export default useSwipe;

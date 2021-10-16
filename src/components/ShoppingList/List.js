@@ -70,7 +70,7 @@ const List = (props) => {
   };
 
   return (
-    <div className={styles.container}>
+    <div style={props.style} className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
       <Card className="shopping-list">
         {errors && <p>{errors}</p>}

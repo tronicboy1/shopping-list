@@ -15,27 +15,51 @@ const AppWithContext = () => {
   const [choresList, setChoresList] = useState([]);
   const swipeHandler = useSwipe(
     () => {
-      if (context.appMode === "SHOPPING") {context.setAppMode("CHORES");}
+      if (context.appMode === "SHOPPING") {
+        context.setAppMode("CHORES");
+      }
     },
     () => {
-      if (context.appMode === "CHORES") {context.setAppMode("SHOPPING");}
+      if (context.appMode === "CHORES") {
+        context.setAppMode("SHOPPING");
+      }
     }
   );
+  const translateXVal =
+    Math.abs(swipeHandler.touchEnd) > 20 ? swipeHandler.touchEnd : 0;
   if (context.appMode) {
     return (
       <div
         className="swipe-div"
-        onClick={() => {console.log("Click")}}
+        onClick={() => {
+          console.log("Click");
+        }}
         onTouchStart={swipeHandler.handleTouchStart}
         onTouchMove={swipeHandler.handelTouchMove}
         onTouchEnd={swipeHandler.handleTouchEnd}
       >
         <Header />
         {context.appMode === "SHOPPING" && (
-          <List shoppingList={shoppingList} setShoppingList={setShoppingList} />
+          <List
+            style={{
+              transform: `translateX(${
+                translateXVal > 0 ? -translateXVal : 0
+              }px)`,
+            }}
+            shoppingList={shoppingList}
+            setShoppingList={setShoppingList}
+          />
         )}
         {context.appMode === "CHORES" && (
-          <Chores choresList={choresList} setChoresList={setChoresList} />
+          <Chores
+            style={{
+              transform: `translateX(${
+                translateXVal < 0 ? -translateXVal : 0
+              }px)`,
+            }}
+            choresList={choresList}
+            setChoresList={setChoresList}
+          />
         )}
         <SettingsButton />
       </div>

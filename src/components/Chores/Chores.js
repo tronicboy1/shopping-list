@@ -2,8 +2,10 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import AppContext from "../../helpers/AppContext";
 import useDoubleClick from "../../hooks/use-double-click";
 import useHttp from "../../hooks/use-http";
-import Button from "../UI/Button";
 
+import styles from "./Chores.module.css";
+
+import Button from "../UI/Button";
 import Card from "../UI/Card";
 import AddChore from "./AddChore";
 import ChoresLogic from "./ChoresLogic";
@@ -85,7 +87,7 @@ const Chores = (props) => {
   };
 
   return (
-    <div style={{ marginBottom: "6rem", marginTop: "12vh"}}>
+    <div style={props.style} className={styles['chores-list']}>
       <AddChore addChore={addChore} />
       <Card style={{ backgroundColor: "#270053", borderColor: "#270053" }} className={deleteMode && "delete-mode"}>
         {errors && <p>{errors}</p>}
