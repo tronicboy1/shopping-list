@@ -25,15 +25,10 @@ const AppWithContext = () => {
       }
     }
   );
-  const translateXVal =
-    Math.abs(swipeHandler.touchEnd) > 20 && !swipeHandler.touchYEnd ? swipeHandler.touchEnd : 0;
   if (context.appMode) {
     return (
       <div
         className="swipe-div"
-        onClick={() => {
-          console.log("Click");
-        }}
         onTouchStart={swipeHandler.handleTouchStart}
         onTouchMove={swipeHandler.handelTouchMove}
         onTouchEnd={swipeHandler.handleTouchEnd}
@@ -42,9 +37,7 @@ const AppWithContext = () => {
         {context.appMode === "SHOPPING" && (
           <List
             style={{
-              transform: `translateX(${
-                translateXVal > 0 ? -translateXVal : 0
-              }px)`,
+              transform: `translateX(${swipeHandler.xChange < 0 ? swipeHandler.xChange : 0}px)`,
             }}
             shoppingList={shoppingList}
             setShoppingList={setShoppingList}
@@ -53,9 +46,7 @@ const AppWithContext = () => {
         {context.appMode === "CHORES" && (
           <Chores
             style={{
-              transform: `translateX(${
-                translateXVal < 0 ? -translateXVal : 0
-              }px)`,
+              transform: `translateX(${swipeHandler.xChange > 0 ? swipeHandler.xChange : 0}px)`,
             }}
             choresList={choresList}
             setChoresList={setChoresList}
