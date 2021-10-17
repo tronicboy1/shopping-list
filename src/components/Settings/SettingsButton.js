@@ -17,16 +17,13 @@ const SettingsButton = () => {
   const choresColor = "rgb(94, 92,230)";
 
   const listButtonStyle = {
-    borderBottomLeftRadius: "8px",
     background: context.appMode === "SHOPPING" && selectedBGColor,
     borderColor: context.appMode === "SHOPPING" && selectedBGColor,
     cursor: context.appMode === "SHOPPING" && "default",
     borderTopRightRadius: "0",
-    borderBottomLeftRadius: "0"
   };
 
   const choresButtonStyle = {
-    borderBottomRightRadius: "8px",
     background: context.appMode === "CHORES" && choresColor,
     borderColor: context.appMode === "CHORES" && choresColor,
     cursor: context.appMode === "CHORES" && "default",

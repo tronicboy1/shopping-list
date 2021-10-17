@@ -24,8 +24,6 @@
 }
 
 .list-item:hover {
-    border: 1px rgb(173, 173, 173) solid;
-    background: rgb(173, 173, 173);
     cursor: pointer;
 }
 
@@ -41,6 +39,6 @@
 }
 
 .warning {
-    border-color: rgb(216, 0, 0);
-    background: rgb(255, 226, 226);
+    border-color: rgb(255, 159, 10);
+    background: rgb(255, 159, 10);
 }
