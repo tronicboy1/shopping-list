@@ -26,7 +26,7 @@ const AppWithContext = () => {
     }
   );
   const translateXVal =
-    Math.abs(swipeHandler.touchEnd) > 20 ? swipeHandler.touchEnd : 0;
+    Math.abs(swipeHandler.touchEnd) > 20 && !swipeHandler.touchYEnd ? swipeHandler.touchEnd : 0;
   if (context.appMode) {
     return (
       <div
