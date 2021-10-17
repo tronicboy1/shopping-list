@@ -3,8 +3,8 @@
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     margin-top: 0.5rem;
-    background: rgb(0, 0, 88);
-    border: 1px rgb(0, 0, 88) solid;
+    background: rgb(10, 132, 255);
+    border: 1px rgb(10, 132, 255) solid;
     border-radius: 8px;
     cursor: pointer;
     color: white;
@@ -13,17 +13,22 @@
 }
 
 .button:hover {
-    background: rgb(0, 0, 204);
-    border-color: rgb(0, 0, 204);
+    background: rgb(55, 155, 255);
+    border-color: rgb(55, 155, 255);
 }
 
 .button:disabled {
-    background: grey;
-    border-color: grey;
+    background: rgb(142, 142, 147);
+    border-color: rgb(142, 142, 147);
     cursor: default;
 }
 
 .button.right {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+.button img {
+    width: auto;
+    height: 70%;
 }

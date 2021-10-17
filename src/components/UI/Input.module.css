@@ -43,7 +43,7 @@
 
 .form-control.invalid input {
     background: rgb(255, 210, 210);
-    border-color: rgb(255, 97, 97);
+    border-color: rgb(255, 55, 95);
 }
 
 .form-control.left input {

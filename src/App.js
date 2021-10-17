@@ -4,7 +4,6 @@ import Startup from "./components/Startup/Startup";
 import AppContext from "./helpers/AppContext";
 import ContextProvider from "./helpers/ContextProvider";
 import List from "./components/ShoppingList/List";
-import Header from "./components/Header/Header";
 import Chores from "./components/Chores/Chores";
 import SettingsButton from "./components/Settings/SettingsButton";
 import useSwipe from "./hooks/use-swipe";
@@ -33,7 +32,6 @@ const AppWithContext = () => {
         onTouchMove={swipeHandler.handelTouchMove}
         onTouchEnd={swipeHandler.handleTouchEnd}
       >
-        <Header />
         {context.appMode === "SHOPPING" && (
           <List
             style={{

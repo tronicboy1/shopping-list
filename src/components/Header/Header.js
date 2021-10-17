@@ -7,8 +7,8 @@ import styles from "./Header.module.css";
 const Header = () => {
   const context = useContext(AppContext);
 
-  const selectedBGColor = "rgb(0, 59, 5)";
-  const choresColor = "#270053";
+  const selectedBGColor = "rgb(48, 209, 88)";
+  const choresColor = "rgb(94, 92,230)";
 
   const listButtonStyle = {
     borderBottomLeftRadius: "8px",

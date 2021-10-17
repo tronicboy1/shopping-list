@@ -7,8 +7,8 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: 0.75rem;
-    background: rgb(104, 104, 104);
-    border: 1px rgb(104, 104, 104) solid;
+    background: rgb(99, 99, 102);
+    border: 1px rgb(99, 99, 102) solid;
     border-radius: 10px;
     box-shadow: 1px 3px 3px 1px rgba(0, 0, 0, 0.151);
     padding: 0.75rem;
@@ -18,8 +18,13 @@
 .shopping-list {
     padding-top: 0;
     padding-bottom: 0;
-    background: rgb(0, 59, 5);
-    border-color: rgb(0, 59, 5);
+    background: rgb(48, 209, 88);
+    border-color: rgb(48, 209, 88);
+}
+
+.chores-card {
+    background-color: rgb(94, 92, 230);
+    border-color: rgb(94, 92, 230);
 }
 
 .clear-all {
@@ -58,8 +63,8 @@
         border-color: rgb(104, 104, 104);
     }
     50% {
-        background: rgb(124, 0, 0);
-        border-color: rgb(124, 0, 0);
+        background: rgb(255, 69, 58);
+        border-color: rgb(255, 69, 58);
     }
     100% {
         background: rgb(104, 104, 104);
@@ -73,8 +78,8 @@
         border-color: rgb(104, 104, 104);
     }
     50% {
-        background: rgb(124, 0, 0);
-        border-color: rgb(124, 0, 0);
+        background: rgb(255, 69, 58);
+        border-color: rgb(255, 69, 58);
     }
     100% {
         background: rgb(104, 104, 104);
