@@ -1,3 +1,10 @@
+#License
+This project is distributed under the MIT license
+
+#About this Project
+I created this project to learn how to use Google Firebase to host React Apps without a backend. I also implemented my own techniques to handle swipe imput from users (I am not sure if my solution is a best practice or not).
+The goal of this project is to create an app that my wife and I can use to manage our chores and shopping lists so that we do not run out of beer in the fridge! Or have mold in the shower...
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
