@@ -7,6 +7,7 @@ import List from "./components/ShoppingList/List";
 import Chores from "./components/Chores/Chores";
 import SettingsButton from "./components/Settings/SettingsButton";
 import useSwipe from "./hooks/use-swipe";
+import { useEffect } from "react/cjs/react.development";
 
 const AppWithContext = () => {
   const context = useContext(AppContext);
@@ -24,6 +25,12 @@ const AppWithContext = () => {
       }
     }
   );
+
+  useEffect(() => {
+    setShoppingList([]);
+    setChoresList([]);
+  }, [context.houseName])
+
   if (context.appMode) {
     return (
       <div
