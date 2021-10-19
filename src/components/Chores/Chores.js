@@ -87,13 +87,19 @@ const Chores = (props) => {
   };
 
   return (
-    <div style={props.style} className={styles['chores-list']}>
+    <div style={props.style} className={styles["chores-list"]}>
       <AddChore addChore={addChore} />
       <Card className={deleteMode ? "delete-mode" : "chores-card"}>
         {errors && <p>{errors}</p>}
         {deleteMode && (
           <Card
-            style={{ textAlign: "center", color: "black", background: "white", marginBottom: "1rem" }}
+            style={{
+              textAlign: "center",
+              color: "black",
+              background: "white",
+              marginBottom: "1rem",
+              borderColor: "white",
+            }}
           >
             Double click to delete
           </Card>
