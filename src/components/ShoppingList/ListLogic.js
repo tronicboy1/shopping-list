@@ -11,11 +11,12 @@ const ListLogic = (props) => {
   }
   return (
     <ul className={props.styles.list}>
-      {props.list.map((item) => (
+      {props.list.map((item, index) => (
         <ListItem
           onClick={props.removeClicked.bind(null, item.id)}
           id={item.id}
           key={item.id}
+          last={index === 0}
         >
           {item.item}
         </ListItem>
