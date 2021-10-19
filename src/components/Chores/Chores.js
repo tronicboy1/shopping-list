@@ -105,7 +105,7 @@ const Chores = (props) => {
           context={context}
         />
       </Card>
-      <Card>
+      <Card className="no-text-select">
         <Button
           onClick={toggleDeleteMode}
           disabled={!choresList.length > 0}

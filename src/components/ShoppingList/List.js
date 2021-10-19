@@ -81,7 +81,7 @@ const List = (props) => {
           styles={styles}
         />
       </Card>
-      <Card>
+      <Card className="no-text-select">
         <Button
           style={{ height: "50px", marginTop: "0" }}
           onClick={onDeleteButtonClicked.bind(null, "delete")}
