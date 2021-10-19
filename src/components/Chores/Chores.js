@@ -93,7 +93,7 @@ const Chores = (props) => {
         {errors && <p>{errors}</p>}
         {deleteMode && (
           <Card
-            style={{ textAlign: "center", color: "black", background: "white" }}
+            style={{ textAlign: "center", color: "black", background: "white", marginBottom: "1rem" }}
           >
             Double click to delete
           </Card>
