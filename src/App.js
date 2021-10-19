@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import "./App.css";
 import Startup from "./components/Startup/Startup";
 import AppContext from "./helpers/AppContext";
@@ -7,7 +7,6 @@ import List from "./components/ShoppingList/List";
 import Chores from "./components/Chores/Chores";
 import SettingsButton from "./components/Settings/SettingsButton";
 import useSwipe from "./hooks/use-swipe";
-import { useEffect } from "react/cjs/react.development";
 
 const AppWithContext = () => {
   const context = useContext(AppContext);
