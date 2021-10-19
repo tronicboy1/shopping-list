@@ -23,7 +23,7 @@ const ChoresLogic = (props) => {
     return <p style={{ textAlign: "center" }}>No chores</p>;
   }
   return (
-    <ul style={{ listStyleType: "none", padding: "0" }}>
+    <ul style={{ listStyleType: "none", padding: "0", margin: "0" }}>
       {choresSorted.map((chore, index) => (
         <ListItem
           className={weekOld(chore.lastCompleted) && "warning"}
