@@ -18,13 +18,11 @@
 .shopping-list {
     padding-top: 0;
     padding-bottom: 0;
-    background: rgb(48, 209, 88);
-    border-color: rgb(48, 209, 88);
 }
 
 .chores-card {
-    background-color: rgb(94, 92, 230);
-    border-color: rgb(94, 92, 230);
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
 }
 
 .clear-all {
