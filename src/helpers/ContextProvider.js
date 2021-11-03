@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import firebase from "../services/firebase";
+import { getAuth } from "firebase/auth";
 
 import AppContext from "./AppContext";
 
@@ -12,9 +12,8 @@ const ContextProvider = (props) => {
   const [appMode, setAppMode] = useState("START");
   const [uri, setUri] = useState(null);
   const [timeZone, setTimeZone] = useState("Asia/Tokyo");
-  const [firebase, setFirebase] = useState(null);
   const [auth, setAuth] = useState(null);
-  const [isAuth, setIsAuth] = useState(false);
+  const [user, setUser] = useState(null);
 
   //check local cache for account info
   useEffect(() => {
@@ -35,25 +34,9 @@ const ContextProvider = (props) => {
 
   //setup firebase
   useEffect(() => {
-    const firebaseApp = initializeApp({
-      apiKey: "AIzaSyBZ3KUebo7OAtHJQRwEJr2VEpH1yWktahE",
-      authDomain: "shopping-list-app-d0386.firebaseapp.com",
-      databaseURL:
-        "https://shopping-list-app-d0386-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "shopping-list-app-d0386",
-      storageBucket: "shopping-list-app-d0386.appspot.com",
-      messagingSenderId: "302654429160",
-      appId: "1:302654429160:web:b1d02796a6b4d7fa92365d",
-    });
-    setFirebase(firebaseApp);
-    const appAuth = getAuth(firebaseApp)
-    setAuth(appAuth);
-    onAuthStateChanged(appAuth, user => {
-      if (user) {
-        setIsAuth(true);
-        console.log(appAuth.currentUser);
-      }
-    })
+    const auth = getAuth(firebase);
+    auth.onAuthStateChanged(setUser);
+    setAuth(auth);
   }, []);
 
   //change local cache settings
@@ -65,7 +48,7 @@ const ContextProvider = (props) => {
 
   const logout = () => {
     auth.signOut();
-    setIsAuth(false);
+    setUser(null);
     setHouseName("");
     setAppMode("");
   };
@@ -80,8 +63,8 @@ const ContextProvider = (props) => {
     setTimeZone: setTimeZone,
     firebase,
     auth,
-    isAuth,
-    setIsAuth,
+    user,
+    setUser,
     logout
   };
 

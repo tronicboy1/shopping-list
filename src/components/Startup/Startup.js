@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -14,7 +14,7 @@ import AppContext from "../../helpers/AppContext";
 import AuthButtonBar from "./AuthButtonBar";
 
 const Startup = () => {
-  const { auth, setIsAuth } = useContext(AppContext);
+  const { auth, setUser } = useContext(AppContext);
   const [status, setStatus] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const email = useInput((value) => {
@@ -25,6 +25,12 @@ const Startup = () => {
   const pass = useInput((value) => value.trim().length > 7);
 
   console.log(auth);
+
+  useEffect(() => {
+    return () => {
+      setStatus(null);
+    };
+  }, []);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -37,7 +43,7 @@ const Startup = () => {
         signInWithEmailAndPassword(auth, emailVal, passVal)
           .then((cred) => {
             console.log(cred.user);
-            setIsAuth(true);
+            setUser(cred.user);
             setStatus("Success!");
           })
           .catch((e) => {
@@ -51,7 +57,7 @@ const Startup = () => {
         createUserWithEmailAndPassword(auth, emailVal, passVal)
           .then((cred) => {
             console.log(cred.user);
-            setIsAuth(true);
+            setUser(cred.user);
             setStatus("Success!");
           })
           .catch((e) => {

@@ -30,7 +30,7 @@ const AppWithContext = () => {
     setChoresList([]);
   }, [context.houseName])
 
-  if (context.isAuth) {
+  if (context.user) {
     return (
       <div
         className="swipe-div"
