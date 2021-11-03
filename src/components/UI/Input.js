@@ -48,6 +48,7 @@ const Input = (props) => {
           placeholder={props.placeholder}
           value={props.value}
           type={props.type}
+          autoComplete="no"
         />
       {props.description && <small>{props.description}</small>}
     </div>

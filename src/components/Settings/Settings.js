@@ -31,8 +31,8 @@ const Settings = (props) => {
           <option value="America/New_York">Eastern Time</option>
         </select>
       </div>
-      <Button style={{ height: "45px" }} onClick={context.clearHouse}>
-        Change House
+      <Button style={{ height: "45px" }} onClick={context.logout}>
+        Logout
       </Button>
     </Modal>
   );

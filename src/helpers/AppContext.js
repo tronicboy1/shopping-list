@@ -8,7 +8,13 @@ const AppContext = React.createContext({
   uri: "",
   clearHouse: () => {},
   timeZone: "",
-  setTimeZone: (timezone) => {}
+  setTimeZone: (timezone) => {},
+  user: {},
+  setUser: (user) => {},
+  firebase: {},
+  auth: {},
+  isAuth: false,
+  setIsAuth: (bool) => {}
 });
 
 export default AppContext;
