@@ -29,7 +29,7 @@ const Startup = () => {
       setStatus(null);
       setAppMode("SHOPPING");
     };
-  }, []);
+  }, [setAppMode]);
 
   const submitHandler = (e) => {
     e.preventDefault();

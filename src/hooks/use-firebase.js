@@ -30,12 +30,12 @@ const useFirebase = (userId, path = "", unpacker) => {
   };
 
   const writeData = (subpath, item) => {
-    setHandler(`${userId}/${path}/${subpath}`, item)
+    setHandler(`${userId}/${path}/${subpath}`, item);
   };
 
   const addData = (newItem) => {
     const db = getDatabase();
-    push(ref(db, `${userId}/${path}`), newItem)
+    push(ref(db, `${userId}/${path}`), newItem);
   };
 
   const remove = (name) => {
