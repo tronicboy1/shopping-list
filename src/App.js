@@ -1,17 +1,14 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import "./App.css";
 import Startup from "./components/Startup/Startup";
 import AppContext from "./helpers/AppContext";
-import ContextProvider from "./helpers/ContextProvider";
 import List from "./components/ShoppingList/List";
 import Chores from "./components/Chores/Chores";
 import SettingsButton from "./components/Settings/SettingsButton";
 import useSwipe from "./hooks/use-swipe";
 
-const AppWithContext = () => {
+const App = () => {
   const context = useContext(AppContext);
-  const [shoppingList, setShoppingList] = useState([]);
-  const [choresList, setChoresList] = useState([]);
   const swipeHandler = useSwipe(
     () => {
       if (context.appMode === "SHOPPING") {
@@ -24,53 +21,35 @@ const AppWithContext = () => {
       }
     }
   );
-
-  useEffect(() => {
-    setShoppingList([]);
-    setChoresList([]);
-  }, [context.houseName])
+  const [shoppingList, setShoppingList] = useState([]);
+  const listStyle = {
+    transform: `translateX(${
+      swipeHandler.xChange < 0 ? swipeHandler.xChange : 0
+    }px)`,
+  };
+  const choresStyle = {
+    transform: `translateX(${
+      swipeHandler.xChange > 0 ? swipeHandler.xChange : 0
+    }px)`,
+  };
 
   if (context.user) {
     return (
-      <div
-        className="swipe-div"
-        onTouchStart={swipeHandler.handleTouchStart}
-        onTouchMove={swipeHandler.handelTouchMove}
-        onTouchEnd={swipeHandler.handleTouchEnd}
-      >
-        {context.appMode === "SHOPPING" && (
-          <List
-            style={{
-              transform: `translateX(${swipeHandler.xChange < 0 ? swipeHandler.xChange : 0}px)`,
-            }}
-            shoppingList={shoppingList}
-            setShoppingList={setShoppingList}
-          />
-        )}
-        {context.appMode === "CHORES" && (
-          <Chores
-            style={{
-              transform: `translateX(${swipeHandler.xChange > 0 ? swipeHandler.xChange : 0}px)`,
-            }}
-            choresList={choresList}
-            setChoresList={setChoresList}
-          />
-        )}
-        <SettingsButton />
+      <div className="App">
+        <div
+          className="swipe-div"
+          onTouchStart={swipeHandler.handleTouchStart}
+          onTouchMove={swipeHandler.handelTouchMove}
+          onTouchEnd={swipeHandler.handleTouchEnd}
+        >
+          {context.appMode === "SHOPPING" && <List shoppingList={shoppingList} style={listStyle} />}
+          {context.appMode === "CHORES" && <Chores style={choresStyle} />}
+          <SettingsButton />
+        </div>
       </div>
     );
   }
   return <Startup />;
 };
-
-function App() {
-  return (
-    <ContextProvider>
-      <div className="App">
-        <AppWithContext />
-      </div>
-    </ContextProvider>
-  );
-}
 
 export default App;

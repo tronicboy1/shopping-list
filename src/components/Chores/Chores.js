@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import AppContext from "../../helpers/AppContext";
+import useFirebase from "../../hooks/use-firebase";
 import useDoubleClick from "../../hooks/use-double-click";
 import useHttp from "../../hooks/use-http";
 
@@ -10,74 +11,85 @@ import Card from "../UI/Card";
 import AddChore from "./AddChore";
 import ChoresLogic from "./ChoresLogic";
 
+
 const defaultHttpConfig = { uri: null, method: null, body: null };
 
 const Chores = (props) => {
   const context = useContext(AppContext);
-  const { choresList, setChoresList } = props;
+  const { setChoresList } = props;
+  const { list: choresList, data } = useFirebase(
+    "NewHouse",
+    "CHORES",
+    (name, data) => ({
+      id: name,
+      title: data[name].title,
+      lastCompleted: new Date(data[name].lastCompleted),
+    })
+  );
+  console.log(data);
   const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
-  const { loading, errors, data } = useHttp(httpConfig);
+  const { loading, errors } = useHttp(httpConfig);
   const [deleteMode, setDeleteMode] = useState(false);
   const doubleClickHandler = useCallback(
     (id) => {
-      if (deleteMode) {
-        delete data[id];
-        setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
-        setChoresList((prev) => prev.filter((chore) => chore.id !== id));
-        setDeleteMode(false);
-      } else {
-        data[id].lastCompleted = new Date().toJSON();
-        setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
-        setChoresList((prev) =>
-          prev.map((item) => {
-            if (item.id === id) {
-              item.lastCompleted = new Date();
-              return item;
-            }
-            return item;
-          })
-        );
-      }
+      // if (deleteMode) {
+      //   delete data[id];
+      //   setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
+      //   setChoresList((prev) => prev.filter((chore) => chore.id !== id));
+      //   setDeleteMode(false);
+      // } else {
+      //   data[id].lastCompleted = new Date().toJSON();
+      //   setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
+      //   setChoresList((prev) =>
+      //     prev.map((item) => {
+      //       if (item.id === id) {
+      //         item.lastCompleted = new Date();
+      //         return item;
+      //       }
+      //       return item;
+      //     })
+      //   );
+      // }
     },
     [data, deleteMode, setChoresList]
   );
   const onTileClicked = useDoubleClick(doubleClickHandler);
 
   //set uri to chores
-  useEffect(() => {
-    if (context.uri) {
-      setHttpConfig((prev) => ({
-        ...prev,
-        uri: `${context.uri}CHORES.json`,
-      }));
-    }
-  }, [context.uri]);
+  // useEffect(() => {
+  //   if (context.uri) {
+  //     setHttpConfig((prev) => ({
+  //       ...prev,
+  //       uri: `${context.uri}CHORES.json`,
+  //     }));
+  //   }
+  // }, [context.uri]);
 
-  //load chores from firebase
-  useEffect(() => {
-    if (data) {
-      const newChores = [];
-      for (const name in data) {
-        newChores.push({
-          id: name,
-          title: data[name].title,
-          lastCompleted: new Date(data[name].lastCompleted),
-        });
-        setChoresList(newChores);
-      }
-    }
-  }, [data, setChoresList]);
+  // //load chores from firebase
+  // useEffect(() => {
+  //   if (data) {
+  //     const newChores = [];
+  //     for (const name in data) {
+  //       newChores.push({
+  //         id: name,
+  //         title: data[name].title,
+  //         lastCompleted: new Date(data[name].lastCompleted),
+  //       });
+  //       setChoresList(newChores);
+  //     }
+  //   }
+  // }, [data, setChoresList]);
 
   const addChore = (title, lastCompleted) => {
-    setChoresList((prev) => [
-      ...prev,
-      { id: "PENDING", title: title, lastCompleted: lastCompleted },
-    ]);
-    setHttpConfig((prev) => ({
-      ...prev,
-      method: "POST",
-      body: { title: title, lastCompleted: lastCompleted.toJSON() },
-    }));
+    // setChoresList((prev) => [
+    //   ...prev,
+    //   { id: "PENDING", title: title, lastCompleted: lastCompleted },
+    // ]);
+    // setHttpConfig((prev) => ({
+    //   ...prev,
+    //   method: "POST",
+    //   body: { title: title, lastCompleted: lastCompleted.toJSON() },
+    // }));
   };
 
   const toggleDeleteMode = () => {

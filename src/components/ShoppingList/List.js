@@ -1,7 +1,7 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
+import React, { useContext, useCallback } from "react";
 import AppContext from "../../helpers/AppContext";
-import useHttp from "../../hooks/use-http";
 import useDoubleClick from "../../hooks/use-double-click";
+import useFirebase from "../../hooks/use-firebase";
 
 import styles from "./List.module.css";
 
@@ -10,62 +10,32 @@ import Button from "../UI/Button";
 import AddItem from "./AddItem";
 import ListLogic from "./ListLogic";
 
-const defaultHttpConfig = { uri: null, method: null, body: null };
-
 const List = (props) => {
-  const context = useContext(AppContext);
-  const { setShoppingList } = props;
-  const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
-  const { loading, errors, data } = useHttp(httpConfig);
+  const { user } = useContext(AppContext);
+  const { list, loading, errors, addData, remove, removeAll } = useFirebase(
+    user.uid,
+    "SHOPPING",
+    (name, data) => ({ id: name, item: data[name]["item"] })
+  );
   //handle double click
   const removeClicked = useCallback(
     (name) => {
-      setShoppingList((prev) => {
-        return prev.filter((item) => item.id !== name);
-      });
-      delete data[name];
-      setHttpConfig((prev) => ({
-        ...prev,
-        method: "PUT",
-        body: data,
-      }));
+      remove(name);
     },
-    [data, setShoppingList]
+    [remove]
   );
 
   const onTileClicked = useDoubleClick(removeClicked);
 
   const deleteAll = () => {
-    setShoppingList([]);
-    fetch(httpConfig.uri, { method: "DELETE" });
+    removeAll();
   };
 
   const onDeleteButtonClicked = useDoubleClick(deleteAll);
 
-  //make changes to states here depending on data content
-  useEffect(() => {
-    if (data) {
-      const newList = [];
-
-      for (const name in data) {
-        newList.push({ id: name, item: data[name].item });
-      }
-
-      setShoppingList(newList);
-    }
-  }, [setShoppingList, data]);
-
-  //set uri
-  useEffect(() => {
-    if (context.uri) {
-      setHttpConfig((prev) => ({ ...prev, uri: `${context.uri}SHOPPING.json` }));
-    }
-  }, [context.uri]);
-
   const addItem = (itemName) => {
-    setShoppingList((prev) => [...prev, { id: "PENDING", item: itemName }]);
-    setHttpConfig((prev) => {
-      return { ...prev, method: "POST", body: { item: itemName } };
+    addData({
+      item: itemName,
     });
   };
 
@@ -75,7 +45,7 @@ const List = (props) => {
       <Card className="shopping-list">
         {errors && <p>{errors}</p>}
         <ListLogic
-          list={props.shoppingList}
+          list={list}
           removeClicked={onTileClicked}
           loading={loading}
           styles={styles}
