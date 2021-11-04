@@ -12,8 +12,8 @@ import ChoresLogic from "./ChoresLogic";
 
 const Chores = (props) => {
   const { user } = useContext(AppContext);
-  const { list, errors, data, loading, remove, writeData } = useFirebase(
-    "NewHouse",
+  const { list, errors, data, loading, remove, writeData, addData } = useFirebase(
+    user.uid,
     "CHORES",
     (name, data) => ({
       id: name,
@@ -31,7 +31,12 @@ const Chores = (props) => {
   }, [data, deleteMode, remove, writeData]);
   const onTileClicked = useDoubleClick(doubleClickHandler);
 
-  const addChore = (title, lastCompleted) => {};
+  const addChore = (title, lastCompleted) => {
+    addData({
+      title,
+      lastCompleted: lastCompleted.toJSON()
+    })
+  };
 
   const toggleDeleteMode = () => {
     if (list.length > 0) {
