@@ -7,7 +7,6 @@ const useFirebase = (userId, path = "", unpacker) => {
   const [errors, setError] = useState(null);
 
   useEffect(() => {
-    console.log("effect");
     setLoading(true);
     const database = getDatabase();
     const hookRef = ref(database, `${userId}/${path}`);

@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import "./App.css";
 import Startup from "./components/Startup/Startup";
 import AppContext from "./helpers/AppContext";
@@ -21,7 +21,6 @@ const App = () => {
       }
     }
   );
-  const [shoppingList, setShoppingList] = useState([]);
   const listStyle = {
     transform: `translateX(${
       swipeHandler.xChange < 0 ? swipeHandler.xChange : 0
@@ -42,7 +41,7 @@ const App = () => {
           onTouchMove={swipeHandler.handelTouchMove}
           onTouchEnd={swipeHandler.handleTouchEnd}
         >
-          {context.appMode === "SHOPPING" && <List shoppingList={shoppingList} style={listStyle} />}
+          {context.appMode === "SHOPPING" && <List style={listStyle} />}
           {context.appMode === "CHORES" && <Chores style={choresStyle} />}
           <SettingsButton />
         </div>

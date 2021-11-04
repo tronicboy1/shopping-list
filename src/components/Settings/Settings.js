@@ -17,7 +17,7 @@ const Settings = (props) => {
     <Modal onClick={props.toggleSettings}>
       <h1 style={{ marginTop: "0" }}>Settings</h1>
       <p>
-        Your house name: <strong>{context.houseName}</strong>
+        Account: <strong>{context.user.email}</strong>
       </p>
       <div className={styles.timezone}>
         <label htmlFor="timezone">Timezone</label>

@@ -24,8 +24,6 @@ const Startup = () => {
   });
   const pass = useInput((value) => value.trim().length > 7);
 
-  console.log(auth);
-
   useEffect(() => {
     return () => {
       setStatus(null);
