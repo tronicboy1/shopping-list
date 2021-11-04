@@ -1,8 +1,7 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import AppContext from "../../helpers/AppContext";
 import useFirebase from "../../hooks/use-firebase";
 import useDoubleClick from "../../hooks/use-double-click";
-import useHttp from "../../hooks/use-http";
 
 import styles from "./Chores.module.css";
 
@@ -11,13 +10,9 @@ import Card from "../UI/Card";
 import AddChore from "./AddChore";
 import ChoresLogic from "./ChoresLogic";
 
-
-const defaultHttpConfig = { uri: null, method: null, body: null };
-
 const Chores = (props) => {
-  const context = useContext(AppContext);
-  const { setChoresList } = props;
-  const { list: choresList, data } = useFirebase(
+  const { user } = useContext(AppContext);
+  const { list, errors, data, loading, remove, writeData } = useFirebase(
     "NewHouse",
     "CHORES",
     (name, data) => ({
@@ -26,74 +21,20 @@ const Chores = (props) => {
       lastCompleted: new Date(data[name].lastCompleted),
     })
   );
-  console.log(data);
-  const [httpConfig, setHttpConfig] = useState(defaultHttpConfig);
-  const { loading, errors } = useHttp(httpConfig);
   const [deleteMode, setDeleteMode] = useState(false);
-  const doubleClickHandler = useCallback(
-    (id) => {
-      // if (deleteMode) {
-      //   delete data[id];
-      //   setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
-      //   setChoresList((prev) => prev.filter((chore) => chore.id !== id));
-      //   setDeleteMode(false);
-      // } else {
-      //   data[id].lastCompleted = new Date().toJSON();
-      //   setHttpConfig((prev) => ({ ...prev, body: data, method: "PUT" }));
-      //   setChoresList((prev) =>
-      //     prev.map((item) => {
-      //       if (item.id === id) {
-      //         item.lastCompleted = new Date();
-      //         return item;
-      //       }
-      //       return item;
-      //     })
-      //   );
-      // }
-    },
-    [data, deleteMode, setChoresList]
-  );
+  const doubleClickHandler = useCallback((id) => {
+    if (deleteMode) {
+      remove(id);
+    } else {
+      writeData(id, { ...data[id], lastCompleted: new Date().toJSON() });
+    }
+  }, [data, deleteMode, remove, writeData]);
   const onTileClicked = useDoubleClick(doubleClickHandler);
 
-  //set uri to chores
-  // useEffect(() => {
-  //   if (context.uri) {
-  //     setHttpConfig((prev) => ({
-  //       ...prev,
-  //       uri: `${context.uri}CHORES.json`,
-  //     }));
-  //   }
-  // }, [context.uri]);
-
-  // //load chores from firebase
-  // useEffect(() => {
-  //   if (data) {
-  //     const newChores = [];
-  //     for (const name in data) {
-  //       newChores.push({
-  //         id: name,
-  //         title: data[name].title,
-  //         lastCompleted: new Date(data[name].lastCompleted),
-  //       });
-  //       setChoresList(newChores);
-  //     }
-  //   }
-  // }, [data, setChoresList]);
-
-  const addChore = (title, lastCompleted) => {
-    // setChoresList((prev) => [
-    //   ...prev,
-    //   { id: "PENDING", title: title, lastCompleted: lastCompleted },
-    // ]);
-    // setHttpConfig((prev) => ({
-    //   ...prev,
-    //   method: "POST",
-    //   body: { title: title, lastCompleted: lastCompleted.toJSON() },
-    // }));
-  };
+  const addChore = (title, lastCompleted) => {};
 
   const toggleDeleteMode = () => {
-    if (choresList.length > 0) {
+    if (list.length > 0) {
       setDeleteMode((prev) => !prev);
     }
   };
@@ -116,17 +57,12 @@ const Chores = (props) => {
             Double click to delete
           </Card>
         )}
-        <ChoresLogic
-          list={choresList}
-          loading={loading}
-          onClick={onTileClicked}
-          context={context}
-        />
+        <ChoresLogic list={list} loading={loading} onClick={onTileClicked} />
       </Card>
       <Card className="no-text-select">
         <Button
           onClick={toggleDeleteMode}
-          disabled={!choresList.length > 0}
+          disabled={!list.length > 0}
           style={{
             margin: "0",
             height: "50px",

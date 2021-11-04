@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useContext } from "react";
+import AppContext from "../../helpers/AppContext";
 
 import ListItem from "../UI/ListItem";
 
@@ -13,6 +14,7 @@ const weekOld = (date) => {
 };
 
 const ChoresLogic = (props) => {
+  const { timeZone } = useContext(AppContext);
   const choresSorted = props.list.sort((a, b) => {
     return a.lastCompleted - b.lastCompleted;
   });
@@ -34,7 +36,7 @@ const ChoresLogic = (props) => {
           <p>{chore.title}</p>
           <small>
             {chore.lastCompleted.toLocaleDateString({
-              timeZone: props.context.timeZone,
+              timeZone,
             })}
           </small>
         </ListItem>
