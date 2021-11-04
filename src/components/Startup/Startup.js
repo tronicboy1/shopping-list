@@ -14,7 +14,7 @@ import AppContext from "../../helpers/AppContext";
 import AuthButtonBar from "./AuthButtonBar";
 
 const Startup = () => {
-  const { auth, setUser } = useContext(AppContext);
+  const { auth, setUser, setAppMode } = useContext(AppContext);
   const [status, setStatus] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const email = useInput((value) => {
@@ -27,6 +27,7 @@ const Startup = () => {
   useEffect(() => {
     return () => {
       setStatus(null);
+      setAppMode("SHOPPING");
     };
   }, []);
 
@@ -40,7 +41,6 @@ const Startup = () => {
       if (isLogin) {
         signInWithEmailAndPassword(auth, emailVal, passVal)
           .then((cred) => {
-            console.log(cred.user);
             setUser(cred.user);
             setStatus("Success!");
           })
