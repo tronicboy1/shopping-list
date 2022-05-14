@@ -6,6 +6,7 @@
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "module": "esnext",
+    "sourceMap": true,
     "moduleResolution": "node",
     "jsx": "react",
     "incremental": true,

@@ -15,6 +15,7 @@ export const config: Config = {
     },
     {
       type: "dist-custom-elements",
+      dir: "./dist/components"
     },
     // {
     //   type: 'docs-readme',

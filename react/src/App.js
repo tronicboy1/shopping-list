@@ -6,6 +6,7 @@ import List from "./components/ShoppingList/List";
 import Chores from "./components/Chores/Chores";
 import SettingsButton from "./components/Settings/SettingsButton";
 import useSwipe from "./hooks/use-swipe";
+import { MyComponent } from "./components/stencil"
 
 const App = () => {
   const context = useContext(AppContext);
@@ -45,10 +46,11 @@ const App = () => {
           {context.appMode === "CHORES" && <Chores style={choresStyle} />}
           <SettingsButton />
         </div>
+
       </div>
     );
   }
-  return <Startup />;
+  return <><Startup /><MyComponent first="Stencil" last="'Don't call me a framework' JS" /></>;
 };
 
 export default App;
