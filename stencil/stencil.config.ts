@@ -1,14 +1,20 @@
-import { Config } from '@stencil/core';
+import { Config } from "@stencil/core";
+import { reactOutputTarget } from "@stencil/react-output-target";
 
 export const config: Config = {
-  namespace: 'stencil',
+  namespace: "stencil",
   outputTargets: [
+    reactOutputTarget({
+      componentCorePackage: "stencil",
+      proxiesFile: "../react/src/components/stencil/index.ts",
+      includeDefineCustomElements: true,
+    }),
     {
-      type: 'dist',
-      esmLoaderPath: '../loader',
+      type: "dist",
+      esmLoaderPath: "../loader",
     },
     {
-      type: 'dist-custom-elements',
+      type: "dist-custom-elements",
     },
     // {
     //   type: 'docs-readme',
