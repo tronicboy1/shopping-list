@@ -4,7 +4,6 @@ import useInput from "../../hooks/use-input";
 
 import styles from "./AddItem.module.css";
 
-import Card from "../UI/Card";
 import Input from "../UI/Input";
 
 const AddItem = (props) => {
@@ -22,7 +21,7 @@ const AddItem = (props) => {
     }
   };
   return (
-    <Card>
+    <base-card>
       <form onSubmit={addItemHandler} className={styles["new-item__input"]}>
         <Input
           style={{ marginTop: "0", marginBottom: "0", width: "100%" }}
@@ -34,7 +33,7 @@ const AddItem = (props) => {
           buttonDisabled={!newItem.isValid || props.loading}
         />
       </form>
-    </Card>
+    </base-card>
   );
 };
 

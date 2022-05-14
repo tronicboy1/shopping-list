@@ -6,7 +6,6 @@ import useDoubleClick from "../../hooks/use-double-click";
 import styles from "./Chores.module.css";
 
 import Button from "../UI/Button";
-import Card from "../UI/Card";
 import AddChore from "./AddChore";
 import ChoresLogic from "./ChoresLogic";
 
@@ -47,10 +46,10 @@ const Chores = (props) => {
   return (
     <div style={props.style} className={styles["chores-list"]}>
       <AddChore addChore={addChore} />
-      <Card className={deleteMode ? "delete-mode" : "chores-card"}>
+      <base-card className={deleteMode ? "delete-mode" : "chores-card"}>
         {errors && <p>{errors}</p>}
         {deleteMode && (
-          <Card
+          <base-card
             style={{
               textAlign: "center",
               color: "black",
@@ -60,11 +59,11 @@ const Chores = (props) => {
             }}
           >
             Double click to delete
-          </Card>
+          </base-card>
         )}
         <ChoresLogic list={list} loading={loading} onClick={onTileClicked} />
-      </Card>
-      <Card className="no-text-select">
+      </base-card>
+      <base-card className="no-text-select">
         <Button
           onClick={toggleDeleteMode}
           disabled={!list.length > 0}
@@ -77,7 +76,7 @@ const Chores = (props) => {
         >
           Delete Mode
         </Button>
-      </Card>
+      </base-card>
     </div>
   );
 };

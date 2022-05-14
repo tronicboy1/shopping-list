@@ -7,7 +7,6 @@ import useInput from "../../hooks/use-input";
 
 //import styles from "./Startup.module.css";
 
-import Card from "../UI/Card";
 import Input from "../UI/Input";
 import Button from "../UI/Button";
 import AppContext from "../../helpers/AppContext";
@@ -71,15 +70,15 @@ const Startup = () => {
 
   return (
     <>
-      <Card>
+      <base-card>
         <h1 style={{ marginBottom: "0.25rem", textAlign: "center" }}>
           The House App
         </h1>
         <p style={{ marginTop: "0.25rem", textAlign: "center" }}>
           Login to get started!
         </p>
-      </Card>
-      <Card>
+      </base-card>
+      <base-card>
         <AuthButtonBar isLogin={isLogin} setIsLogin={setIsLogin} />
 
         <form onSubmit={submitHandler}>
@@ -114,7 +113,7 @@ const Startup = () => {
             {status ? status : isLogin ? "Login" : "Register"}
           </Button>
         </form>
-      </Card>
+      </base-card>
     </>
   );
 };

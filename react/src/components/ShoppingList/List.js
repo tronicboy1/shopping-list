@@ -5,7 +5,6 @@ import useFirebase from "../../hooks/use-firebase";
 
 import styles from "./List.module.css";
 
-import Card from "../UI/Card";
 import Button from "../UI/Button";
 import AddItem from "./AddItem";
 import ListLogic from "./ListLogic";
@@ -42,7 +41,7 @@ const List = (props) => {
   return (
     <div style={props.style} className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
-      <Card className="shopping-list">
+      <base-card className="shopping-list">
         {errors && <p>{errors}</p>}
         <ListLogic
           list={list}
@@ -50,15 +49,15 @@ const List = (props) => {
           loading={loading}
           styles={styles}
         />
-      </Card>
-      <Card className="no-text-select">
+      </base-card>
+      <base-card className="no-text-select">
         <Button
           style={{ height: "50px", marginTop: "0" }}
           onClick={onDeleteButtonClicked.bind(null, "delete")}
         >
           Clear All
         </Button>
-      </Card>
+      </base-card>
     </div>
   );
 };

@@ -4,7 +4,6 @@ import useInput from "../../hooks/use-input";
 import styles from "./AddChore.module.css";
 
 import Button from "../UI/Button";
-import Card from "../UI/Card";
 import Input from "../UI/Input";
 
 const AddChore = (props) => {
@@ -30,7 +29,7 @@ const AddChore = (props) => {
   const formValid = name.isValid && inputDate.isValid;
 
   return (
-    <Card>
+    <base-card>
       <form className={styles["form-control"]} onSubmit={submitHandler}>
         <div className={styles["input-box"]}>
           <Input
@@ -55,7 +54,7 @@ const AddChore = (props) => {
           </Button>
         </div>
       </form>
-    </Card>
+    </base-card>
   );
 };
 
