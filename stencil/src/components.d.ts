@@ -6,8 +6,16 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
+    interface BaseButton {
+        "borderRadius": string;
+        "class": string;
+        "customStyle": { [key: string]: string };
+        "disabled": boolean;
+        "handleClick": EventListener;
+        "type": string;
+    }
     interface BaseCard {
-        "className": string;
+        "class": string;
     }
     interface MyComponent {
         /**
@@ -25,6 +33,12 @@ export namespace Components {
     }
 }
 declare global {
+    interface HTMLBaseButtonElement extends Components.BaseButton, HTMLStencilElement {
+    }
+    var HTMLBaseButtonElement: {
+        prototype: HTMLBaseButtonElement;
+        new (): HTMLBaseButtonElement;
+    };
     interface HTMLBaseCardElement extends Components.BaseCard, HTMLStencilElement {
     }
     var HTMLBaseCardElement: {
@@ -38,13 +52,22 @@ declare global {
         new (): HTMLMyComponentElement;
     };
     interface HTMLElementTagNameMap {
+        "base-button": HTMLBaseButtonElement;
         "base-card": HTMLBaseCardElement;
         "my-component": HTMLMyComponentElement;
     }
 }
 declare namespace LocalJSX {
+    interface BaseButton {
+        "borderRadius"?: string;
+        "class"?: string;
+        "customStyle"?: { [key: string]: string };
+        "disabled"?: boolean;
+        "handleClick"?: EventListener;
+        "type"?: string;
+    }
     interface BaseCard {
-        "className"?: string;
+        "class"?: string;
     }
     interface MyComponent {
         /**
@@ -61,6 +84,7 @@ declare namespace LocalJSX {
         "middle"?: string;
     }
     interface IntrinsicElements {
+        "base-button": BaseButton;
         "base-card": BaseCard;
         "my-component": MyComponent;
     }
@@ -69,6 +93,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "base-button": LocalJSX.BaseButton & JSXBase.HTMLAttributes<HTMLBaseButtonElement>;
             "base-card": LocalJSX.BaseCard & JSXBase.HTMLAttributes<HTMLBaseCardElement>;
             "my-component": LocalJSX.MyComponent & JSXBase.HTMLAttributes<HTMLMyComponentElement>;
         }

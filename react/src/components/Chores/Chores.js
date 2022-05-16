@@ -46,7 +46,7 @@ const Chores = (props) => {
   return (
     <div style={props.style} className={styles["chores-list"]}>
       <AddChore addChore={addChore} />
-      <base-card className={deleteMode ? "delete-mode" : "chores-card"}>
+      <base-card class={deleteMode ? "delete-mode" : "chores-card"}>
         {errors && <p>{errors}</p>}
         {deleteMode && (
           <base-card
@@ -63,7 +63,7 @@ const Chores = (props) => {
         )}
         <ChoresLogic list={list} loading={loading} onClick={onTileClicked} />
       </base-card>
-      <base-card className="no-text-select">
+      <base-card class="no-text-select">
         <Button
           onClick={toggleDeleteMode}
           disabled={!list.length > 0}

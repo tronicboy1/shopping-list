@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+button {
+  --primary-color: rgb(10, 132, 255);
+  --primary-color-hover: rgb(55, 155, 255);
+  --secondary-color: rgb(142, 142, 147);
+  height: 35px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  margin-top: 0.5rem;
+  background: var(--primary-color);
+  border: 1px var(--primary-color) solid;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  transition: 0.2s;
+  font-size: large;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+
+
+button:hover {
+  background: var(--primary-color-hover);
+  border-color: var(--primary-color-hover);
+}
+
+button:disabled {
+  background: var(--secondary-color);
+  border-color: var(--secondary-color);
+  cursor: default;
+}
+
+button.right {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+button img {
+  width: auto;
+  height: 70%;
+}

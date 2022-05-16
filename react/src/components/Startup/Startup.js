@@ -32,6 +32,7 @@ const Startup = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
+    console.log("submitted")
 
     if (email.isValid && pass.isValid) {
       setStatus("Loading...");
@@ -109,9 +110,9 @@ const Startup = () => {
               "Must not include spaces or special characters"
             }
           />
-          <Button disabled={!email.isValid || !pass.isValid}>
+          <button is="base-button" disabled={!email.isValid || !pass.isValid} type="submit">
             {status ? status : isLogin ? "Login" : "Register"}
-          </Button>
+          </button>
         </form>
       </base-card>
     </>

@@ -3,7 +3,7 @@ import useInput from "../../hooks/use-input";
 
 import styles from "./AddChore.module.css";
 
-import Button from "../UI/Button";
+import { BaseButton } from "../stencil"
 import Input from "../UI/Input";
 
 const AddChore = (props) => {
@@ -49,9 +49,9 @@ const AddChore = (props) => {
           />
         </div>
         <div className={styles["button-box"]}>
-          <Button style={{ margin: "0" }} disabled={!formValid} type="submit">
+          <base-button style={{ margin: "0" }} disabled={!formValid} type="submit">
             Add
-          </Button>
+          </base-button>
         </div>
       </form>
     </base-card>

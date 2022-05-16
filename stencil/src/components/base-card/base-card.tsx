@@ -7,14 +7,14 @@ import { Component, h, Prop } from "@stencil/core";
 })
 export class BaseCard {
   @Prop()
-  className: string;
+  class: string;
 
   hostData() {
-    return { className: this.className };
+    return { class: this.class };
   }
   render() {
     return (
-      <div class={`card ${this.className}`}>
+      <div class={`card ${this.class}`}>
         <slot></slot>
       </div>
     );

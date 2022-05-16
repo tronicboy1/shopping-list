@@ -41,7 +41,7 @@ const List = (props) => {
   return (
     <div style={props.style} className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
-      <base-card className="shopping-list">
+      <base-card class="shopping-list">
         {errors && <p>{errors}</p>}
         <ListLogic
           list={list}
@@ -50,7 +50,7 @@ const List = (props) => {
           styles={styles}
         />
       </base-card>
-      <base-card className="no-text-select">
+      <base-card class="no-text-select">
         <Button
           style={{ height: "50px", marginTop: "0" }}
           onClick={onDeleteButtonClicked.bind(null, "delete")}
