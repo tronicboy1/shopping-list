@@ -10,6 +10,10 @@
     "jsx": "react",
     "incremental": true,
     "outDir": "./dist/",
+    "baseUrl": "./",
+    "paths": {
+      "@web-components/*": ["src/web-components/*"]
+    },
     "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
