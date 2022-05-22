@@ -5,8 +5,8 @@
   :host {
     --primary-color: white;
     --secondary-color: rgb(185, 185, 185);
-    --highlight-color: rgb(84, 84, 255);
-    --highlight-hover: rgb(100, 100, 255);
+    --highlight-color: rgb(0, 76, 255);
+    --highlight-hover: rgb(35, 101, 255);
     width: 90%;
     max-width: 500px;
     margin: 1rem auto;
@@ -26,7 +26,7 @@
   }
 
   :host([dark]) {
-    --dark-color: rgb(32, 32, 32);
+    --dark-color: rgb(83, 83, 83);
     background-color: var(--dark-color);
     border-color: var(--dark-color);
     color: white;
@@ -73,6 +73,7 @@
     flex: 0 1 45%;
     cursor: pointer;
   }
+
   button[active] {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
@@ -85,17 +86,25 @@
     background-color: var(--highlight-hover);
     border-color: var(--highlight-hover);
   }
+  .button-left {
+    border-radius: 4px 0 0 4px;
+    flex: 1 0;
+  }
+  .button-right {
+    border-radius: 0 4px 4px 0;
+    flex: 1 0;
+  }
 
-  form {
+  .login-form {
     display: flex;
     flex-direction: column;
   }
 
-  form[loading] {
+  .login-form[loading] {
     display: none;
   }
 
-  form button {
+  .login-form button {
     padding: 0.5rem 0.75rem;
   }
 
@@ -116,10 +125,10 @@
 
 <h1>Shopping List</h1>
 <div class="button-group">
-  <button id="login-button" type="button">Login</button>
-  <button id="register-button" type="button">Register</button>
+  <button class="button-left" id="login-button" type="button">Login</button>
+  <button class="button-right" id="register-button" type="button">Register</button>
 </div>
-<form></form>
+<form class="login-form"></form>
 
 <template id="login">
   <p id="errors"></p>
