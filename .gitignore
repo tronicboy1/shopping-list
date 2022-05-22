@@ -25,3 +25,6 @@ yarn-error.log*
 .firebase/hosting.YnVpbGQ.cache
 *.cache
 .firebase/hosting.YnVpbGQ.cache
+
+dist
+*.pem
