@@ -3,9 +3,48 @@
     box-sizing: border-box;
   }
 
+  :host {
+    display: none;
+  }
+
+  :host([show]) {
+    display: block;
+  }
+
+  .card {
+    --primary-color: white;
+    --secondary-color: rgb(185, 185, 185);
+    --highlight-color: rgb(0, 76, 255);
+    --highlight-hover: rgb(35, 101, 255);
+    width: 90%;
+    max-width: 500px;
+    margin: 1rem auto;
+    background-color: white;
+    border: 1px solid white;
+    border-radius: 8px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.168);
+    color: black;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+  }
+
+  .card[show] {
+    display: flex;
+  }
+
+  .card[dark] {
+    --dark-color: rgb(83, 83, 83);
+    background-color: var(--dark-color);
+    border-color: var(--dark-color);
+    color: white;
+  }
+
   ul {
     list-style-type: none;
     padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column-reverse;
   }
@@ -35,6 +74,9 @@
     cursor: pointer;
   }
 </style>
-<ul>
-  <p>No items.</p>
-</ul>
+
+<div class="card">
+  <ul>
+    <p>No items.</p>
+  </ul>
+</div>

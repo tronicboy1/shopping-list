@@ -27,7 +27,6 @@ export default class ShoppingList extends HTMLElement {
   }
 
   connectedCallback() {
-    this.setAttribute("class", "card");
     const auth = getAuth(firebase);
     onAuthStateChanged(auth, auth => {
       if (auth) {
