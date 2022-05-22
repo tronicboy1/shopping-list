@@ -46,6 +46,9 @@ module.exports = {
     ],
   },
   resolve: {
+    alias: {
+      "@web-components": path.resolve(__dirname, "src/web-components/")
+    },
     extensions: [".tsx", ".ts", ".js"],
   },
   output: {
