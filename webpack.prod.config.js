@@ -52,7 +52,7 @@ module.exports = {
     extensions: [".tsx", ".ts", ".js"],
   },
   output: {
-    filename: "[name].js",
+    filename: "[name].[fullhash].js",
     path: path.resolve(__dirname, "dist"),
     clean: true,
   },
