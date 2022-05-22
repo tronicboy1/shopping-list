@@ -1,0 +1,40 @@
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  ul p {
+    text-align: center;
+    color: rgb(184, 184, 184);
+  }
+
+  li {
+    --item-color: rgb(215, 215, 215);
+    display: flex;
+    flex-direction: column;
+    border: 1px var(--item-color) solid;
+    background: var(--item-color);
+    border-radius: 8px;
+    color: black;
+    padding: 0.5rem 0 0.5rem 0;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    user-select: none;
+  }
+
+  li:hover {
+    cursor: pointer;
+  }
+</style>
+<ul>
+  <p>No items.</p>
+</ul>

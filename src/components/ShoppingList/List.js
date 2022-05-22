@@ -17,15 +17,6 @@ const List = (props) => {
     "SHOPPING",
     (name, data) => ({ id: name, item: data[name]["item"] })
   );
-  //handle double click
-  const removeClicked = useCallback(
-    (name) => {
-      remove(name);
-    },
-    [remove]
-  );
-
-  const onTileClicked = useDoubleClick(removeClicked);
 
   const deleteAll = () => {
     removeAll();
@@ -42,15 +33,7 @@ const List = (props) => {
   return (
     <div style={props.style} className={styles.container}>
       <AddItem addItem={addItem} loading={loading} />
-      <Card className="shopping-list">
-        {errors && <p>{errors}</p>}
-        <ListLogic
-          list={list}
-          removeClicked={onTileClicked}
-          loading={loading}
-          styles={styles}
-        />
-      </Card>
+      <shopping-list />
       <Card className="no-text-select">
         <Button
           style={{ height: "50px", marginTop: "0" }}
