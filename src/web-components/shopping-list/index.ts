@@ -25,20 +25,6 @@ export default class ShoppingList extends HTMLElement {
     this.shadowRoot.innerHTML = template;
     this.#list = this.shadowRoot.querySelector("ul")!;
   }
-  get clicked(): string | null {
-    return this.#clicked;
-  }
-  set clicked(value: string | null) {
-    if (value && this.#clicked === value) {
-      this.#deleteItem(value);
-      this.#clicked = null;
-    } else {
-      this.#clicked = value;
-      setTimeout(() => {
-        this.#clicked = null;
-      }, 400);
-    }
-  }
 
   connectedCallback() {
     this.setAttribute("class", "card");
@@ -69,7 +55,16 @@ export default class ShoppingList extends HTMLElement {
   #handleClick: EventListener = event => {
     const target = event.target;
     if (!(target instanceof HTMLLIElement)) return;
-    this.clicked = target.id;
+    const id = target.id;
+    if (this.#clicked === id) {
+      this.#deleteItem(id);
+      this.#clicked = null;
+    } else {
+      this.#clicked = id;
+      setTimeout(() => {
+        this.#clicked = null;
+      }, 400);
+    }
   };
   #deleteItem = (id: string) => {
     if (!(this.#data && this.#ref)) return;
