@@ -76,7 +76,6 @@ export default class ShoppingList extends HTMLElement {
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
     if (this.#clicked === id) {
-      console.log(id);
       id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id);
       this.#clicked = null;
     } else {
@@ -92,7 +91,6 @@ export default class ShoppingList extends HTMLElement {
     set(this.#ref, this.#data);
   };
   #deleteAllItems = () => {
-    console.log("delete all");
     set(this.#ref!, {});
   };
 
