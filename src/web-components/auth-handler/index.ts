@@ -1,5 +1,5 @@
 import template from "./template.html";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 
 interface FormData {
@@ -53,6 +53,10 @@ export default class AuthHandler extends HTMLElement {
     this.#loading = value;
     const button = this.shadowRoot?.getElementById("submit");
     button!.textContent = this.#loading ? "Loading..." : "Submit";
+  }
+
+  connectedCallback() {
+    onAuthStateChanged(auth, auth => (auth ? this.toggleAttribute("show", false) : this.toggleAttribute("show", true)));
   }
 
   disconnectedCallback() {

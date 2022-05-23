@@ -57,6 +57,7 @@ export default class ShoppingList extends HTMLElement {
             }
           } else {
             this.#list.innerHTML = "<p>No items.</p>";
+            this.toggleAttribute("show", false);
           }
         });
       } else {
