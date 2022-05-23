@@ -74,10 +74,65 @@
   li:hover {
     cursor: pointer;
   }
+
+  form {
+    display: flex;
+    flex-direction: row;
+  }
+
+  form input {
+    height: 40px;
+    border: 1px solid var(--secondary-color);
+    border-right: none;
+    border-radius: 4px 0 0 4px;
+    flex: 1;
+    font-size: 1.2rem;
+    padding-left: 0.25rem;
+    outline: none;
+  }
+
+  .invalid {
+    background-color: rgb(255, 250, 211);
+    display: block;
+  }
+
+  form button {
+    border-radius: 0 4px 4px 0;
+    border-left: none;
+    flex: 0 0 20%;
+  }
+
+  form:invalid button {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+
+  form label {
+    display: none;
+  }
+
+  button {
+    border: 1px solid var(--highlight-color);
+    background-color: var(--highlight-color);
+    border-radius: 4px;
+    color: white;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
 </style>
 
+<div class="card">
+  <form autocomplete="off">
+    <input id="name" minlength="1" type="text" maxlength="33" required>
+    <button id="add" type="submit">Add</button>
+  </form>
+</div>
 <div class="card">
   <ul>
     <p>No items.</p>
   </ul>
+</div>
+<div class="card">
+  <button id="clear" type="button">Clear All</button>
 </div>
