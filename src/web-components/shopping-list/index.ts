@@ -36,13 +36,17 @@ export default class ShoppingList extends HTMLElement {
         onValue(this.#ref, snapshot => {
           this.#data = snapshot.val() as ShoppingListData;
           this.#list.innerHTML = "";
-          for (const key in this.#data) {
-            const text = this.#data[key].item;
-            const li = document.createElement("li");
-            li.textContent = text;
-            li.id = key;
-            li.addEventListener("click", this.#handleClick);
-            this.#list.append(li);
+          if (this.#data) {
+            for (const key in this.#data) {
+              const text = this.#data[key].item;
+              const li = document.createElement("li");
+              li.textContent = text;
+              li.id = key;
+              li.addEventListener("click", this.#handleClick);
+              this.#list.append(li);
+            }
+          } else {
+            this.#list.innerHTML = "<p>No items.</p>";
           }
         });
       } else {
