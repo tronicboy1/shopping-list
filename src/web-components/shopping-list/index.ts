@@ -39,7 +39,6 @@ export default class ShoppingList extends HTMLElement {
     const auth = getAuth(firebase);
     onAuthStateChanged(auth, auth => {
       if (auth) {
-        this.toggleAttribute("show", true);
         const db = getDatabase(firebase);
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
         onValue(this.#ref, snapshot => {
@@ -57,7 +56,6 @@ export default class ShoppingList extends HTMLElement {
             }
           } else {
             this.#list.innerHTML = "<p>No items.</p>";
-            this.toggleAttribute("show", false);
           }
         });
       } else {
