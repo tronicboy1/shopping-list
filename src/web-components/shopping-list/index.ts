@@ -54,7 +54,7 @@ export default class ShoppingList extends HTMLElement {
               li.addEventListener("click", this.#handleItemClick);
               this.#list.append(li);
             }
-            if (this.#list.lastChild instanceof HTMLLIElement) this.#list.lastChild.style.marginBottom = "0";
+            if (this.#list.firstChild instanceof HTMLLIElement) this.#list.firstChild.style.marginBottom = "0";
           } else {
             this.#list.innerHTML = "<p>No items.</p>";
           }
