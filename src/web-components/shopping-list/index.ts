@@ -38,8 +38,6 @@ export default class ShoppingList extends LitElement {
         onValue(this.#ref, (snapshot) => {
           this.listData = snapshot.val() as ShoppingListData;
         });
-      } else {
-        this.removeAttribute("show");
       }
     });
   }
@@ -101,7 +99,7 @@ export default class ShoppingList extends LitElement {
             : html`<p>No Items.</p>`}
         </ul>
       </div>
-      <div class="card">
+      <div style="margin-bottom: 11vh;" class="card">
         <button id="clear" @click=${this.#handleItemClick} type="button">Clear All</button>
       </div>
     `;

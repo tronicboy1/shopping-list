@@ -6,19 +6,13 @@ export default css`
   }
 
   :host {
-    display: none;
-    width: 100%;
-  }
-
-  :host([show]) {
-    display: block;
-  }
-
-  .card {
     --primary-color: white;
     --secondary-color: rgb(218, 218, 218);
     --highlight-color: rgb(0, 140, 255);
     --highlight-hover: rgb(26, 152, 255);
+  }
+
+  .card {
     width: 90%;
     max-width: 500px;
     margin: 1rem auto;
@@ -44,8 +38,33 @@ export default css`
     color: white;
   }
 
+  button {
+    border: 1px solid var(--highlight-color);
+    padding: 0.25rem 0.5rem;
+    font-size: 1.1rem;
+    height: 50px;
+    color: white;
+    background-color: var(--highlight-color);
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  button[active] {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+  button[active]:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+  button:hover {
+    background-color: var(--highlight-hover);
+    border-color: var(--highlight-hover);
+  }
+
   @media (prefers-color-scheme: light) {
-    .card {
+    :host {
       --primary-color: white;
       --secondary-color: rgb(218, 218, 218);
       --highlight-color: rgb(0, 140, 255);
@@ -55,7 +74,7 @@ export default css`
   }
 
   @media (prefers-color-scheme: dark) {
-    .card {
+    :host {
       --primary-color: rgb(85, 85, 85);
       --secondary-color: rgb(132, 132, 132);
       --highlight-color: rgb(0, 140, 255);
