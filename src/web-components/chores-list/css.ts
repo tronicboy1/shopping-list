@@ -53,7 +53,7 @@ export default css`
 
   li strong {
     font-size: 1.8rem;
-    font-weight: 100;
+    font-weight: 400;
   }
 
   form {
