@@ -1,9 +1,10 @@
 import firebase from "../../services/firebase";
 import { getDatabase, ref, onValue, set, DatabaseReference, push } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { css, html, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import styles from "./css";
+import sharedStyles from "../shared-css";
 
 interface ShoppingListData {
   [id: string]: {
@@ -19,7 +20,7 @@ export default class ShoppingList extends LitElement {
   listData: ShoppingListData | null = null;
   @query("form")
   form!: HTMLFormElement;
-  static styles = styles;
+  static styles = [styles, sharedStyles];
 
   constructor() {
     super();
