@@ -42,6 +42,10 @@ li:hover {
   cursor: pointer;
 }
 
+li:first-child {
+  margin-bottom: 0;
+}
+
 form {
   display: flex;
   flex-direction: row;
