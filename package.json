@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "firebase": "^9.8.1"
+    "firebase": "^9.8.1",
+    "lit": "^2.2.5"
   },
   "scripts": {
     "start": "webpack serve",
