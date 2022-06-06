@@ -15,19 +15,21 @@ div {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.168);
   border: 1px solid var(--primary-color);
   border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
 }
 
 ul {
   list-style-type: none;
   display: flex;
   flex-direction: row;
-  justify-content: center;
-  padding: 0;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 2rem;
   margin: 0;
 }
 
 li {
-  padding: 1rem;
   cursor: pointer;
 }
 

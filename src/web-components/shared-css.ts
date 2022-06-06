@@ -63,6 +63,11 @@ export default css`
     border-color: var(--highlight-hover);
   }
 
+  form:invalid button {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+  }
+
   @media (prefers-color-scheme: light) {
     :host {
       --primary-color: white;

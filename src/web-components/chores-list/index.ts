@@ -38,6 +38,15 @@ export default class ChoresList extends LitElement {
 
   render() {
     return html`
+    <div class="card">
+      <form>
+        <label>Name</label>
+        <input type="text" id="title" name="title" maxlength="32" minlength="1" required>
+        <label>Last Completed</label>
+        <input type="date" required>
+        <button type="submit">Add</button>
+      </form>
+    </div>
       <div style="margin-bottom: 15vh;" class="card">
         <ul>
           ${this._choresData.length
