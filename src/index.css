@@ -3,12 +3,19 @@ body {
     "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: rgb(58, 58, 58);
   margin: 0;
+}
+
+html {
+  background-color: white;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root {
+  color-scheme: light dark;
 }
 
 .card {
@@ -39,4 +46,30 @@ code {
   background-color: var(--dark-color);
   border-color: var(--dark-color);
   color: white;
+}
+
+
+@media (prefers-color-scheme: light) {
+  .card {
+    --primary-color: white;
+    --secondary-color: rgb(218, 218, 218);
+    --highlight-color: rgb(0, 140, 255);
+    --highlight-hover: rgb(26, 152, 255);
+  }
+  html {
+    background-color: white;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    --primary-color: rgb(83, 83, 83);;
+    --secondary-color: rgb(50, 50, 50);
+    --highlight-color: rgb(0, 140, 255);
+    --highlight-hover: rgb(26, 152, 255);
+    color: white;
+  }
+  html {
+    background-color: rgb(35, 35, 35);
+  }
 }

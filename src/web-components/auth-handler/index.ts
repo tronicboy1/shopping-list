@@ -1,6 +1,9 @@
-import template from "./template.html";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
+import { html, LitElement } from "lit";
+import { state, query } from "lit/decorators.js";
+import sharedCss from "@web-components/shared-css";
+import css from "./css";
 
 interface FormData {
   email: string;
@@ -8,116 +11,128 @@ interface FormData {
   "password-confirm"?: string;
 }
 
-export default class AuthHandler extends HTMLElement {
-  #loginTemplate: HTMLTemplateElement;
-  #registerTemplate: HTMLTemplateElement;
-  #loginButton: HTMLButtonElement;
-  #registerButton: HTMLButtonElement;
-  #form: HTMLFormElement;
-  #error: string | null;
-  #loading: boolean;
+export default class AuthHandler extends LitElement {
+  @state()
+  private _mode: "LOGIN" | "REGISTER" = "LOGIN";
+  @state()
+  private _error: string | null = null;
+  @state()
+  private _loading = false;
+  @query("form")
+  private _form!: HTMLFormElement;
+  @query("button#submit")
+  private _submitButton!: HTMLButtonElement;
 
-  constructor() {
-    super();
-    this.#error = null;
-    this.#loading = false;
-    this.attachShadow({ mode: "open" });
-    if (!this.shadowRoot) throw Error("Shadow root not attached.");
-    this.shadowRoot.innerHTML = template;
-    this.#loginTemplate = this.shadowRoot.getElementById("login") as HTMLTemplateElement;
-    this.#registerTemplate = this.shadowRoot.getElementById("register") as HTMLTemplateElement;
-    this.#loginButton = this.shadowRoot.getElementById("login-button") as HTMLButtonElement;
-    this.#registerButton = this.shadowRoot.getElementById("register-button") as HTMLButtonElement;
-    this.#form = this.shadowRoot.querySelector("form")!;
-    this.#setForm("login");
-    this.#loginButton.toggleAttribute("active", true);
-    this.#loginButton.addEventListener("click", this.#handleLoginClick);
-    this.#registerButton.addEventListener("click", this.#handleRegisterClick);
-    this.#form.addEventListener("submit", this.#handleSubmit);
-  }
+  static styles = [sharedCss, css];
 
-  get error(): string | null {
-    return this.#error;
-  }
-  set error(value: string | null) {
-    this.#error = value;
-    const errorElement = this.shadowRoot?.getElementById("errors");
-    if (!errorElement) throw Error("Error element not found.");
-    errorElement.toggleAttribute("show", Boolean(this.#error));
-    errorElement.textContent = this.#error;
-  }
-  get loading(): boolean {
-    return this.#loading;
-  }
-  set loading(value: boolean) {
-    this.#loading = value;
-    const button = this.shadowRoot?.getElementById("submit");
-    button!.textContent = this.#loading ? "Loading..." : "Submit";
-  }
-
-  disconnectedCallback() {
-    this.#loginButton.removeEventListener("click", this.#handleLoginClick);
-    this.#registerButton.removeEventListener("click", this.#handleRegisterClick);
-    this.#form.removeEventListener("submit", this.#handleSubmit);
-  }
-
-  #handleSubmit: EventListener = event => {
+  #handleSubmit: EventListener = (event) => {
     event.preventDefault();
-    this.error = null;
-    const formData = new FormData(this.#form);
+    this._error = null;
+    const formData = new FormData(this._form);
     const formDataObj = Object.fromEntries(formData) as unknown;
     const data = formDataObj as FormData;
     const isRegister = Boolean(data["password-confirm"]);
-    if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(data.email)) {
-      this.error = "Must provide valid Email.";
+    if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$/g.test(data.email)) {
+      this._error = "Must provide valid Email.";
+      return;
     }
     if (isRegister) {
       const passwordsMatch = data.password === data["password-confirm"];
       if (!passwordsMatch) {
-        this.error = "Passwords do not Match.";
+        this._error = "Passwords do not Match.";
         return;
       }
-      this.loading = true;
+      this._loading = true;
       createUserWithEmailAndPassword(auth, data.email, data.password)
-        .then(credentials => {
+        .then((credentials) => {
           this.removeAttribute("show");
-          this.#form.reset();
+          this._form.reset();
         })
-        .catch(error => {
+        .catch((error) => {
           if (!(error instanceof Error)) return;
-          this.error = error.message;
+          this._error = error.message;
         })
-        .finally(() => (this.loading = false));
+        .finally(() => (this._loading = false));
     } else {
-      this.loading = true;
+      this._loading = true;
       signInWithEmailAndPassword(auth, data.email, data.password)
         .then(() => {
           this.removeAttribute("show");
-          this.#form.reset();
+          this._form.reset();
         })
-        .catch(error => {
+        .catch((error) => {
           if (!(error instanceof Error)) return;
-          this.error = error.message;
+          this._error = error.message;
         })
-        .finally(() => (this.loading = false));
+        .finally(() => (this._loading = false));
     }
   };
 
-  #setForm = (mode: "login" | "register") => {
-    const template = mode === "login" ? this.#loginTemplate : this.#registerTemplate;
-    const inputElements = template.content.cloneNode(true);
-    this.#form.innerHTML = "";
-    this.#form.append(inputElements);
-  };
-
   #handleLoginClick: EventListener = () => {
-    this.#loginButton.toggleAttribute("active", true);
-    this.#registerButton.removeAttribute("active");
-    this.#setForm("login");
+    this._mode = "LOGIN";
   };
   #handleRegisterClick: EventListener = () => {
-    this.#loginButton.removeAttribute("active");
-    this.#registerButton.toggleAttribute("active", true);
-    this.#setForm("register");
+    this._mode = "REGISTER";
   };
+
+  render() {
+    const loginTemplate = html`
+      <p id="errors"></p>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password" />
+      </div>
+    `;
+    const registerTemplate = html`
+      <p id="errors"></p>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label for="password-confirm">Confirm Password</label>
+        <input id="password-confirm" name="password-confirm" type="password" required autocomplete="new-password" />
+      </div>
+    `;
+
+    return html`
+      <div class="card">
+        <h1>Shopping List</h1>
+        <div class="button-group">
+          <button
+            @click=${this.#handleLoginClick}
+            ?active=${this._mode === "LOGIN"}
+            class="button-left"
+            id="login-button"
+            type="button"
+          >
+            Login
+          </button>
+          <button
+            @click=${this.#handleRegisterClick}
+            ?active=${this._mode === "REGISTER"}
+            class="button-right"
+            id="register-button"
+            type="button"
+          >
+            Register
+          </button>
+        </div>
+        <form @submit=${this.#handleSubmit} class="login-form">
+          ${this._mode === "LOGIN" ? loginTemplate : registerTemplate}
+          <button id="submit" type="submit">
+            ${this._loading ? html`<loading-spinner color="white" />` : "Submit"}
+          </button>
+        </form>
+      </div>
+    `;
+  }
 }
