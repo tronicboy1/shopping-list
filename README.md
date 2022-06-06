@@ -9,3 +9,10 @@ The goal of this project is to create an app that my wife and I can use to manag
 1. firebase logout
 2. firebase login
 3. firebase deploy --only hosting
+
+## Setting up Development Environment
+```
+yarn install
+yarn mkcert
+yarn start
+```
