@@ -118,6 +118,7 @@ export const formCss = css`
     outline: none;
     margin: 0;
     min-width: 50px;
+    width: 100%;
   }
 
   form textarea {

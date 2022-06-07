@@ -36,6 +36,7 @@ li {
   text-align: center;
   font-size: 1.8rem;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 li:hover {

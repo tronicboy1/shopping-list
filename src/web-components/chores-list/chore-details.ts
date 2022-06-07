@@ -91,6 +91,7 @@ export default class ChoreDetails extends LitElement {
     const title = this._data ? this._data.title : "";
     const date = this._data ? new Date(this._data.lastCompleted).toISOString().split("T")[0] : "";
     const loadingSpinner = html`<loading-spinner color="white" />`;
+    const todaysDate = new Date().toISOString().split("T")[0]
     return html`
       <base-modal id="main-modal" title="Chore Details">
         <base-modal id="delete-modal" title=${`Delete ${title}?`}>
@@ -105,7 +106,7 @@ export default class ChoreDetails extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required .value=${title} />
           <label for="last-completed">Last Completed</label>
-          <input type="date" id="last-completed" name="lastCompleted" required .value=${date} />
+          <input type="date" id="last-completed" name="lastCompleted" required .value=${date} max=${todaysDate} />
           <label for="memo">Memo</label>
           <textarea name="memo" id="memo"></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>

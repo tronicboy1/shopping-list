@@ -37,9 +37,9 @@ export default class BaseModal extends LitElement {
         border: 1px var(--primary-color) solid;
         border-radius: 10px;
         padding: 1rem;
-        width: 70%;
+        width: 90%;
         max-width: 450px;
-        max-height: 60%;
+        max-height: 70%;
         margin: auto;
         overflow-y: auto;
       }

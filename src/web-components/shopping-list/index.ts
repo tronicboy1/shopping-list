@@ -136,7 +136,13 @@ export default class ShoppingList extends LitElement {
           ${this.listData
             ? Object.keys(this.listData).map(
                 (key) =>
-                  html`<li id=${key} @mouseup=${this.#handleItemMouseup} @mousedown=${this.#handleItemClick}>
+                  html`<li
+                    id=${key}
+                    @mouseup=${this.#handleItemMouseup}
+                    @touchend=${this.#handleItemMouseup}
+                    @mousedown=${this.#handleItemClick}
+                    @touchstart=${this.#handleItemClick}
+                  >
                     ${this.listData![key].item}
                   </li>`
               )
