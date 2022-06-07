@@ -1,5 +1,5 @@
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, getDatabase, onValue, ref, set } from "firebase/database";
+import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
@@ -30,9 +30,10 @@ export default class MainApp extends LitElement {
       if (auth) {
         const db = getDatabase(firebaseApp);
         this.#settingsRef = ref(db, `${auth.uid}/SETTINGS/CHORES`);
-        onValue(this.#settingsRef, (snapshot) => {
-          const data = snapshot.val();
-          this._settings = { daysUntilDue: data?.daysUntilDue ?? 7 };
+        get(this.#settingsRef).then((data) => {
+          if (!data.exists()) return;
+          const value = data.val();
+          this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
         });
       }
       this._uid = auth ? auth.uid : null;
@@ -73,8 +74,12 @@ export default class MainApp extends LitElement {
     const daysUntilDue = Number(formData.get("daysUntilDue"));
     if (isNaN(daysUntilDue)) throw TypeError("Days until Due must be a number.");
     this._settingsChangeLoading = true;
-    set(this.#settingsRef, { daysUntilDue })
-      .then(() => this._modal.removeAttribute("show"))
+    const newSettings = { daysUntilDue };
+    set(this.#settingsRef, newSettings)
+      .then(() => {
+        this._settings = newSettings;
+        this._modal.removeAttribute("show");
+      })
       .finally(() => (this._settingsChangeLoading = false));
   };
 
