@@ -1,5 +1,6 @@
 import { onAuthStateChanged } from "firebase/auth";
 import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
@@ -28,6 +29,13 @@ export default class MainApp extends LitElement {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
+        // const messaging = getMessaging(firebaseApp);
+        // getToken(messaging).then((value) => {
+        //   console.log(value)
+        //   onMessage(messaging, (payload) => {
+        //     console.log("message received", payload);
+        //   });
+        // });
         const db = getDatabase(firebaseApp);
         this.#settingsRef = ref(db, `${auth.uid}/SETTINGS/CHORES`);
         get(this.#settingsRef).then((data) => {
