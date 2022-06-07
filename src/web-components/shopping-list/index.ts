@@ -1,7 +1,7 @@
 import firebase from "../../services/firebase";
 import { getDatabase, ref, onValue, set, DatabaseReference, push } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { html, LitElement } from "lit";
+import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
 import styles from "./css";
 import sharedStyles from "../shared-css";
@@ -28,8 +28,6 @@ export default class ShoppingList extends LitElement {
   listData: ShoppingListData | null = null;
   @state()
   private _adding = false;
-  @state()
-  uid = "";
   @query("form")
   form!: HTMLFormElement;
   @query("shopping-item-details")
@@ -37,12 +35,11 @@ export default class ShoppingList extends LitElement {
 
   static styles = [styles, sharedStyles];
 
-  connectedCallback() {
-    super.connectedCallback();
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     const auth = getAuth(firebase);
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
-        this.uid = auth.uid;
+        this._shoppingItemDetails.setAttribute("uid", auth.uid);
         const db = getDatabase(firebase);
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
         onValue(this.#ref, (snapshot) => {
@@ -127,7 +124,7 @@ export default class ShoppingList extends LitElement {
 
   render() {
     return html`
-      <shopping-item-details uid=${this.uid}></shopping-item-details>
+      <shopping-item-details></shopping-item-details>
       <div class="card">
         <form @submit=${this.#handleAddItem} autocomplete="off">
           <input @input=${this.#handleInput} id="item" name="item" minlength="1" type="text" maxlength="33" required />
