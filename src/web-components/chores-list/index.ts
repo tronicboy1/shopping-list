@@ -22,6 +22,8 @@ export default class ChoresList extends LitElement {
   private _daysUntilDue: number = 7;
   @query("chore-details")
   private _choreDetails!: ChoreDetails;
+  @state()
+  uid = "";
 
   static styles = [sharedCss, css, formCss];
 
@@ -29,7 +31,7 @@ export default class ChoresList extends LitElement {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
       if (!auth) return;
-      this._choreDetails.setAttribute("uid", auth.uid);
+      this.uid = auth.uid;
       const db = getDatabase(firebaseApp);
       this.#ref = ref(db, `${auth.uid}/CHORES/`);
       onValue(this.#ref, (snapshot) => {
@@ -68,7 +70,7 @@ export default class ChoresList extends LitElement {
           </li>`;
         })
       : html`<p>No Items.</p>`;
-    const todaysDate = new Date().toISOString().split("T")[0]
+    const todaysDate = new Date().toISOString().split("T")[0];
 
     return html`
       <div class="card">
@@ -76,14 +78,7 @@ export default class ChoresList extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required />
           <label for="last-completed">Last Completed</label>
-          <input
-            type="date"
-            id="last-completed"
-            name="lastCompleted"
-            required
-            value=${todaysDate}
-            max=${todaysDate}
-          />
+          <input type="date" id="last-completed" name="lastCompleted" required value=${todaysDate} max=${todaysDate} />
           <button type="submit">Add</button>
         </form>
       </div>
@@ -92,7 +87,7 @@ export default class ChoresList extends LitElement {
           ${choresList}
         </ul>
       </div>
-      <chore-details></chore-details>
+      <chore-details uid=${this.uid} id="chore-details"></chore-details>
     `;
   }
 }

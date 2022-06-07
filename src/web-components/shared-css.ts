@@ -69,10 +69,6 @@ export default css`
     border-color: var(--secondary-color);
   }
 
-  button + button {
-    margin-top: 1rem;
-  }
-
   button.delete {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
@@ -132,6 +128,10 @@ export const formCss = css`
 
   form input + button,
   form textarea + button {
+    margin-top: 1rem;
+  }
+
+  button + button {
     margin-top: 1rem;
   }
   @media (prefers-color-scheme: dark) {
