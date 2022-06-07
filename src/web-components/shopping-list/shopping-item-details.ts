@@ -54,8 +54,8 @@ export default class ShoppingItemDetails extends LitElement {
           return loader.load();
         })
         .then((google) => {
-          const lat = this._data!.position.latitude;
-          const lng = this._data!.position.longitude;
+          const lat = this._data!.position?.latitude ?? 26.2126;
+          const lng = this._data!.position?.longitude ?? 127.679;
           const map = new google.maps.Map(this.shadowRoot!.getElementById("map")!, {
             center: { lat, lng },
             zoom: 10,
@@ -64,7 +64,10 @@ export default class ShoppingItemDetails extends LitElement {
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
         })
-        .catch(() => this._modal.removeAttribute("show"));
+        .catch((error) => {
+          console.log(error);
+          this._modal.removeAttribute("show");
+        });
     }
   }
 
