@@ -62,6 +62,7 @@ export default class ShoppingItemDetails extends LitElement {
           });
           new google.maps.Marker({ map, position: { lat, lng }, title: this._data!.item });
           this._modal.toggleAttribute("show", true);
+          this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
         })
         .catch(() => this._modal.removeAttribute("show"));
     }
@@ -114,7 +115,7 @@ export default class ShoppingItemDetails extends LitElement {
           <label for="date-added">Date Added</label>
           <input type="date" id="date-added" name="dateAdded" .value=${dateAdded} disabled />
           <label for="amount">Quantity</label>
-          <input id="amount" name="amount" type="number" min="1" .value=${amount} />
+          <input id="amount" name="amount" type="number" min="1" .value=${amount} required />
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" .value=${memo}></textarea>
           <span>Location Added</span>
