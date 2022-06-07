@@ -4,25 +4,30 @@ import { onAuthStateChanged } from "firebase/auth";
 import { DatabaseReference, getDatabase, onValue, push, ref } from "firebase/database";
 import { html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
-import css from "./css";
-interface Chore {
+import ChoreDetails from "./chore-details";
+import css, { formCss } from "./css";
+export interface Chore {
   lastCompleted: string;
   title: string;
+  memo: string;
 }
+
+customElements.define("chore-details", ChoreDetails);
 
 export default class ChoresList extends LitElement {
   #ref!: DatabaseReference;
   @state()
   private _choresData: { [id: string]: Chore } | null = null;
-  @query("form")
-  private _form!: HTMLFormElement;
+  @query("chore-details")
+  private _choreDetails!: ChoreDetails;
 
-  static styles = [sharedCss, css];
+  static styles = [sharedCss, css, formCss];
 
   connectedCallback(): void {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
       if (!auth) return;
+      this._choreDetails.setAttribute("uid", auth.uid);
       const db = getDatabase(firebaseApp);
       this.#ref = ref(db, `${auth.uid}/CHORES/`);
       onValue(this.#ref, (snapshot) => {
@@ -34,17 +39,27 @@ export default class ChoresList extends LitElement {
 
   #handleFormSubmit: EventListener = (event) => {
     event.preventDefault();
-    const formData = new FormData(this._form);
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw Error("Submit event origin not a Form Element");
+    const formData = new FormData(form);
     const title = formData.get("title")!.toString().trim();
     const lastCompleted = new Date(formData.get("lastCompleted")!.toString());
-    push(this.#ref, { title, lastCompleted: lastCompleted.getTime() });
+    push(this.#ref, { title, lastCompleted: lastCompleted.getTime(), memo: "" }).then(() => form.reset());
+  };
+
+  #openChore: EventListener = (event) => {
+    const li = event.currentTarget;
+    if (!(li instanceof HTMLLIElement)) return;
+    const key = li.id;
+    this._choreDetails.setAttribute("chore-key", key);
+    this._choreDetails.open();
   };
 
   render() {
     const choresList = this._choresData
       ? Object.keys(this._choresData).map((key) => {
           const choreItem = this._choresData![key];
-          return html`<li id=${key}>
+          return html`<li @click=${this.#openChore} id=${key}>
             <strong>${choreItem.title}</strong><small>${new Date(choreItem.lastCompleted).toLocaleDateString()}</small>
           </li>`;
         })
@@ -65,6 +80,7 @@ export default class ChoresList extends LitElement {
           ${choresList}
         </ul>
       </div>
+      <chore-details></chore-details>
     `;
   }
 }

@@ -56,6 +56,14 @@ export default css`
     font-weight: 400;
   }
 
+  @media (prefers-color-scheme: dark) {
+    li {
+      color: white;
+    }
+  }
+`;
+
+export const formCss = css`
   form {
     display: flex;
     flex-direction: column;
@@ -80,14 +88,17 @@ export default css`
     min-width: 50px;
   }
 
-  form input + button {
-    margin-top: 1rem;
+  form textarea {
+    height: 10vh;
+    min-height: 80px;
+    padding: 0.5rem;
   }
 
+  form input + button,
+  form textarea + button {
+    margin-top: 1rem;
+  }
   @media (prefers-color-scheme: dark) {
-    li {
-      color: white;
-    }
     form label {
       color: white;
     }

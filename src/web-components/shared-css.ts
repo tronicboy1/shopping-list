@@ -10,6 +10,7 @@ export default css`
     --secondary-color: rgb(218, 218, 218);
     --highlight-color: rgb(0, 140, 255);
     --highlight-hover: rgb(26, 152, 255);
+    --danger-color: rgb(255, 94, 94);
   }
 
   .card {
@@ -66,6 +67,15 @@ export default css`
   form:invalid button {
     background-color: var(--secondary-color);
     border-color: var(--secondary-color);
+  }
+
+  button + button {
+    margin-top: 1rem;
+  }
+
+  button.delete {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
   }
 
   @media (prefers-color-scheme: light) {
