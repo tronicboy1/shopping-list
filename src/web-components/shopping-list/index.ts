@@ -7,8 +7,6 @@ import styles from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 
-customElements.define("shopping-item-details", ShoppingItemDetails);
-
 type ShoppingListData = Record<string, ShoppingListItem>;
 
 export interface ShoppingListItem {
@@ -22,7 +20,7 @@ export interface ShoppingListItem {
 export default class ShoppingList extends LitElement {
   #ref!: DatabaseReference;
   #clicked: string | null = null;
-  #clickedAt: { id: string; when: Date } | null = null;
+  #clickedAt: { id: string; when: Date; where: { x: number; y: number } } | null = null;
 
   @state()
   listData: ShoppingListData | null = null;
@@ -34,6 +32,13 @@ export default class ShoppingList extends LitElement {
   private _shoppingItemDetails!: ShoppingItemDetails;
 
   static styles = [styles, sharedStyles];
+
+  constructor() {
+    super();
+    import("./shopping-item-details").then((ShoppingItemDetails) =>
+      customElements.define("shopping-item-details", ShoppingItemDetails.default)
+    );
+  }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     const auth = getAuth(firebase);
@@ -68,14 +73,19 @@ export default class ShoppingList extends LitElement {
       this.#clicked = null;
     } else {
       this.#clicked = id;
-      this.#clickedAt = { id, when: new Date() };
+      if (event instanceof MouseEvent) {
+        this.#clickedAt = { id, when: new Date(), where: { x: event.clientX, y: event.clientY } };
+      }
+      if (event instanceof TouchEvent) {
+        this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
+      }
       setTimeout(() => {
         this.#clicked = null;
       }, 400);
     }
   };
 
-  #handleItemMouseup: EventListener = (event) => {
+  #handleItemMouseup = (event: Event) => {
     const target = event.currentTarget;
     if (!(target instanceof HTMLLIElement) || !this.#clickedAt) return;
     const id = target.id;
@@ -83,8 +93,17 @@ export default class ShoppingList extends LitElement {
       this.#clickedAt = null;
       return;
     }
+    let y2: number | null = null;
+    if (event instanceof MouseEvent) {
+      y2 = event.clientY;
+    }
+    if (event instanceof TouchEvent) {
+      y2 = event.changedTouches[0].clientY
+    }
+    if (!y2) return;
+    const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 50;
     const heldLongEnough = new Date().getTime() - this.#clickedAt.when.getTime() > 500;
-    if (heldLongEnough) {
+    if (heldLongEnough && notMoved) {
       this._shoppingItemDetails.setAttribute("key", id);
     }
     this.#clickedAt = null;
@@ -113,11 +132,11 @@ export default class ShoppingList extends LitElement {
         push(this.#ref!, newData).then(() => (this._adding = false));
         this.form.reset();
       },
-      (error) => {
+      () => {
         push(this.#ref!, newData).then(() => (this._adding = false));
         this.form.reset();
       },
-      { timeout: 500 }
+      { timeout: 2000 }
     );
   };
 
