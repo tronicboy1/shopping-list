@@ -98,3 +98,45 @@ export default css`
     }
   }
 `;
+
+export const formCss = css`
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  form input + label {
+    margin-top: 1rem;
+  }
+
+  form label {
+    margin-bottom: 0.3rem;
+  }
+
+  form input {
+    height: 45px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-size: 1.2rem;
+    padding-left: 0.5rem;
+    outline: none;
+    margin: 0;
+    min-width: 50px;
+  }
+
+  form textarea {
+    height: 10vh;
+    min-height: 80px;
+    padding: 0.5rem;
+  }
+
+  form input + button,
+  form textarea + button {
+    margin-top: 1rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    form label {
+      color: white;
+    }
+  }
+`;

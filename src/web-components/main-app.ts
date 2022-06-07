@@ -1,25 +1,40 @@
 import { onAuthStateChanged } from "firebase/auth";
+import { DatabaseReference, getDatabase, onValue, ref, set } from "firebase/database";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
-import { auth } from "./firebase";
-import sharedCss from "./shared-css";
+import { auth, firebaseApp } from "./firebase";
+import sharedCss, { formCss } from "./shared-css";
 
 type Modes = "SHOPPING" | "CHORES";
 
 export default class MainApp extends LitElement {
+  #settingsRef!: DatabaseReference;
+
   @state()
   private _mode: Modes = "SHOPPING";
   @state()
   private _uid: string | null = null;
   @state()
+  private _settings: { daysUntilDue: number } = { daysUntilDue: 7 };
+  @state()
   private _loading = true;
+  @state()
+  private _settingsChangeLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
 
   connectedCallback() {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
+      if (auth) {
+        const db = getDatabase(firebaseApp);
+        this.#settingsRef = ref(db, `${auth.uid}/SETTINGS/CHORES`);
+        onValue(this.#settingsRef, (snapshot) => {
+          const data = snapshot.val();
+          this._settings = { daysUntilDue: data?.daysUntilDue ?? 7 };
+        });
+      }
       this._uid = auth ? auth.uid : null;
       this._loading = false;
     });
@@ -41,6 +56,7 @@ export default class MainApp extends LitElement {
 
   static styles = [
     sharedCss,
+    formCss,
     css`
       #settings-content {
         display: flex;
@@ -49,6 +65,19 @@ export default class MainApp extends LitElement {
     `,
   ];
 
+  #handleSettingsSubmit: EventListener = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw Error("Submit event origin not a Form Element");
+    const formData = new FormData(form);
+    const daysUntilDue = Number(formData.get("daysUntilDue"));
+    if (isNaN(daysUntilDue)) throw TypeError("Days until Due must be a number.");
+    this._settingsChangeLoading = true;
+    set(this.#settingsRef, { daysUntilDue })
+      .then(() => this._modal.removeAttribute("show"))
+      .finally(() => (this._settingsChangeLoading = false));
+  };
+
   render() {
     if (this._loading)
       return html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`;
@@ -56,11 +85,25 @@ export default class MainApp extends LitElement {
 
     return html`
       <shopping-list ?show=${this._mode === "SHOPPING"}></shopping-list>
-      <chores-list ?show=${this._mode === "CHORES"}></chores-list>
+      <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
       <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
       <base-modal title="Settings"
         ><div id="settings-content">
-          <button type="button" @click=${this.#handleLogoutClick}>Logout</button>
+          <form @submit=${this.#handleSettingsSubmit}>
+            <label for="days-until-due">Days Until Chore is Due</label>
+            <input
+              min="1"
+              max="31"
+              type="number"
+              id="days-until-due"
+              name="daysUntilDue"
+              .value=${String(this._settings.daysUntilDue)}
+            />
+            <button type="submit">
+              ${this._settingsChangeLoading ? html`<loading-spinner color="white" />` : "Change Settings"}
+            </button>
+            <button type="button" @click=${this.#handleLogoutClick}>Logout</button>
+          </form>
         </div></base-modal
       >
     `;

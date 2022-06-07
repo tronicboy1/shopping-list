@@ -1,14 +1,12 @@
 import BaseModal from "@web-components/base-modal";
 import { firebaseApp } from "@web-components/firebase";
-import sharedCss from "@web-components/shared-css";
+import sharedCss, { formCss } from "@web-components/shared-css";
 import { child, Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { Chore } from "./";
-import { formCss } from "./css";
 
 export default class ChoreDetails extends LitElement {
-  #uid!: string;
   #choreKey!: string;
   #ref!: DatabaseReference;
   #db: Database;
@@ -104,11 +102,11 @@ export default class ChoreDetails extends LitElement {
           </div>
         </base-modal>
         <form @submit=${this.#handleSubmit}>
-          <label>Name</label>
+          <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required .value=${title} />
-          <label>Last Completed</label>
-          <input type="date" name="lastCompleted" required .value=${date} />
-          <label>Memo</label>
+          <label for="last-completed">Last Completed</label>
+          <input type="date" id="last-completed" name="lastCompleted" required .value=${date} />
+          <label for="memo">Memo</label>
           <textarea name="memo" id="memo"></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>
           <button @click=${this.#handleInitialDeleteClick} class="delete" type="button">Delete</button>

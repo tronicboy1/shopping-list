@@ -9,7 +9,7 @@ div {
   margin: auto;
   height: 10vh;
   min-height: 100pxs;
-  width: 90%;
+  width: 95%;
   max-width: 500px;
   background-color: var(--primary-color);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.168);

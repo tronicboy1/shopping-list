@@ -48,7 +48,15 @@ export default css`
   }
 
   li small {
-    font-size: 1rem;
+    font-size: 0.8rem;
+    margin: 0 auto;
+    padding: 2px 0.5rem;
+    border-radius: 8px;
+  }
+
+  li small[due] {
+    font-weight: 800;
+    background-color: var(--danger-color);
   }
 
   li strong {
@@ -58,48 +66,6 @@ export default css`
 
   @media (prefers-color-scheme: dark) {
     li {
-      color: white;
-    }
-  }
-`;
-
-export const formCss = css`
-  form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  form input + label {
-    margin-top: 1rem;
-  }
-
-  form label {
-    margin-bottom: 0.3rem;
-  }
-
-  form input {
-    height: 45px;
-    border: 1px solid var(--secondary-color);
-    border-radius: 4px;
-    font-size: 1.2rem;
-    padding-left: 0.25rem;
-    outline: none;
-    margin: 0;
-    min-width: 50px;
-  }
-
-  form textarea {
-    height: 10vh;
-    min-height: 80px;
-    padding: 0.5rem;
-  }
-
-  form input + button,
-  form textarea + button {
-    margin-top: 1rem;
-  }
-  @media (prefers-color-scheme: dark) {
-    form label {
       color: white;
     }
   }

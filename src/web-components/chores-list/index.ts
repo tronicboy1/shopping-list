@@ -1,11 +1,11 @@
 import { auth, firebaseApp } from "@web-components/firebase";
-import sharedCss from "@web-components/shared-css";
+import sharedCss, { formCss } from "@web-components/shared-css";
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, getDatabase, onValue, push, ref } from "firebase/database";
+import { DatabaseReference, get, getDatabase, onValue, push, ref } from "firebase/database";
 import { html, LitElement } from "lit";
-import { query, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import ChoreDetails from "./chore-details";
-import css, { formCss } from "./css";
+import css from "./css";
 export interface Chore {
   lastCompleted: string;
   title: string;
@@ -18,6 +18,8 @@ export default class ChoresList extends LitElement {
   #ref!: DatabaseReference;
   @state()
   private _choresData: { [id: string]: Chore } | null = null;
+  @property({ attribute: "days-until-due", type: Number })
+  private _daysUntilDue: number = 7;
   @query("chore-details")
   private _choreDetails!: ChoreDetails;
 
@@ -59,8 +61,11 @@ export default class ChoresList extends LitElement {
     const choresList = this._choresData
       ? Object.keys(this._choresData).map((key) => {
           const choreItem = this._choresData![key];
+          const lastCompleted = new Date(choreItem.lastCompleted);
+          const due =
+            new Date().getTime() - lastCompleted.getTime() > this._daysUntilDue * 24 * 60 * 60 * 1000;
           return html`<li @click=${this.#openChore} id=${key}>
-            <strong>${choreItem.title}</strong><small>${new Date(choreItem.lastCompleted).toLocaleDateString()}</small>
+            <strong>${choreItem.title}</strong><small ?due=${due}>${lastCompleted.toLocaleDateString()}</small>
           </li>`;
         })
       : html`<p>No Items.</p>`;
@@ -68,10 +73,10 @@ export default class ChoresList extends LitElement {
     return html`
       <div class="card">
         <form @submit=${this.#handleFormSubmit}>
-          <label>Name</label>
+          <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required />
-          <label>Last Completed</label>
-          <input type="date" name="lastCompleted" required />
+          <label for="last-completed">Last Completed</label>
+          <input type="date" id="last-completed" name="lastCompleted" required />
           <button type="submit">Add</button>
         </form>
       </div>
