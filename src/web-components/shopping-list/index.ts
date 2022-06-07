@@ -1,5 +1,5 @@
 import firebase from "../../services/firebase";
-import { getDatabase, ref, onValue, set, DatabaseReference, push } from "firebase/database";
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -92,8 +92,7 @@ export default class ShoppingList extends LitElement {
 
   #deleteItem = (id: string) => {
     if (!(this.listData && this.#ref)) return;
-    delete this.listData[id];
-    set(this.#ref, this.listData);
+    remove(child(this.#ref, id));
   };
 
   #deleteAllItems = () => {
