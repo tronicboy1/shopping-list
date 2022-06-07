@@ -2,7 +2,7 @@ import BaseModal from "@web-components/base-modal";
 import { firebaseApp } from "@web-components/firebase";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
-import { html, LitElement } from "lit";
+import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { ShoppingListItem } from "./";
 
@@ -19,7 +19,18 @@ export default class ShoppingItemDetails extends LitElement {
   @query("base-modal")
   private _modal!: BaseModal;
 
-  static styles = [sharedCss, formCss];
+  static styles = [
+    sharedCss,
+    formCss,
+    css`
+      #map {
+        height: 300px;
+        width: 100%;
+        margin-bottom: 1rem;
+        border-radius: 4px;
+      }
+    `,
+  ];
 
   static get observedAttributes(): string[] {
     return ["uid", "key"];
@@ -35,6 +46,21 @@ export default class ShoppingItemDetails extends LitElement {
         .then((data) => {
           if (!data.exists()) throw Error("No data found.");
           this._data = data.val();
+
+          return import("@googlemaps/js-api-loader");
+        })
+        .then((LoaderPackage) => {
+          const loader = new LoaderPackage.Loader({ apiKey: "AIzaSyBCgJPh9x8GaafDzUL1X1XrxQEVEX4uVD8" });
+          return loader.load();
+        })
+        .then((google) => {
+          const lat = this._data!.position.latitude;
+          const lng = this._data!.position.longitude;
+          const map = new google.maps.Map(this.shadowRoot!.getElementById("map")!, {
+            center: { lat, lng },
+            zoom: 10,
+          });
+          new google.maps.Marker({ map, position: { lat, lng }, title: this._data!.item });
           this._modal.toggleAttribute("show", true);
         })
         .catch(() => this._modal.removeAttribute("show"));
@@ -81,7 +107,7 @@ export default class ShoppingItemDetails extends LitElement {
 
     const loadingSpinner = html`<loading-spinner color="white" />`;
     return html`
-      <base-modal title="Item Details">
+      <base-modal title="Details">
         <form @submit=${this.#handleEditSubmit}>
           <label for="item">Name</label>
           <input type="text" id="item" name="item" maxlength="32" minlength="1" .value=${item} />
@@ -91,6 +117,8 @@ export default class ShoppingItemDetails extends LitElement {
           <input id="amount" name="amount" type="number" min="1" .value=${amount} />
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" .value=${memo}></textarea>
+          <span>Location Added</span>
+          <div id="map"></div>
           <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>
           <button @click=${this.#handleDeleteClick} type="button" class="delete">
             ${this._deleteLoading ? loadingSpinner : "Delete"}

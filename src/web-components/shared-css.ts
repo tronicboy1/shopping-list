@@ -101,11 +101,12 @@ export const formCss = css`
     flex-direction: column;
   }
 
-  form input + label {
+  form input + label, form input + span, form textarea + span {
     margin-top: 1rem;
   }
 
-  form label {
+
+  form label, form span {
     margin-bottom: 0.3rem;
   }
 
