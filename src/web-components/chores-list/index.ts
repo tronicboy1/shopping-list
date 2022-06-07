@@ -62,13 +62,13 @@ export default class ChoresList extends LitElement {
       ? Object.keys(this._choresData).map((key) => {
           const choreItem = this._choresData![key];
           const lastCompleted = new Date(choreItem.lastCompleted);
-          const due =
-            new Date().getTime() - lastCompleted.getTime() > this._daysUntilDue * 24 * 60 * 60 * 1000;
+          const due = new Date().getTime() - lastCompleted.getTime() > this._daysUntilDue * 24 * 60 * 60 * 1000;
           return html`<li @click=${this.#openChore} id=${key}>
             <strong>${choreItem.title}</strong><small ?due=${due}>${lastCompleted.toLocaleDateString()}</small>
           </li>`;
         })
       : html`<p>No Items.</p>`;
+    const todaysDate = new Date().toISOString().split("T")[0]
 
     return html`
       <div class="card">
@@ -76,7 +76,14 @@ export default class ChoresList extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required />
           <label for="last-completed">Last Completed</label>
-          <input type="date" id="last-completed" name="lastCompleted" required />
+          <input
+            type="date"
+            id="last-completed"
+            name="lastCompleted"
+            required
+            value=${todaysDate}
+            max=${todaysDate}
+          />
           <button type="submit">Add</button>
         </form>
       </div>
