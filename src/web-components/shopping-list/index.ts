@@ -14,9 +14,9 @@ type ShoppingListData = Record<string, ShoppingListItem>;
 export interface ShoppingListItem {
   item: string;
   memo: string;
-  dateAdded: string;
+  dateAdded: number;
   amount: number;
-  position: GeolocationCoordinates;
+  position: { latitude: number; longitude: number };
 }
 
 export default class ShoppingList extends LitElement {
@@ -108,16 +108,18 @@ export default class ShoppingList extends LitElement {
     const item = String(formData.get("item")!).trim();
     const dateAdded = new Date().getTime();
     this._adding = true;
+    const newData: Partial<ShoppingListItem> = { item, dateAdded };
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        push(this.#ref!, { item, dateAdded, position }).then(() => (this._adding = false));
+        newData.position = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        push(this.#ref!, newData).then(() => (this._adding = false));
         this.form.reset();
       },
       (error) => {
-        push(this.#ref!, { item, dateAdded }).then(() => (this._adding = false));
+        push(this.#ref!, newData).then(() => (this._adding = false));
         this.form.reset();
       },
-      { timeout: 1000 }
+      { timeout: 500 }
     );
   };
 
