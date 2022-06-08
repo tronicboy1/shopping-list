@@ -38,7 +38,13 @@ export default class ShoppingItemDetails extends LitElement {
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
         })
-        .catch(() => this._modal.removeAttribute("show"));
+        .catch(() => this._modal.removeAttribute("show"))
+        .finally(() => {
+          const activeEl = this.shadowRoot!.activeElement;
+          if (activeEl && activeEl instanceof HTMLInputElement) {
+            activeEl.blur(); // fix stupid ios auto focus bug
+          }
+        });
     }
   }
 
@@ -92,7 +98,7 @@ export default class ShoppingItemDetails extends LitElement {
             <label for="priority">Priority</label>
           </div>
           <label for="date-added">Date Added</label>
-          <input type="date" id="date-added" name="dateAdded" .value=${dateAdded} disabled />
+          <input type="date" id="date-added" name="dateAdded" .value=${dateAdded} readonly />
           <label for="amount">Quantity</label>
           <input id="amount" name="amount" type="number" min="1" .value=${amount} required />
           <label for="memo">Memo</label>
