@@ -46,21 +46,6 @@ export default class ShoppingItemDetails extends LitElement {
         .then((data) => {
           if (!data.exists()) throw Error("No data found.");
           this._data = data.val();
-
-          return import("@googlemaps/js-api-loader");
-        })
-        .then((LoaderPackage) => {
-          const loader = new LoaderPackage.Loader({ apiKey: "AIzaSyBCgJPh9x8GaafDzUL1X1XrxQEVEX4uVD8" });
-          return loader.load();
-        })
-        .then((google) => {
-          const lat = this._data!.position.latitude;
-          const lng = this._data!.position.longitude;
-          const map = new google.maps.Map(this.shadowRoot!.getElementById("map")!, {
-            center: { lat, lng },
-            zoom: 10,
-          });
-          new google.maps.Marker({ map, position: { lat, lng }, title: this._data!.item });
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
         })
@@ -77,7 +62,6 @@ export default class ShoppingItemDetails extends LitElement {
     const amount = Number(formData.get("amount"));
     if (isNaN(amount)) throw TypeError("Quantity must be a number.");
     const memo = formData.get("memo")!.toString().trim();
-    const position = this._data?.position;
     this._editLoading = true;
     const newData: Partial<ShoppingListItem> = {
       item,
@@ -85,7 +69,6 @@ export default class ShoppingItemDetails extends LitElement {
       memo,
       dateAdded: this._data!.dateAdded ?? new Date().getTime(),
     };
-    if (position) newData.position = position;
     set(this.#ref, newData)
       .then(() => {
         this._modal.removeAttribute("show");
