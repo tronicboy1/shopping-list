@@ -4,6 +4,7 @@ import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";
 import css from "./css";
+import { FirebaseError } from "firebase/app";
 
 interface FormData {
   email: string;
@@ -61,8 +62,8 @@ export default class AuthHandler extends LitElement {
           this._form.reset();
         })
         .catch((error) => {
-          if (!(error instanceof Error)) return;
-          this._error = error.message;
+          console.log();
+          if (error instanceof FirebaseError) this._error = error.message;
         })
         .finally(() => (this._loading = false));
     }
@@ -75,9 +76,9 @@ export default class AuthHandler extends LitElement {
     this._mode = "REGISTER";
   };
 
+
   render() {
     const loginTemplate = html`
-      <p id="errors"></p>
       <div class="form-group">
         <label for="email">Email</label>
         <input id="email" name="email" type="email" required autocomplete="email" />
@@ -88,7 +89,6 @@ export default class AuthHandler extends LitElement {
       </div>
     `;
     const registerTemplate = html`
-      <p id="errors"></p>
       <div class="form-group">
         <label for="email">Email</label>
         <input id="email" name="email" type="email" required autocomplete="email" />
@@ -126,6 +126,7 @@ export default class AuthHandler extends LitElement {
             Register
           </button>
         </div>
+        ${this._error ? html`<p id="errors">${this._error}</p>` : ""}
         <form @submit=${this.#handleSubmit} class="login-form">
           ${this._mode === "LOGIN" ? loginTemplate : registerTemplate}
           <button id="submit" type="submit">
