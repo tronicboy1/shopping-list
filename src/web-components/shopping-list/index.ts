@@ -101,7 +101,7 @@ export default class ShoppingList extends LitElement {
       y2 = event.changedTouches[0].clientY;
     }
     if (!y2) return;
-    const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 20;
+    const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 10;
     const heldLongEnough = new Date().getTime() - this.#clickedAt.when.getTime() > 500;
     if (heldLongEnough && notMoved) {
       this._shoppingItemDetails.setAttribute("key", id);

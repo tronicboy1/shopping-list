@@ -150,8 +150,8 @@ export const formCss = css`
   }
 
   form input[type="checkbox"] {
-    height: 50px;
-    width: 50px;
+    height: 45px;
+    width: 45px;
   }
 
   button + button {
