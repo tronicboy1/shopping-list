@@ -44,6 +44,11 @@ export default class MainApp extends LitElement {
           this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
         });
       }
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+        const meta = document.querySelector("meta[name='theme-color']")!;
+        const isDarkMode = event.matches;
+        meta.setAttribute("value", isDarkMode ? "#555555" : "#fff");
+      });
       this._uid = auth ? auth.uid : null;
       this._loading = false;
     });

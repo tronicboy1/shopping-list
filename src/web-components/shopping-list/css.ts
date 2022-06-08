@@ -77,11 +77,6 @@ export default css`
     min-width: 50px;
   }
 
-  .invalid {
-    background-color: rgb(255, 250, 211);
-    display: block;
-  }
-
   form button {
     border-radius: 0 4px 4px 0;
     border-left: none;
