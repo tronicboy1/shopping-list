@@ -1,6 +1,6 @@
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { DatabaseReference, get, getDatabase, push, ref, set } from "firebase/database";
+import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
@@ -29,14 +29,19 @@ export default class MainApp extends LitElement {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
-        // const messaging = getMessaging(firebaseApp);
-        // getToken(messaging).then((value) => {
-        //   console.log(value)
-        //   onMessage(messaging, (payload) => {
-        //     console.log("message received", payload);
-        //   });
-        // });
         const db = getDatabase(firebaseApp);
+        const messaging = getMessaging(firebaseApp);
+        isSupported().then((isSupported) => {
+          if (!isSupported) throw Error("Browser does not support firebase Notifications.");
+          getToken(messaging).then((newFCM) => {
+            const fcmListRef = ref(db, `${auth.uid}/SETTINGS/FCM`);
+            get(fcmListRef).then((currentData) => {
+              const oldFCMList = (currentData.val() as string[]) ?? [];
+              if (oldFCMList.find((fcm) => fcm === newFCM)) return;
+              set(fcmListRef, [...oldFCMList, newFCM]);
+            });
+          });
+        });
         this.#settingsRef = ref(db, `${auth.uid}/SETTINGS/CHORES`);
         get(this.#settingsRef).then((data) => {
           if (!data.exists()) return;
@@ -57,6 +62,30 @@ export default class MainApp extends LitElement {
   };
   #handleLogoutClick: EventListener = () => {
     auth.signOut();
+  };
+  #handleNotificationEnableClick: EventListener = () => {
+    Notification.requestPermission()
+      .then(() => {
+        if (!("serviceWorker" in navigator)) throw Error("Service Worker API must be supported for Notifications.");
+        const options: NotificationOptions = {
+          body: "You can now receive Notifications from Listo.",
+          icon: "/apple-touch-icon.png",
+          image: "/apple-touch-icon.png",
+          lang: "en-US",
+          vibrate: [100, 50, 200],
+          badge: "/apple-touch-icon.png",
+          tag: "enable-notifications",
+        };
+        navigator.serviceWorker.ready
+          .then((swReg) => {
+            if (!("showNotification" in swReg))
+              throw Error("Your browser does not support Service Worker Notifications.");
+            swReg.showNotification("Notifications Successfully Enabled!", options);
+          })
+          .catch((error) => alert(error));
+      })
+      .catch(() => alert("Notifications were not Enabled."))
+      .finally(() => this._modal.removeAttribute("show"));
   };
 
   #renderAuth() {
@@ -115,6 +144,9 @@ export default class MainApp extends LitElement {
             <button type="submit">
               ${this._settingsChangeLoading ? html`<loading-spinner color="white" />` : "Change Settings"}
             </button>
+            ${"Notification" in window
+              ? html`<button @click=${this.#handleNotificationEnableClick} type="button">Enable Notifications</button>`
+              : ""}
             <button type="button" @click=${this.#handleLogoutClick}>Logout</button>
           </form>
         </div></base-modal

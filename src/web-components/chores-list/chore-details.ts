@@ -111,7 +111,7 @@ export default class ChoreDetails extends LitElement {
           <input type="date" id="last-completed" name="lastCompleted" required .value=${date} max=${todaysDate} />
           <label for="memo">Memo</label>
           <textarea name="memo" id="memo"></textarea>
-          <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>
+          <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>
           <button @click=${this.#handleInitialDeleteClick} class="delete" type="button">Delete</button>
         </form>
       </base-modal>
