@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyBZ3KUebo7OAtHJQRwEJr2VEpH1yWktahE",
   authDomain: "shopping-list-app-d0386.firebaseapp.com",
   databaseURL: "https://shopping-list-app-d0386-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -11,6 +11,6 @@ const firebaseConfig = {
   appId: "1:302654429160:web:b1d02796a6b4d7fa92365d"
 };
 
-const app = initializeApp(firebaseConfig);
+export const firebaseApp = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
+export const auth = getAuth(firebaseApp);

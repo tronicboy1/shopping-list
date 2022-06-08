@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth } from "../firebase";
 import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";

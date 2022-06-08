@@ -5,6 +5,7 @@ const fs = require("fs");
 module.exports = {
   entry: "./src/index.ts",
   mode: "development",
+  devtool: "inline-source-map",
   module: {
     rules: [
       {
