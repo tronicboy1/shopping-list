@@ -52,6 +52,8 @@ export default class ChoreDetails extends LitElement {
     if (!(this.#ref && this.#choreKey)) return;
     get(child(this.#ref, this.#choreKey)).then((snapshot) => {
       snapshot.exists() ? (this._data = snapshot.val()) : (this._data = null);
+      const modalContainer = this._modal.shadowRoot!.querySelector("#modal-container")!;
+      modalContainer.scrollTo({ top: 0 });
     });
   }
 
@@ -91,7 +93,7 @@ export default class ChoreDetails extends LitElement {
     const title = this._data ? this._data.title : "";
     const date = this._data ? new Date(this._data.lastCompleted).toISOString().split("T")[0] : "";
     const loadingSpinner = html`<loading-spinner color="white" />`;
-    const todaysDate = new Date().toISOString().split("T")[0]
+    const todaysDate = new Date().toISOString().split("T")[0];
     return html`
       <base-modal id="main-modal" title="Chore Details">
         <base-modal id="delete-modal" title=${`Delete ${title}?`}>
