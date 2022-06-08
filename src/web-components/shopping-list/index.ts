@@ -55,7 +55,7 @@ export default class ShoppingList extends LitElement {
   }
 
   #handleInput: EventListener = (event) => {
-    const input = event.target;
+    const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) throw Error("Event target not input.");
     if (input.value.length === input.maxLength) {
       input.setAttribute("class", "invalid");
@@ -65,7 +65,7 @@ export default class ShoppingList extends LitElement {
   };
 
   #handleItemClick: EventListener = (event) => {
-    const target = event.target;
+    const target = event.currentTarget;
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
     if (this.#clicked === id) {
@@ -98,7 +98,7 @@ export default class ShoppingList extends LitElement {
       y2 = event.clientY;
     }
     if (event instanceof TouchEvent) {
-      y2 = event.changedTouches[0].clientY
+      y2 = event.changedTouches[0].clientY;
     }
     if (!y2) return;
     const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 50;
@@ -127,10 +127,27 @@ export default class ShoppingList extends LitElement {
     this._adding = true;
     const newData: Partial<ShoppingListItem> = { item, dateAdded };
     push(this.#ref!, newData).then(() => (this._adding = false));
-        this.form.reset();
+    this.form.reset();
   };
 
   render() {
+    const list = this.listData
+      ? Object.keys(this.listData).map((key) => {
+          const item = this.listData![key];
+          return html`<li
+            id=${key}
+            ?priority=${item.priority}
+            @mouseup=${this.#handleItemMouseup}
+            @touchend=${this.#handleItemMouseup}
+            @mousedown=${this.#handleItemClick}
+            @touchstart=${this.#handleItemClick}
+          >
+            <span>${item.item}</span>
+            ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
+          </li>`;
+        })
+      : html`<p>No Items.</p>`;
+
     return html`
       <shopping-item-details></shopping-item-details>
       <div class="card">
@@ -141,20 +158,7 @@ export default class ShoppingList extends LitElement {
       </div>
       <div class="card">
         <ul>
-          ${this.listData
-            ? Object.keys(this.listData).map(
-                (key) =>
-                  html`<li
-                    id=${key}
-                    @mouseup=${this.#handleItemMouseup}
-                    @touchend=${this.#handleItemMouseup}
-                    @mousedown=${this.#handleItemClick}
-                    @touchstart=${this.#handleItemClick}
-                  >
-                    ${this.listData![key].item}
-                  </li>`
-              )
-            : html`<p>No Items.</p>`}
+          ${list}
         </ul>
       </div>
       <div style="margin-bottom: 11vh;" class="card">

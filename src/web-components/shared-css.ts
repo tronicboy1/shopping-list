@@ -42,8 +42,8 @@ export default css`
   button {
     border: 1px solid var(--highlight-color);
     padding: 0.25rem 0.5rem;
-    font-size: 1.1rem;
-    height: 50px;
+    font-size: 1.5rem;
+    height: 60px;
     color: white;
     background-color: var(--highlight-color);
     border-radius: 4px;
@@ -72,6 +72,7 @@ export default css`
   button.delete {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
+    height: 40px;
   }
 
   @media (prefers-color-scheme: light) {
@@ -101,12 +102,14 @@ export const formCss = css`
     flex-direction: column;
   }
 
-  form input + label, form input + span, form textarea + span {
+  form input + label,
+  form input + span,
+  form textarea + span {
     margin-top: 1rem;
   }
 
-
-  form label, form span {
+  form label,
+  form span {
     margin-bottom: 0.3rem;
   }
 
@@ -126,7 +129,7 @@ export const formCss = css`
     height: 10vh;
     min-height: 80px;
     padding: 0.5rem;
-    font-size: 1.2rem
+    font-size: 1.2rem;
   }
 
   form input + button,
@@ -146,7 +149,7 @@ export const formCss = css`
     margin: 0 0 0 1rem;
   }
 
-  form input[type=checkbox] {
+  form input[type="checkbox"] {
     height: 50px;
     width: 50px;
   }

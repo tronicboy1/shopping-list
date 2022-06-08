@@ -97,7 +97,7 @@ export default class ShoppingItemDetails extends LitElement {
           <input id="amount" name="amount" type="number" min="1" .value=${amount} required />
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" .value=${memo}></textarea>
-          <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>
+          <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>
           <button @click=${this.#handleDeleteClick} type="button" class="delete">
             ${this._deleteLoading ? loadingSpinner : "Delete"}
           </button>
