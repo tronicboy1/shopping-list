@@ -123,10 +123,13 @@ export default class ShoppingList extends LitElement {
     if (this._adding) return;
     const formData = new FormData(this.form);
     const item = String(formData.get("item")!).trim();
+    if (item.length > 32) return;
     const dateAdded = new Date().getTime();
     this._adding = true;
     const newData: Partial<ShoppingListItem> = { item, dateAdded };
-    push(this.#ref!, newData).then(() => (this._adding = false));
+    Promise.resolve(push(this.#ref!, newData))
+      .catch((error) => console.error(error))
+      .finally(() => (this._adding = false));
     this.form.reset();
   };
 

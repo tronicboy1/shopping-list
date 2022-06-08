@@ -11,6 +11,7 @@ export default css`
     --highlight-color: rgb(0, 140, 255);
     --highlight-hover: rgb(26, 152, 255);
     --danger-color: rgb(255, 94, 94);
+    --warning-color: rgb(255, 250, 211);
   }
 
   .card {
@@ -32,11 +33,9 @@ export default css`
     display: flex;
   }
 
-  .card[dark] {
-    --dark-color: rgb(83, 83, 83);
-    background-color: var(--dark-color);
-    border-color: var(--dark-color);
-    color: white;
+  .invalid {
+    background-color: var(--warning-color);
+    display: block;
   }
 
   button {
@@ -91,6 +90,7 @@ export default css`
       --secondary-color: rgb(132, 132, 132);
       --highlight-color: rgb(0, 140, 255);
       --highlight-hover: rgb(26, 152, 255);
+      --warning-color: rgb(105, 95, 23);
       color: white;
     }
   }
