@@ -14,6 +14,7 @@ export interface ShoppingListItem {
   memo: string;
   dateAdded: number;
   amount: number;
+  priority: boolean;
 }
 
 export default class ShoppingList extends LitElement {

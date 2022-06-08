@@ -19,10 +19,7 @@ export default class ShoppingItemDetails extends LitElement {
   @query("base-modal")
   private _modal!: BaseModal;
 
-  static styles = [
-    sharedCss,
-    formCss,
-  ];
+  static styles = [sharedCss, formCss];
 
   static get observedAttributes(): string[] {
     return ["uid", "key"];
@@ -54,11 +51,13 @@ export default class ShoppingItemDetails extends LitElement {
     const amount = Number(formData.get("amount"));
     if (isNaN(amount)) throw TypeError("Quantity must be a number.");
     const memo = formData.get("memo")!.toString().trim();
+    const priority = formData.get("priority")?.toString() === "on";
     this._editLoading = true;
-    const newData: Partial<ShoppingListItem> = {
+    const newData: ShoppingListItem = {
       item,
       amount,
       memo,
+      priority,
       dateAdded: this._data!.dateAdded ?? new Date().getTime(),
     };
     set(this.#ref, newData)
@@ -80,6 +79,7 @@ export default class ShoppingItemDetails extends LitElement {
     const dateAdded = this._data?.dateAdded ? new Date(this._data.dateAdded).toISOString().split("T")[0] : "";
     const memo = this._data?.memo ?? "";
     const amount = this._data?.amount?.toString() ?? "1";
+    const priority = this._data?.priority ?? false;
 
     const loadingSpinner = html`<loading-spinner color="white" />`;
     return html`
@@ -87,6 +87,10 @@ export default class ShoppingItemDetails extends LitElement {
         <form @submit=${this.#handleEditSubmit}>
           <label for="item">Name</label>
           <input type="text" id="item" name="item" maxlength="32" minlength="1" .value=${item} />
+          <div class="checkbox-group">
+            <input type="checkbox" id="priority" name="priority" ?checked=${priority} />
+            <label for="priority">Priority</label>
+          </div>
           <label for="date-added">Date Added</label>
           <input type="date" id="date-added" name="dateAdded" .value=${dateAdded} disabled />
           <label for="amount">Quantity</label>

@@ -126,11 +126,29 @@ export const formCss = css`
     height: 10vh;
     min-height: 80px;
     padding: 0.5rem;
+    font-size: 1.2rem
   }
 
   form input + button,
   form textarea + button {
     margin-top: 1rem;
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 1rem 0;
+  }
+
+  .checkbox-group label {
+    margin: 0 0 0 1rem;
+  }
+
+  form input[type=checkbox] {
+    height: 50px;
+    width: 50px;
   }
 
   button + button {
