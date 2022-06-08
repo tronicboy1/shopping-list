@@ -68,20 +68,20 @@ export default class ShoppingList extends LitElement {
     const target = event.currentTarget;
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
-    if (this.#clicked === id) {
-      id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id);
-      this.#clicked = null;
-    } else {
-      this.#clicked = id;
-      if (event instanceof MouseEvent) {
-        this.#clickedAt = { id, when: new Date(), where: { x: event.clientX, y: event.clientY } };
-      }
-      if (event instanceof TouchEvent) {
-        this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
-      }
-      setTimeout(() => {
+    if (event instanceof MouseEvent) {
+      this.#clickedAt = { id, when: new Date(), where: { x: event.clientX, y: event.clientY } };
+      if (this.#clicked === id) {
+        id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id); // only delete on mouse events
         this.#clicked = null;
-      }, 400);
+      } else {
+        this.#clicked = id;
+        setTimeout(() => {
+          this.#clicked = null;
+        }, 400);
+      }
+    }
+    if (event instanceof TouchEvent) {
+      this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
     }
   };
 
