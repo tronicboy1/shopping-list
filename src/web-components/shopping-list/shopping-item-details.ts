@@ -2,7 +2,7 @@ import BaseModal from "@web-components/base-modal";
 import { firebaseApp } from "@web-components/firebase";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
-import { css, html, LitElement } from "lit";
+import { html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { ShoppingListItem } from "./";
 
@@ -22,14 +22,6 @@ export default class ShoppingItemDetails extends LitElement {
   static styles = [
     sharedCss,
     formCss,
-    css`
-      #map {
-        height: 300px;
-        width: 100%;
-        margin-bottom: 1rem;
-        border-radius: 4px;
-      }
-    `,
   ];
 
   static get observedAttributes(): string[] {
@@ -101,8 +93,6 @@ export default class ShoppingItemDetails extends LitElement {
           <input id="amount" name="amount" type="number" min="1" .value=${amount} required />
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" .value=${memo}></textarea>
-          <span>Location Added</span>
-          <div id="map"></div>
           <button type="submit">${this._editLoading ? loadingSpinner : "Edit"}</button>
           <button @click=${this.#handleDeleteClick} type="button" class="delete">
             ${this._deleteLoading ? loadingSpinner : "Delete"}
