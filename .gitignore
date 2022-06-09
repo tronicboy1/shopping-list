@@ -11,8 +11,8 @@
 # production
 /build
 
-/public/sw.js
-/public/sw.js.LICENSE.txt
+/public/firebase-messaging-sw.js
+/public/firebase-messaging-sw.js.LICENSE.txt
 
 # misc
 .DS_Store
