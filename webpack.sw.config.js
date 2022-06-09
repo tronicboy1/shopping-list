@@ -39,7 +39,7 @@ module.exports = {
   },
   output: {
     filename: "sw.js",
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "public"),
     clean: false,
   },
 };

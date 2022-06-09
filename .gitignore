@@ -11,6 +11,9 @@
 # production
 /build
 
+/public/sw.js
+/public/sw.js.LICENSE.txt
+
 # misc
 .DS_Store
 .env.local

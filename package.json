@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "webpack serve",
-    "build": "webpack --config webpack.prod.config.js",
+    "build": "webpack --config webpack.sw.config.js && webpack --config webpack.prod.config.js",
     "mkcert": "mkcert -key-file key.pem -cert-file cert.pem example.com *.example.com localhost"
   },
   "devDependencies": {
