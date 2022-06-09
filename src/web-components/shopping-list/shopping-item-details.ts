@@ -94,7 +94,7 @@ export default class ShoppingItemDetails extends LitElement {
           <label for="item">Name</label>
           <input type="text" id="item" name="item" maxlength="32" minlength="1" .value=${item} />
           <div class="checkbox-group">
-            <input type="checkbox" id="priority" name="priority" ?checked=${priority} />
+            <input type="checkbox" id="priority" name="priority" ?checked=${priority} .value=${priority ? "on" : ""} />
             <label for="priority">Priority</label>
           </div>
           <label for="date-added">Date Added</label>

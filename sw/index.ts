@@ -1,8 +1,8 @@
-importScripts("https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js");
-importScripts("https://www.gstatic.com/firebasejs/8.1.1/firebase-messaging.js");
-/**
- * @typedef {{body: string;data: any;icon: string;lang: string;requireInteraction: boolean;silent: boolean;tag: string;timestamp: number;title: string;close(): void;requestPermission(): Promise<string>;}} Notification
- */
+import { initializeApp } from "firebase/app";
+import { isSupported } from "firebase/messaging";
+import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+
+declare var self: ServiceWorkerGlobalScope;
 
 self.addEventListener("install", (event) => {
   console.log("SW: Installing.", event);
@@ -12,15 +12,9 @@ self.addEventListener("activate", (event) => {
   console.log("SW: Activated.", event);
 });
 
-self.addEventListener(
-  "fetch",
-  /**
-   * @param {Event & {request: Request; respondWith(response: Promise<Response>|Response): Promise<Response>;}} event
-   */
-  (event) => {
-    event.respondWith(fetch(event.request));
-  }
-);
+self.addEventListener("fetch", (event) => {
+  event.respondWith(fetch(event.request));
+});
 
 self.addEventListener(
   "notificationclick",
@@ -47,19 +41,22 @@ const firebaseConfig = {
   appId: "1:302654429160:web:b1d02796a6b4d7fa92365d",
 };
 
-const firebaseApp = firebase.initializeApp(firebaseConfig);
+const firebaseApp = initializeApp(firebaseConfig);
 
-if (firebase.messaging.isSupported()) {
-  const firebaseMessaging = firebase.messaging(firebaseApp);
-  firebaseMessaging.onBackgroundMessage((payload) => {
+isSupported().then(() => {
+  const firebaseMessaging = getMessaging(firebaseApp);
+  onBackgroundMessage(firebaseMessaging, (payload) => {
     console.log("SW: Message Received", payload);
-    const notificationTitle = payload.notification.title;
+    const notificationData = payload.notification;
+    if (!notificationData) return;
+    const { title, body } = notificationData;
+    if (!(title && body)) return;
     const notificationOptions = {
-      body: payload.notification.body,
+      body,
       icon: "/apple-touch-icon.png",
       renotify: true,
       tag: "notification",
     };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    self.registration.showNotification(title, notificationOptions);
   });
-}
+});
