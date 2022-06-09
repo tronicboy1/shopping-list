@@ -7,5 +7,8 @@
     "firebase-admin": "^10.2.0",
     "nodemon": "^2.0.16",
     "ts-node": "^10.8.1"
+  },
+  "scripts": {
+    "start": "nodemon index.ts"
   }
 }
