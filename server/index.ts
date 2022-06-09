@@ -1,14 +1,19 @@
-import http from "http";
 import admin from "firebase-admin";
+import dotenv from "dotenv";
+import express from "express"
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
+
+dotenv.config();
+
 const key = require("./shopping-list-app-d0386-firebase-adminsdk-4n6jo-97fc02004b.json");
 
-const server = http.createServer((req, res) => {
-  res.write("OK");
+let lastMessage: string;
+const app = express();
+app.get("/", (req, res) => {
   res.statusCode = 200;
-  return res.end();
-});
+  return res.send(`Last Notification: ${lastMessage}`);
+})
 
 admin.initializeApp({
   credential: admin.credential.cert(key),
@@ -34,9 +39,12 @@ ref.on("child_changed", (snapshot) => {
           body: `New Item ${newNotification.item} was updated in your list.`,
         },
       })
-      .then((value) => console.log("Notification Sent", newNotification.uid));
+      .then((value) => {
+        console.log("Notification Sent", newNotification.uid);
+        lastMessage = newNotification.uid + " " + newNotification.item;
+      });
   });
 });
 
-const port = 8080;
-server.listen(port, () => console.log(`listening on ${port}`));
+const port = process.env.PORT ?? 8080;
+app.listen(port, () => console.log(`listening on ${port}`));

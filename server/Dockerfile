@@ -13,6 +13,7 @@ WORKDIR /app
 COPY --from=build /app/dist /app/dist
 COPY package.json .
 COPY yarn.lock .
+COPY shopping-list-app-d0386-firebase-adminsdk-4n6jo-97fc02004b.json /app/dist/
 RUN yarn install --production
 
 ENV NODE_ENV=production
