@@ -17,8 +17,20 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("notificationclick", (event) => {
-  console.log(event.notification);
   event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((windowClients) => {
+      const openedWindow = windowClients.find(
+        (windowClient) =>
+          windowClient.url === "https://shopping-list-app-d0386.web.app/"
+      );
+      if (openedWindow && "focus" in openedWindow) {
+        openedWindow.focus();
+      } else {
+        self.clients.openWindow("https://shopping-list-app-d0386.web.app/");
+      }
+    })
+  );
 });
 
 self.addEventListener("notificationclose", (event) => {
@@ -45,12 +57,10 @@ isSupported().then(() => {
     if (!notificationData) return;
     const { title, body } = notificationData;
     if (!(title && body)) return;
-    const notificationOptions = {
+    const notificationOptions: NotificationOptions = {
       body,
       icon: "/apple-touch-icon.png",
-      renotify: true,
-      tag: "notification",
     };
-    return self.registration.showNotification(title, notificationOptions);
+    self.registration.showNotification(title, notificationOptions);
   });
 });

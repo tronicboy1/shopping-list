@@ -38,7 +38,7 @@ module.exports = {
     extensions: [".ts", ".js"],
   },
   output: {
-    filename: "sw.js",
+    filename: "firebase-messaging-sw.js",
     path: path.resolve(__dirname, "public"),
     clean: false,
     iife: false,

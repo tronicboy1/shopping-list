@@ -1,5 +1,5 @@
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, get, getDatabase, push, ref, set } from "firebase/database";
+import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -34,7 +34,7 @@ export default class MainApp extends LitElement {
         isSupported().then((isSupported) => {
           if (!isSupported) throw Error("Browser does not support firebase Notifications.");
           getToken(messaging).then((newFCM) => {
-            const fcmListRef = ref(db, `${auth.uid}/SETTINGS/FCM`);
+            const fcmListRef = ref(db, `FCM/${auth.uid}/`);
             get(fcmListRef).then((currentData) => {
               const oldFCMList = (currentData.val() as string[]) ?? [];
               if (oldFCMList.find((fcm) => fcm === newFCM)) return;
