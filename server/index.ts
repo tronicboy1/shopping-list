@@ -14,20 +14,29 @@ admin.initializeApp({
 const messaging = getMessaging();
 
 const db = getDatabase();
-const ref = db.ref("/zlnVg5eATAY5oDNcPKrgEkYfVma2/");
-ref.on("value", (snapshot) => {
-  const value = snapshot.val();
-  const FCMTokens = value?.SETTINGS?.FCM as string[] | null | undefined;
-  if (!FCMTokens) return;
+
+type FCMKeys = Record<string, string[]>;
+let fcmKeys: FCMKeys = {};
+const fcmRef = db.ref("/FCM/");
+fcmRef.on("value", (snapshot) => {
+  const value = snapshot.val() as FCMKeys | null;
+  if (!(value && value instanceof Object)) return;
+  fcmKeys = value;
+});
+
+const ref = db.ref("/NOTIFICATIONS/");
+ref.on("child_changed", (snapshot) => {
+  const newNotification = snapshot.val() as { item?: string; uid: string } | null;
+  const uidList = Object.keys(fcmKeys);
+  if (!(uidList.length && newNotification)) return;
+  const fcmTokens = fcmKeys[newNotification.uid];
+  if (!fcmTokens || fcmTokens.length === 0) return;
+  console.log(newNotification, fcmTokens);
   messaging
-    .sendToDevice(FCMTokens, {
-      data: {
-        title: "List Updated",
-        body: "Information was updated in your list.",
-      },
+    .sendToDevice(fcmTokens, {
       notification: {
         title: "List Updated",
-        body: "Information was updated in your list.",
+        body: `New Item ${newNotification.item} was updated in your list.`,
       },
     })
     .then((value) => console.log("Notification Sent", value));
