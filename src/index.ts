@@ -10,7 +10,7 @@ import ChoresList from "@web-components/chores-list";
 import { firebaseApp } from "@web-components/firebase";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => console.log(error));
+  navigator.serviceWorker.register("/sw.js").catch((error) => console.log(error));
 }
 
 customElements.define("auth-handler", AuthHandler);
