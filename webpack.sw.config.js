@@ -7,7 +7,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: ["babel-loader", "ts-loader"],
+        use: ["ts-loader"],
         exclude: /node_modules/,
       },
       {
@@ -41,5 +41,6 @@ module.exports = {
     filename: "sw.js",
     path: path.resolve(__dirname, "public"),
     clean: false,
+    iife: false,
   },
 };

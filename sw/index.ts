@@ -16,16 +16,10 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(fetch(event.request));
 });
 
-self.addEventListener(
-  "notificationclick",
-  /**
-   * @param {{action: string; notification: Notification;}} event
-   */
-  (event) => {
-    console.log(event.notification);
-    event.notification.close();
-  }
-);
+self.addEventListener("notificationclick", (event) => {
+  console.log(event.notification);
+  event.notification.close();
+});
 
 self.addEventListener("notificationclose", (event) => {
   console.log("SW: Notification Closed.", event);
@@ -57,6 +51,6 @@ isSupported().then(() => {
       renotify: true,
       tag: "notification",
     };
-    self.registration.showNotification(title, notificationOptions);
+    return self.registration.showNotification(title, notificationOptions);
   });
 });
