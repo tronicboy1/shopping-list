@@ -10,13 +10,14 @@ import BaseModal from "@web-components/base-modal";
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
   #uid!: string;
-  #unsubscribe!: Unsubscribe;
   @state()
   private _listGroups: ListGroups | null = null;
   @state()
   private _adding = false;
   @state()
   private _deleteLoading = false;
+  @state()
+  private _initLoading = true;
   @query("form")
   form!: HTMLFormElement;
   @query("base-modal")
@@ -34,6 +35,10 @@ export default class AllShoppingLists extends LitElement {
       :host([show]) {
         display: block;
       }
+
+      loading-spinner + p {
+        display: none;
+      }
     `,
   ];
 
@@ -44,7 +49,9 @@ export default class AllShoppingLists extends LitElement {
         this.#uid = auth.uid;
         const db = getDatabase(firebaseApp);
         this.#ref = ref(db, `${auth.uid}/SHOPPING-LISTS/`);
-        this.#refreshList();
+        this.#refreshList().finally(() => {
+          this._initLoading = false;
+        });
       }
     });
   }
@@ -122,6 +129,7 @@ export default class AllShoppingLists extends LitElement {
           <button id="add" type="submit">${this._adding ? html`<loading-spinner color="white" />` : "Add"}</button>
         </form>
       </div>
+      ${this._initLoading ? html`<loading-spinner />` : ""}
       ${this._listGroups
         ? Object.keys(this._listGroups).map(
             (key) => html`<shopping-list @deleted=${() => this.#refreshList()} list-id=${key} uid=${this.#uid}></shopping-list>`
