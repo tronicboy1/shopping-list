@@ -10,7 +10,8 @@ This project uses Web Components and Firebase to build a simple shopping list ap
 
 1. firebase logout
 2. firebase login
-3. firebase deploy --only hosting
+3. yarn build
+4. firebase deploy --only hosting
 
 ## Deploy - Notification Server
 
