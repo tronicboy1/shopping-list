@@ -178,16 +178,19 @@ export default class ShoppingList extends LitElement {
     const droppedLocationData = this.#listData[droppedLocationId];
     const draggedData = this.#listData[draggedId];
     if (!(draggedData && droppedLocationData)) return;
-    const newSortedArray = [...this.sortedData!].filter((item) => item.key !== draggedId);
-    const indexOfDropped = newSortedArray.findIndex((item) => item.key === droppedLocationId);
-    const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
-    const itemsAfterDropped = newSortedArray.slice(indexOfDropped);
-    const changedOrder = [...itemsUpToDropped, { key: draggedId, ...draggedData }, ...itemsAfterDropped];
-    const newData = { ...this.#listData };
-    changedOrder.forEach((item, index) => {
-      newData[item.key].order = index;
-    });
-    set(this.#dataRef, newData);
+    const newSortedArray = this.sortedData!.filter((item) => item.key !== draggedId);
+    const worker = new Worker("change-order.js");
+    worker.onmessage = (event) => set(this.#dataRef, event.data);
+    worker.postMessage({ newSortedArray, droppedLocationId, draggedData, data: this.#listData, draggedId });
+    // const indexOfDropped = newSortedArray.findIndex((item) => item.key === droppedLocationId);
+    // const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
+    // const itemsAfterDropped = newSortedArray.slice(indexOfDropped);
+    // const changedOrder = [...itemsUpToDropped, { key: draggedId, ...draggedData }, ...itemsAfterDropped];
+    // const newData = { ...this.#listData };
+    // changedOrder.forEach((item, index) => {
+    //   newData[item.key].order = index;
+    // });
+    // set(this.#dataRef, newData);
   };
 
   render() {
