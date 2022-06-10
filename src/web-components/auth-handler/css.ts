@@ -89,17 +89,16 @@ export default css`
   #errors {
     --error-color: orange;
     --error-secondary: rgb(255, 225, 170);
-    background-color: var(--error-secondary);
+    background-color: var(--danger-color);
     padding: 1rem;
-    border: 1px solid var(--error-secondary);
+    border: 1px solid var(--danger-color);
     border-radius: 4px;
-    display: none;
-  }
-
-  #errors[show] {
     display: block;
   }
 
   @media (prefers-color-scheme: dark) {
+    * {
+      color: white;
+    }
   }
 `;

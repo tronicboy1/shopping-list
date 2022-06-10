@@ -7,6 +7,10 @@ import ButtonBar from "@web-components/button-bar";
 import BaseModal from "@web-components/base-modal";
 import ChoresList from "@web-components/chores-list";
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => alert(error));
+}
+
 customElements.define("auth-handler", AuthHandler);
 customElements.define("shopping-list", ShoppingList);
 customElements.define("loading-spinner", LoadingSpinner);

@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: "./src/index.ts",
@@ -47,7 +48,7 @@ module.exports = {
   },
   resolve: {
     alias: {
-      "@web-components": path.resolve(__dirname, "src/web-components/")
+      "@web-components": path.resolve(__dirname, "src/web-components/"),
     },
     extensions: [".tsx", ".ts", ".js"],
   },
@@ -61,5 +62,8 @@ module.exports = {
       template: path.resolve(__dirname, "public", "index.html"),
     }),
     new MiniCssExtractPlugin(),
+    new CopyWebpackPlugin({
+      patterns: [{ from: "public", filter: (path) => !path.includes(".html") }],
+    }),
   ],
 };

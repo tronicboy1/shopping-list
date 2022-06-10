@@ -1,7 +1,15 @@
 import { auth, firebaseApp } from "@web-components/firebase";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, get, getDatabase, onValue, push, ref } from "firebase/database";
+import {
+  DatabaseReference,
+  getDatabase,
+  onValue,
+  orderByChild,
+  push,
+  query as firebaseQuery,
+  ref,
+} from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import ChoreDetails from "./chore-details";
@@ -31,7 +39,8 @@ export default class ChoresList extends LitElement {
       this._choreDetails.setAttribute("uid", auth.uid);
       const db = getDatabase(firebaseApp);
       this.#ref = ref(db, `${auth.uid}/CHORES/`);
-      onValue(this.#ref, (snapshot) => {
+      const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
+      onValue(query, (snapshot) => {
         const value = snapshot.val();
         this._choresData = value;
       });
@@ -67,7 +76,7 @@ export default class ChoresList extends LitElement {
           </li>`;
         })
       : html`<p>No Items.</p>`;
-    const todaysDate = new Date().toISOString().split("T")[0]
+    const todaysDate = new Date().toISOString().split("T")[0];
 
     return html`
       <div class="card">
@@ -75,14 +84,7 @@ export default class ChoresList extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required />
           <label for="last-completed">Last Completed</label>
-          <input
-            type="date"
-            id="last-completed"
-            name="lastCompleted"
-            required
-            value=${todaysDate}
-            max=${todaysDate}
-          />
+          <input type="date" id="last-completed" name="lastCompleted" required value=${todaysDate} max=${todaysDate} />
           <button type="submit">Add</button>
         </form>
       </div>

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": ["esnext", "WebWorker", "WebWorker.ImportScripts", "Webworker.Iterable"],
+    "baseUrl": "../",
+  },
+  "include": ["./**/*"],
+  "files": ["index.ts"],
+  "exclude": ["node_modules", "dist"],
+  "extends": "../tsconfig.json"
+}

@@ -10,7 +10,7 @@ div {
   height: 10vh;
   min-height: 100pxs;
   width: 95%;
-  max-width: 500px;
+  max-width: 600px;
   background-color: var(--primary-color);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.168);
   border: 1px solid var(--primary-color);

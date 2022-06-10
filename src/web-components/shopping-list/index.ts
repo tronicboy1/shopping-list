@@ -1,5 +1,5 @@
 import firebase from "../../services/firebase";
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child } from "firebase/database";
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, Database } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -19,6 +19,8 @@ export interface ShoppingListItem {
 
 export default class ShoppingList extends LitElement {
   #ref!: DatabaseReference;
+  #notificationRef!: DatabaseReference;
+  #uid!: string;
   #clicked: string | null = null;
   #clickedAt: { id: string; when: Date; where: { x: number; y: number } } | null = null;
 
@@ -44,9 +46,11 @@ export default class ShoppingList extends LitElement {
     const auth = getAuth(firebase);
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
+        this.#uid = auth.uid;
         this._shoppingItemDetails.setAttribute("uid", auth.uid);
         const db = getDatabase(firebase);
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
+        this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
         onValue(this.#ref, (snapshot) => {
           this.listData = snapshot.val() as ShoppingListData;
         });
@@ -80,7 +84,7 @@ export default class ShoppingList extends LitElement {
         }, 400);
       }
     }
-    if (event instanceof TouchEvent) {
+    if (window.TouchEvent && event instanceof TouchEvent) {
       this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
     }
   };
@@ -97,7 +101,7 @@ export default class ShoppingList extends LitElement {
     if (event instanceof MouseEvent) {
       y2 = event.clientY;
     }
-    if (event instanceof TouchEvent) {
+    if (window.TouchEvent && event instanceof TouchEvent) {
       y2 = event.changedTouches[0].clientY;
     }
     if (!y2) return;
@@ -127,8 +131,13 @@ export default class ShoppingList extends LitElement {
     const dateAdded = new Date().getTime();
     this._adding = true;
     const newData: Partial<ShoppingListItem> = { item, dateAdded };
-    Promise.resolve(push(this.#ref!, newData))
-      .catch((error) => console.error(error))
+    push(this.#ref, newData)
+      .then(() => {
+        fetch("https://shopping-list-notifications.herokuapp.com/").then(() =>
+          set(this.#notificationRef, { item: newData.item, uid: this.#uid })
+        );
+      })
+      .catch((error) => alert(error))
       .finally(() => (this._adding = false));
     this.form.reset();
   };
