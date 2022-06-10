@@ -133,7 +133,7 @@ export default class ShoppingList extends LitElement {
     const newData: Partial<ShoppingListItem> = { item, dateAdded };
     push(this.#ref, newData)
       .then(() => {
-        fetch("https://shopping-list-notifications.herokuapp.com/").then(() =>
+        fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
         );
       })
