@@ -1,5 +1,5 @@
+import { firebaseApp } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
-import { firebaseApp } from "@web-components/firebase";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { child, Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { css, html, LitElement } from "lit";

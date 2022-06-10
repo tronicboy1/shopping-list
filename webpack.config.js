@@ -43,7 +43,8 @@ module.exports = {
   },
   resolve: {
     alias: {
-      "@web-components": path.resolve(__dirname, "src/web-components/")
+      "@web-components": path.resolve(__dirname, "src/web-components/"),
+      "@firebase-logic": path.resolve(__dirname, "src/firebase/index.ts"),
     },
     extensions: [".tsx", ".ts", ".js"],
   },

@@ -5,7 +5,7 @@ import { state, query } from "lit/decorators.js";
 import styles from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
-import { firebaseApp } from "@web-components/firebase";
+import { firebaseApp } from "@firebase-logic";
 
 type ShoppingListData = Record<string, ShoppingListItem>;
 
