@@ -15,7 +15,7 @@
     "baseUrl": "./",
     "paths": {
       "@web-components/*": ["src/web-components/*"],
-      "@firebase-logic": ["src/firebase/index.ts"]
+      "@firebase-logic": ["src/firebase.ts"]
     },
     "allowSyntheticDefaultImports": true
   },
