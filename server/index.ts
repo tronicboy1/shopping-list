@@ -1,6 +1,6 @@
+import http from "http";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
-import express from "express"
 import { getDatabase } from "firebase-admin/database";
 import { getMessaging } from "firebase-admin/messaging";
 
@@ -8,12 +8,25 @@ dotenv.config();
 
 const key = require("./shopping-list-app-d0386-firebase-adminsdk-4n6jo-97fc02004b.json");
 
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
+  "Access-Control-Max-Age": 2592000,
+};
+
 let lastMessage: string;
-const app = express();
-app.get("/", (req, res) => {
+const bootedAt = new Date();
+const server = http.createServer((req, res) => {
+  res.writeHead(200, headers);
+  res.write(
+    `<html style="background-color: black; color: white;">
+    <h1>Last Notification</h1>
+    <h3>${lastMessage ?? `Rebooted at: ${bootedAt.toLocaleTimeString()}`}</h3>
+    </html>`
+  );
   res.statusCode = 200;
-  return res.send(`Last Notification: ${lastMessage}`);
-})
+  return res.end();
+});
 
 admin.initializeApp({
   credential: admin.credential.cert(key),
@@ -41,10 +54,12 @@ ref.on("child_changed", (snapshot) => {
       })
       .then((value) => {
         console.log("Notification Sent", newNotification.uid);
-        lastMessage = newNotification.uid + " " + newNotification.item;
+        lastMessage = `<p>UID: ${newNotification.uid}</p><p>Item: ${newNotification.item}</p><p>FCM: ${fcmTokens.map(
+          (fcm) => fcm.substring(0, 6) + "..."
+        )}</p>`;
       });
   });
 });
 
 const port = process.env.PORT ?? 8080;
-app.listen(port, () => console.log(`listening on ${port}`));
+server.listen(port, () => console.log(`listening on ${port}`));
