@@ -23,10 +23,9 @@ export default class ShoppingList extends LitElement {
   #notificationRef!: DatabaseReference;
   #uid!: string;
   #clicked: string | null = null;
-  #clickedAt: { id: string; when: Date; where: { x: number; y: number } } | null = null;
+  #listData: ShoppingListData | null = null;
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
-  #listData: ShoppingListData | null = null;
   @state()
   private _adding = false;
   @query("form")
@@ -54,12 +53,12 @@ export default class ShoppingList extends LitElement {
         this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
         onValue(this.#ref, (snapshot) => {
           const data = snapshot.val() as ShoppingListData | null;
-          if (!data) return;
-          const keys = Object.keys(data);
-          if (keys.length === 0) {
+          if (!data || Object.keys(data).length === 0) {
             this.#listData = null;
+            this.sortedData = null;
             return;
           }
+          const keys = Object.keys(data);
           if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
             keys.forEach((key, index) => (data[key].order = index));
             set(this.#ref, data);
@@ -88,8 +87,7 @@ export default class ShoppingList extends LitElement {
     const target = event.currentTarget;
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
-    if (event instanceof MouseEvent) {
-      this.#clickedAt = { id, when: new Date(), where: { x: event.clientX, y: event.clientY } };
+    if (event instanceof MouseEvent || event instanceof TouchEvent) {
       if (this.#clicked === id) {
         id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id); // only delete on mouse events
         this.#clicked = null;
@@ -100,33 +98,6 @@ export default class ShoppingList extends LitElement {
         }, 400);
       }
     }
-    if (window.TouchEvent && event instanceof TouchEvent) {
-      this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
-    }
-  };
-
-  #handleItemMouseup = (event: Event) => {
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLLIElement) || !this.#clickedAt) return;
-    const id = target.id;
-    if (this.#clickedAt.id !== id) {
-      this.#clickedAt = null;
-      return;
-    }
-    let y2: number | null = null;
-    if (event instanceof MouseEvent) {
-      y2 = event.clientY;
-    }
-    if (window.TouchEvent && event instanceof TouchEvent) {
-      y2 = event.changedTouches[0].clientY;
-    }
-    if (!y2) return;
-    const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 10;
-    const heldLongEnough = new Date().getTime() - this.#clickedAt.when.getTime() > 500;
-    if (heldLongEnough && notMoved) {
-      this._shoppingItemDetails.setAttribute("key", id);
-    }
-    this.#clickedAt = null;
   };
 
   #deleteItem = (id: string) => {
@@ -184,7 +155,10 @@ export default class ShoppingList extends LitElement {
     if (!(target instanceof HTMLLIElement)) return;
     const droppedLocationId = target.id;
     const draggedId = event.dataTransfer.getData("id");
-    if (droppedLocationId === draggedId) return;
+    if (droppedLocationId === draggedId) {
+      this._shoppingItemDetails.setAttribute("key", draggedId);
+      return;
+    }
     if (!this.#listData) return;
     const droppedLocationData = this.#listData[droppedLocationId];
     const draggedData = this.#listData[draggedId];
@@ -203,23 +177,20 @@ export default class ShoppingList extends LitElement {
 
   render() {
     const list = this.sortedData
-      ? this.sortedData.map((item) => {
-          return html`<li
+      ? this.sortedData.map(
+          (item) => html`<li
             id=${item.key!}
             draggable="true"
             ?priority=${item.priority}
-            @mouseup=${this.#handleItemMouseup}
-            @touchend=${this.#handleItemMouseup}
-            @mousedown=${this.#handleItemClick}
-            @touchstart=${this.#handleItemClick}
+            @click=${this.#handleItemClick}
             @dragstart=${this.#handleDragStart}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
           >
             <span>${item.item}</span>
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
-          </li>`;
-        })
+          </li>`
+        )
       : html`<p>No Items.</p>`;
 
     return html`
