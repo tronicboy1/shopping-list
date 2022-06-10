@@ -67,6 +67,7 @@ export default class ShoppingItemDetails extends LitElement {
       amount,
       memo,
       priority,
+      order: this._data!.order!,
       dateAdded: this._data!.dateAdded ?? new Date().getTime(),
     };
     set(this.#ref, newData)

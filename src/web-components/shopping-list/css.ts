@@ -32,7 +32,7 @@ export default css`
     background: var(--secondary-color);
     border-radius: 8px;
     color: black;
-    padding: 0.5rem;
+    padding: 1.25rem 0.5rem;
     transition: all 0.2s;
     margin-bottom: 0.5rem;
     text-align: center;

@@ -1,4 +1,4 @@
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, Database } from "firebase/database";
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -15,6 +15,7 @@ export interface ShoppingListItem {
   dateAdded: number;
   amount: number;
   priority: boolean;
+  order: number;
 }
 
 export default class ShoppingList extends LitElement {
@@ -22,10 +23,9 @@ export default class ShoppingList extends LitElement {
   #notificationRef!: DatabaseReference;
   #uid!: string;
   #clicked: string | null = null;
-  #clickedAt: { id: string; when: Date; where: { x: number; y: number } } | null = null;
-
+  #listData: ShoppingListData | null = null;
   @state()
-  listData: ShoppingListData | null = null;
+  sortedData: (ShoppingListItem & { key: string })[] | null = null;
   @state()
   private _adding = false;
   @query("form")
@@ -52,7 +52,22 @@ export default class ShoppingList extends LitElement {
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
         this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
         onValue(this.#ref, (snapshot) => {
-          this.listData = snapshot.val() as ShoppingListData;
+          const data = snapshot.val() as ShoppingListData | null;
+          if (!data || Object.keys(data).length === 0) {
+            this.#listData = null;
+            this.sortedData = null;
+            return;
+          }
+          const keys = Object.keys(data);
+          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+            keys.forEach((key, index) => (data[key].order = index));
+            set(this.#ref, data);
+            return;
+          }
+          this.#listData = data;
+          this.sortedData = Object.keys(this.#listData)
+            .map((key) => ({ key, ...this.#listData![key] }))
+            .sort((a, b) => (a.order < b.order ? -1 : 1));
         });
       }
     });
@@ -72,8 +87,7 @@ export default class ShoppingList extends LitElement {
     const target = event.currentTarget;
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
-    if (event instanceof MouseEvent) {
-      this.#clickedAt = { id, when: new Date(), where: { x: event.clientX, y: event.clientY } };
+    if (event instanceof MouseEvent || event instanceof TouchEvent) {
       if (this.#clicked === id) {
         id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id); // only delete on mouse events
         this.#clicked = null;
@@ -84,37 +98,10 @@ export default class ShoppingList extends LitElement {
         }, 400);
       }
     }
-    if (window.TouchEvent && event instanceof TouchEvent) {
-      this.#clickedAt = { id, when: new Date(), where: { x: event.touches[0].clientX, y: event.touches[0].clientY } };
-    }
-  };
-
-  #handleItemMouseup = (event: Event) => {
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLLIElement) || !this.#clickedAt) return;
-    const id = target.id;
-    if (this.#clickedAt.id !== id) {
-      this.#clickedAt = null;
-      return;
-    }
-    let y2: number | null = null;
-    if (event instanceof MouseEvent) {
-      y2 = event.clientY;
-    }
-    if (window.TouchEvent && event instanceof TouchEvent) {
-      y2 = event.changedTouches[0].clientY;
-    }
-    if (!y2) return;
-    const notMoved = Math.abs(y2 - this.#clickedAt.where.y) < 10;
-    const heldLongEnough = new Date().getTime() - this.#clickedAt.when.getTime() > 500;
-    if (heldLongEnough && notMoved) {
-      this._shoppingItemDetails.setAttribute("key", id);
-    }
-    this.#clickedAt = null;
   };
 
   #deleteItem = (id: string) => {
-    if (!(this.listData && this.#ref)) return;
+    if (!(this.#listData && this.#ref)) return;
     remove(child(this.#ref, id));
   };
 
@@ -130,7 +117,14 @@ export default class ShoppingList extends LitElement {
     if (item.length > 32) return;
     const dateAdded = new Date().getTime();
     this._adding = true;
-    const newData: Partial<ShoppingListItem> = { item, dateAdded };
+    const newData: ShoppingListItem = {
+      item,
+      dateAdded,
+      order: this.#listData ? Object.keys(this.#listData).length + 1 : 0,
+      memo: "",
+      amount: 1,
+      priority: false,
+    };
     push(this.#ref, newData)
       .then(() => {
         fetch(process.env.NOTIFICATION_URI!).then(() =>
@@ -142,22 +136,61 @@ export default class ShoppingList extends LitElement {
     this.form.reset();
   };
 
+  #handleDragStart: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLLIElement)) return;
+    const id = target.id;
+    event.dataTransfer.setData("id", id);
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDragOver: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDrop: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLLIElement)) return;
+    const droppedLocationId = target.id;
+    const draggedId = event.dataTransfer.getData("id");
+    if (droppedLocationId === draggedId) {
+      this._shoppingItemDetails.setAttribute("key", draggedId);
+      return;
+    }
+    if (!this.#listData) return;
+    const droppedLocationData = this.#listData[droppedLocationId];
+    const draggedData = this.#listData[draggedId];
+    if (!(draggedData && droppedLocationData)) return;
+    const newSortedArray = [...this.sortedData!].filter((item) => item.key !== draggedId);
+    const indexOfDropped = newSortedArray.findIndex((item) => item.key === droppedLocationId);
+    const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
+    const itemsAfterDropped = newSortedArray.slice(indexOfDropped);
+    const changedOrder = [...itemsUpToDropped, { key: draggedId, ...draggedData }, ...itemsAfterDropped];
+    const newData = { ...this.#listData };
+    changedOrder.forEach((item, index) => {
+      newData[item.key].order = index;
+    });
+    set(this.#ref, newData);
+  };
+
   render() {
-    const list = this.listData
-      ? Object.keys(this.listData).map((key) => {
-          const item = this.listData![key];
-          return html`<li
-            id=${key}
+    const list = this.sortedData
+      ? this.sortedData.map(
+          (item) => html`<li
+            id=${item.key!}
+            draggable="true"
             ?priority=${item.priority}
-            @mouseup=${this.#handleItemMouseup}
-            @touchend=${this.#handleItemMouseup}
-            @mousedown=${this.#handleItemClick}
-            @touchstart=${this.#handleItemClick}
+            @click=${this.#handleItemClick}
+            @dragstart=${this.#handleDragStart}
+            @dragover=${this.#handleDragOver}
+            @drop=${this.#handleDrop}
           >
             <span>${item.item}</span>
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
-          </li>`;
-        })
+          </li>`
+        )
       : html`<p>No Items.</p>`;
 
     return html`
