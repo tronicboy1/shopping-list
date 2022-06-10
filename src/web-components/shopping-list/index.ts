@@ -2,7 +2,7 @@ import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, firebaseApp } from "@firebase-logic";
-import { DatabaseReference, get, getDatabase, onValue, push, ref, remove, Unsubscribe } from "firebase/database";
+import { DatabaseReference, get, getDatabase, push, ref, remove, Unsubscribe } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups } from "./types";
