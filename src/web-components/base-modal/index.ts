@@ -44,10 +44,6 @@ export default class BaseModal extends LitElement {
         overflow-y: auto;
       }
 
-      #modal-content {
-        padding: 1rem;
-      }
-
       #title {
         font-size: 1.5rem;
       }
