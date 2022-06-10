@@ -11,7 +11,10 @@ export default class ShoppingItemDetails extends LitElement {
   #key: string | null = null;
   #ref!: DatabaseReference;
   @state()
-  private _data: ShoppingListItem | null = null;
+  private _data: { item: string; dateAdded: number } & Partial<ShoppingListItem> = {
+    dateAdded: 1654820213036,
+    item: "",
+  };
   @state()
   private _editLoading = false;
   @state()
@@ -70,7 +73,10 @@ export default class ShoppingItemDetails extends LitElement {
       .then(() => {
         this._modal.removeAttribute("show");
       })
-      .finally(() => (this._editLoading = false));
+      .finally(() => {
+        this._editLoading = false;
+        form.reset();
+      });
   };
 
   #handleDeleteClick: EventListener = () => {
@@ -81,28 +87,28 @@ export default class ShoppingItemDetails extends LitElement {
   };
 
   render() {
-    const item = this._data?.item ?? "";
-    const dateAdded = this._data?.dateAdded ? new Date(this._data.dateAdded).toISOString().split("T")[0] : "";
-    const memo = this._data?.memo ?? "";
-    const amount = this._data?.amount?.toString() ?? "1";
-    const priority = this._data?.priority ?? false;
+    const item = this._data.item;
+    const dateAdded = new Date(this._data.dateAdded).toISOString().split("T")[0];
+    const memo = this._data.memo ?? "";
+    const amount = String(this._data.amount ?? 1);
+    const priority = this._data.priority ?? false;
 
     const loadingSpinner = html`<loading-spinner color="white" />`;
     return html`
       <base-modal title="Details">
         <form @submit=${this.#handleEditSubmit}>
           <label for="item">Name</label>
-          <input type="text" id="item" name="item" maxlength="32" minlength="1" .value=${item} />
+          <input type="text" id="item" name="item" maxlength="32" minlength="1" value=${item} />
           <div class="checkbox-group">
-            <input type="checkbox" id="priority" name="priority" ?checked=${priority} .value=${priority ? "on" : ""} />
+            <input type="checkbox" id="priority" name="priority" ?checked=${priority} />
             <label for="priority">Priority</label>
           </div>
           <label for="date-added">Date Added</label>
-          <input type="date" id="date-added" name="dateAdded" .value=${dateAdded} readonly />
+          <input type="date" id="date-added" name="dateAdded" value=${dateAdded} readonly />
           <label for="amount">Quantity</label>
-          <input id="amount" name="amount" type="number" min="1" .value=${amount} required />
+          <input id="amount" name="amount" type="number" min="1" value=${amount} required />
           <label for="memo">Memo</label>
-          <textarea id="memo" name="memo" .value=${memo}></textarea>
+          <textarea id="memo" name="memo" value=${memo}></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>
           <button @click=${this.#handleDeleteClick} type="button" class="delete">
             ${this._deleteLoading ? loadingSpinner : "Delete"}
