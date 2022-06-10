@@ -1,15 +1,8 @@
-import { auth, firebaseApp } from "@web-components/firebase";
+import { auth, firebaseApp } from "@firebase-logic";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { onAuthStateChanged } from "firebase/auth";
-import {
-  DatabaseReference,
-  getDatabase,
-  onValue,
-  orderByChild,
-  push,
-  query as firebaseQuery,
-  ref,
-} from "firebase/database";
+//prettier-ignore
+import { DatabaseReference, getDatabase, onValue, orderByChild, push, query as firebaseQuery, ref } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import ChoreDetails from "./chore-details";

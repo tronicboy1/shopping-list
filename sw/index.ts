@@ -20,14 +20,11 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
     self.clients.matchAll({ type: "window" }).then((windowClients) => {
-      const openedWindow = windowClients.find(
-        (windowClient) =>
-          windowClient.url === "https://shopping-list-app-d0386.web.app/"
-      );
+      const openedWindow = windowClients.find((windowClient) => windowClient.url === process.env.FRONTEND_URI);
       if (openedWindow && "focus" in openedWindow) {
         openedWindow.focus();
       } else {
-        self.clients.openWindow("https://shopping-list-app-d0386.web.app/");
+        self.clients.openWindow(process.env.FRONTEND_URI!);
       }
     })
   );

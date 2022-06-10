@@ -1,6 +1,9 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const fs = require("fs");
+const webpack = require("webpack");
+
+const port = 9000;
 
 module.exports = {
   entry: "./src/index.ts",
@@ -43,7 +46,8 @@ module.exports = {
   },
   resolve: {
     alias: {
-      "@web-components": path.resolve(__dirname, "src/web-components/")
+      "@web-components": path.resolve(__dirname, "src/web-components/"),
+      "@firebase-logic": path.resolve(__dirname, "src/firebase.ts"),
     },
     extensions: [".tsx", ".ts", ".js"],
   },
@@ -56,7 +60,7 @@ module.exports = {
       cert: fs.readFileSync("./cert.pem"),
     },
     compress: true,
-    port: 9000,
+    port,
   },
   output: {
     filename: "bundle.js",
@@ -65,6 +69,11 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public", "index.html"),
+    }),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: "development",
+      FRONTEND_URI: `https://localhost:${port}/`,
+      NOTIFICATION_URI: "https://shopping-list-notifications.herokuapp.com/",
     }),
   ],
 };

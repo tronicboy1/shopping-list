@@ -1,10 +1,10 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
 import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";
 import css from "./css";
 import { FirebaseError } from "firebase/app";
+import { auth } from "@firebase-logic";
 
 interface FormData {
   email: string;

@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = {
   entry: "./sw/index.ts",
@@ -43,4 +44,11 @@ module.exports = {
     clean: false,
     iife: false,
   },
+  plugins: [
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: "production",
+      FRONTEND_URI: "https://shopping-list-app-d0386.web.app/",
+      NOTIFICATION_URI: "https://shopping-list-notifications.herokuapp.com/",
+    }),
+  ],
 };

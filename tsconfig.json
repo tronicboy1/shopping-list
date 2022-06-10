@@ -14,7 +14,8 @@
     "outDir": "./dist/",
     "baseUrl": "./",
     "paths": {
-      "@web-components/*": ["src/web-components/*"]
+      "@web-components/*": ["src/web-components/*"],
+      "@firebase-logic": ["src/firebase.ts"]
     },
     "allowSyntheticDefaultImports": true
   },

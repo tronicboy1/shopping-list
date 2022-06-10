@@ -1,4 +1,3 @@
-import firebase from "../../services/firebase";
 import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, Database } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { html, LitElement, PropertyValueMap } from "lit";
@@ -6,6 +5,7 @@ import { state, query } from "lit/decorators.js";
 import styles from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
+import { firebaseApp } from "@firebase-logic";
 
 type ShoppingListData = Record<string, ShoppingListItem>;
 
@@ -43,12 +43,12 @@ export default class ShoppingList extends LitElement {
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    const auth = getAuth(firebase);
+    const auth = getAuth(firebaseApp);
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
         this.#uid = auth.uid;
         this._shoppingItemDetails.setAttribute("uid", auth.uid);
-        const db = getDatabase(firebase);
+        const db = getDatabase(firebaseApp);
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
         this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
         onValue(this.#ref, (snapshot) => {
@@ -133,7 +133,7 @@ export default class ShoppingList extends LitElement {
     const newData: Partial<ShoppingListItem> = { item, dateAdded };
     push(this.#ref, newData)
       .then(() => {
-        fetch("https://shopping-list-notifications.herokuapp.com/").then(() =>
+        fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
         );
       })

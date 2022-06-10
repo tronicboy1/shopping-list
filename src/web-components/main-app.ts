@@ -1,10 +1,10 @@
+import { auth, firebaseApp } from "@firebase-logic";
 import { onAuthStateChanged } from "firebase/auth";
 import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
-import { auth, firebaseApp } from "./firebase";
 import sharedCss, { formCss } from "./shared-css";
 
 type Modes = "SHOPPING" | "CHORES";
