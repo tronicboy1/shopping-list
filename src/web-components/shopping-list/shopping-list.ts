@@ -6,17 +6,9 @@ import styles from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { firebaseApp } from "@firebase-logic";
+import { ShoppingListData, ShoppingListItem } from "./types";
 
-type ShoppingListData = Record<string, ShoppingListItem>;
 
-export interface ShoppingListItem {
-  item: string;
-  memo: string;
-  dateAdded: number;
-  amount: number;
-  priority: boolean;
-  order: number;
-}
 
 export default class ShoppingList extends LitElement {
   #ref!: DatabaseReference;

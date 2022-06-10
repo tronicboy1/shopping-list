@@ -4,7 +4,7 @@ import sharedCss, { formCss } from "@web-components/shared-css";
 import { DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
-import { ShoppingListItem } from "./";
+import { ShoppingListItem } from "./types";
 
 export default class ShoppingItemDetails extends LitElement {
   #uid: string | null = null;
