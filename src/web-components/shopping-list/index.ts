@@ -1,4 +1,4 @@
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, Database } from "firebase/database";
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child } from "firebase/database";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -15,6 +15,7 @@ export interface ShoppingListItem {
   dateAdded: number;
   amount: number;
   priority: boolean;
+  order: number;
 }
 
 export default class ShoppingList extends LitElement {
@@ -23,9 +24,9 @@ export default class ShoppingList extends LitElement {
   #uid!: string;
   #clicked: string | null = null;
   #clickedAt: { id: string; when: Date; where: { x: number; y: number } } | null = null;
-
   @state()
-  listData: ShoppingListData | null = null;
+  sortedData: (ShoppingListItem & { key: string })[] | null = null;
+  #listData: ShoppingListData | null = null;
   @state()
   private _adding = false;
   @query("form")
@@ -52,7 +53,22 @@ export default class ShoppingList extends LitElement {
         this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
         this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
         onValue(this.#ref, (snapshot) => {
-          this.listData = snapshot.val() as ShoppingListData;
+          const data = snapshot.val() as ShoppingListData | null;
+          if (!data) return;
+          const keys = Object.keys(data);
+          if (keys.length === 0) {
+            this.#listData = null;
+            return;
+          }
+          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+            keys.forEach((key, index) => (data[key].order = index));
+            set(this.#ref, data);
+            return;
+          }
+          this.#listData = data;
+          this.sortedData = Object.keys(this.#listData)
+            .map((key) => ({ key, ...this.#listData![key] }))
+            .sort((a, b) => (a.order < b.order ? -1 : 1));
         });
       }
     });
@@ -114,7 +130,7 @@ export default class ShoppingList extends LitElement {
   };
 
   #deleteItem = (id: string) => {
-    if (!(this.listData && this.#ref)) return;
+    if (!(this.#listData && this.#ref)) return;
     remove(child(this.#ref, id));
   };
 
@@ -130,7 +146,14 @@ export default class ShoppingList extends LitElement {
     if (item.length > 32) return;
     const dateAdded = new Date().getTime();
     this._adding = true;
-    const newData: Partial<ShoppingListItem> = { item, dateAdded };
+    const newData: ShoppingListItem = {
+      item,
+      dateAdded,
+      order: this.#listData ? Object.keys(this.#listData).length + 1 : 0,
+      memo: "",
+      amount: 1,
+      priority: false,
+    };
     push(this.#ref, newData)
       .then(() => {
         fetch(process.env.NOTIFICATION_URI!).then(() =>
@@ -142,17 +165,56 @@ export default class ShoppingList extends LitElement {
     this.form.reset();
   };
 
+  #handleDragStart: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLLIElement)) return;
+    const id = target.id;
+    event.dataTransfer.setData("id", id);
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDragOver: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDrop: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLLIElement)) return;
+    const droppedLocationId = target.id;
+    const draggedId = event.dataTransfer.getData("id");
+    if (droppedLocationId === draggedId) return;
+    if (!this.#listData) return;
+    const droppedLocationData = this.#listData[droppedLocationId];
+    const draggedData = this.#listData[draggedId];
+    if (!(draggedData && droppedLocationData)) return;
+    const newSortedArray = [...this.sortedData!].filter((item) => item.key !== draggedId);
+    const indexOfDropped = newSortedArray.findIndex((item) => item.key === droppedLocationId);
+    const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
+    const itemsAfterDropped = newSortedArray.slice(indexOfDropped);
+    const changedOrder = [...itemsUpToDropped, { key: draggedId, ...draggedData }, ...itemsAfterDropped];
+    const newData = { ...this.#listData };
+    changedOrder.forEach((item, index) => {
+      newData[item.key].order = index;
+    });
+    set(this.#ref, newData);
+  };
+
   render() {
-    const list = this.listData
-      ? Object.keys(this.listData).map((key) => {
-          const item = this.listData![key];
+    const list = this.sortedData
+      ? this.sortedData.map((item) => {
           return html`<li
-            id=${key}
+            id=${item.key!}
+            draggable="true"
             ?priority=${item.priority}
             @mouseup=${this.#handleItemMouseup}
             @touchend=${this.#handleItemMouseup}
             @mousedown=${this.#handleItemClick}
             @touchstart=${this.#handleItemClick}
+            @dragstart=${this.#handleDragStart}
+            @dragover=${this.#handleDragOver}
+            @drop=${this.#handleDrop}
           >
             <span>${item.item}</span>
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
