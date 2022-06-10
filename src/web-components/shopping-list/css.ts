@@ -1,67 +1,14 @@
 import { css } from "lit";
 
 export default css`
-  :host {
-    display: none;
-    width: 100%;
-  }
-
-  :host([show]) {
-    display: block;
-  }
-
-  ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column-reverse;
-  }
-
-  ul p {
-    text-align: center;
-    color: rgb(184, 184, 184);
-  }
-
-  li {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    border: 1px var(--secondary-color) solid;
-    background: var(--secondary-color);
-    border-radius: 8px;
-    color: black;
-    padding: 1.25rem 0.5rem;
-    transition: all 0.2s;
-    margin-bottom: 0.5rem;
-    text-align: center;
-    font-size: 1.8rem;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  li[priority] {
-    background-color: var(--danger-color);
-    border-color: var(--danger-color);
-  }
-
-  li small {
-    font-size: 1rem;
-    margin-left: 0.5rem;
-  }
-
-  li:hover {
-    cursor: pointer;
-  }
-
-  li:first-child {
-    margin-bottom: 0;
-  }
-
   form {
     display: flex;
     flex-direction: row;
+  }
+
+  p {
+    text-align: center;
+    color: rgb(184, 184, 184);
   }
 
   form input {
@@ -108,6 +55,64 @@ export default css`
   #clear {
     height: 54px;
     border-radius: 8px;
+  }
+`;
+
+export const listCss = css`
+  h2 {
+    text-align: center;
+    border-bottom: 1px solid var(--secondary-color);
+    padding-bottom: 1rem;
+    margin: 0 0 1rem 0;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 1rem 0 0 0;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  ul p {
+    text-align: center;
+    color: rgb(184, 184, 184);
+  }
+
+  li {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    border: 1px var(--secondary-color) solid;
+    background: var(--secondary-color);
+    border-radius: 8px;
+    color: black;
+    padding: 1.25rem 0.5rem;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.8rem;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  li[priority] {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+  }
+
+  li small {
+    font-size: 1rem;
+    margin-left: 0.5rem;
+  }
+
+  li:hover {
+    cursor: pointer;
+  }
+
+  li:first-child {
+    margin-bottom: 0;
   }
 
   @media (prefers-color-scheme: dark) {

@@ -1,23 +1,38 @@
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child } from "firebase/database";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  set,
+  DatabaseReference,
+  push,
+  remove,
+  child,
+  get,
+  Unsubscribe,
+} from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
-import { state, query } from "lit/decorators.js";
-import styles from "./css";
+import { state, query, property } from "lit/decorators.js";
+import styles, { listCss } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { firebaseApp } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
 
-
-
 export default class ShoppingList extends LitElement {
   #ref!: DatabaseReference;
+  #dataRef!: DatabaseReference;
   #notificationRef!: DatabaseReference;
-  #uid!: string;
+  #cancelCallback!: Unsubscribe;
   #clicked: string | null = null;
   #listData: ShoppingListData | null = null;
+  //@property({ attribute: "list-id", type: String })
+  #listId: string = "";
+  //@property({ attribute: "uid", type: String })
+  #uid: string = "";
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
+  @state()
+  listName: string | null = null;
   @state()
   private _adding = false;
   @query("form")
@@ -25,44 +40,49 @@ export default class ShoppingList extends LitElement {
   @query("shopping-item-details")
   private _shoppingItemDetails!: ShoppingItemDetails;
 
-  static styles = [styles, sharedStyles];
-
-  constructor() {
-    super();
-    import("./shopping-item-details").then((ShoppingItemDetails) =>
-      customElements.define("shopping-item-details", ShoppingItemDetails.default)
-    );
+  static styles = [styles, sharedStyles, listCss];
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    this._shoppingItemDetails.setAttribute("uid", this.#uid);
+    this._shoppingItemDetails.setAttribute("list-id", this.#listId);
   }
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    const auth = getAuth(firebaseApp);
-    onAuthStateChanged(auth, (auth) => {
-      if (auth) {
-        this.#uid = auth.uid;
-        this._shoppingItemDetails.setAttribute("uid", auth.uid);
-        const db = getDatabase(firebaseApp);
-        this.#ref = ref(db, `${auth.uid}/SHOPPING/`);
-        this.#notificationRef = ref(db, `NOTIFICATIONS/${auth.uid}`);
-        onValue(this.#ref, (snapshot) => {
-          const data = snapshot.val() as ShoppingListData | null;
-          if (!data || Object.keys(data).length === 0) {
-            this.#listData = null;
-            this.sortedData = null;
-            return;
-          }
-          const keys = Object.keys(data);
-          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-            keys.forEach((key, index) => (data[key].order = index));
-            set(this.#ref, data);
-            return;
-          }
-          this.#listData = data;
-          this.sortedData = Object.keys(this.#listData)
-            .map((key) => ({ key, ...this.#listData![key] }))
-            .sort((a, b) => (a.order < b.order ? -1 : 1));
-        });
-      }
-    });
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#cancelCallback();
+  }
+
+  static get observedAttributes(): string[] {
+    return ["uid", "list-id"];
+  }
+  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
+    if (!value) return;
+    if (name === "uid") this.#uid = value;
+    if (name === "list-id") this.#listId = value;
+    if (this.#uid && this.#listId) {
+      const db = getDatabase(firebaseApp);
+      this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
+      this.#dataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
+      get(child(this.#ref, "listName")).then((val) => (this.listName = val.val()));
+      this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
+      this.#cancelCallback = onValue(this.#dataRef, (snapshot) => {
+        const data = snapshot.val() as ShoppingListData | null;
+        if (!data || Object.keys(data).length === 0) {
+          this.#listData = null;
+          this.sortedData = null;
+          return;
+        }
+        const keys = Object.keys(data);
+        if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+          keys.forEach((key, index) => (data[key].order = index));
+          set(this.#ref, data);
+          return;
+        }
+        this.#listData = data;
+        this.sortedData = Object.keys(this.#listData)
+          .map((key) => ({ key, ...this.#listData![key] }))
+          .sort((a, b) => (a.order < b.order ? -1 : 1));
+      });
+    }
   }
 
   #handleInput: EventListener = (event) => {
@@ -81,7 +101,7 @@ export default class ShoppingList extends LitElement {
     const id = target.id;
     if (event instanceof MouseEvent || event instanceof TouchEvent) {
       if (this.#clicked === id) {
-        id === "clear" ? this.#deleteAllItems() : this.#deleteItem(id); // only delete on mouse events
+        this.#deleteItem(id); // only delete on mouse events
         this.#clicked = null;
       } else {
         this.#clicked = id;
@@ -94,11 +114,14 @@ export default class ShoppingList extends LitElement {
 
   #deleteItem = (id: string) => {
     if (!(this.#listData && this.#ref)) return;
-    remove(child(this.#ref, id));
+    remove(child(this.#dataRef, id));
   };
 
-  #deleteAllItems = () => {
-    set(this.#ref!, {});
+  #handleDeleteList = () => {
+    remove(this.#ref).then(() => {
+      const deletedEvent = new Event("deleted");
+      this.dispatchEvent(deletedEvent);
+    });
   };
 
   #handleAddItem: EventListener = async (event) => {
@@ -117,7 +140,7 @@ export default class ShoppingList extends LitElement {
       amount: 1,
       priority: false,
     };
-    push(this.#ref, newData)
+    push(this.#dataRef, newData)
       .then(() => {
         fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
@@ -164,7 +187,7 @@ export default class ShoppingList extends LitElement {
     changedOrder.forEach((item, index) => {
       newData[item.key].order = index;
     });
-    set(this.#ref, newData);
+    set(this.#dataRef, newData);
   };
 
   render() {
@@ -183,23 +206,19 @@ export default class ShoppingList extends LitElement {
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
           </li>`
         )
-      : html`<p>No Items.</p>`;
+      : html`<button class="delete" type="button" @click=${this.#handleDeleteList}>Delete List?</button>`;
 
     return html`
-      <shopping-item-details></shopping-item-details>
       <div class="card">
+        <h2>${this.listName}</h2>
+        <shopping-item-details></shopping-item-details>
         <form @submit=${this.#handleAddItem} autocomplete="off">
           <input @input=${this.#handleInput} id="item" name="item" minlength="1" type="text" maxlength="33" required />
           <button id="add" type="submit">${this._adding ? html`<loading-spinner color="white" />` : "Add"}</button>
         </form>
-      </div>
-      <div class="card">
         <ul>
           ${list}
         </ul>
-      </div>
-      <div style="margin-bottom: 11vh;" class="card">
-        <button id="clear" @click=${this.#handleItemClick} type="button">Clear All</button>
       </div>
     `;
   }

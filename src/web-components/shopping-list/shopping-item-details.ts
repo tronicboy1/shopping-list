@@ -9,6 +9,7 @@ import { ShoppingListItem } from "./types";
 export default class ShoppingItemDetails extends LitElement {
   #uid: string | null = null;
   #key: string | null = null;
+  #listId: string | null = null;
   #ref!: DatabaseReference;
   @state()
   private _data: { item: string; dateAdded: number } & Partial<ShoppingListItem> = {
@@ -25,15 +26,16 @@ export default class ShoppingItemDetails extends LitElement {
   static styles = [sharedCss, formCss];
 
   static get observedAttributes(): string[] {
-    return ["uid", "key"];
+    return ["uid", "key", "list-id"];
   }
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
     if (!value) return;
     if (name === "uid") this.#uid = value;
     if (name === "key") this.#key = value;
-    if (this.#key && this.#uid) {
+    if (name === "list-id") this.#listId = value;
+    if (this.#key && this.#uid && this.#listId) {
       const db = getDatabase(firebaseApp);
-      this.#ref = ref(db, `${this.#uid}/SHOPPING/${this.#key}`);
+      this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data/${this.#key}`);
       get(this.#ref)
         .then((data) => {
           if (!data.exists()) throw Error("No data found.");

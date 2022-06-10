@@ -8,3 +8,9 @@ export interface ShoppingListItem {
   priority: boolean;
   order: number;
 }
+
+export interface ListGroups {
+  [id: string]: {
+    [id: string]: ShoppingListItem;
+  };
+}
