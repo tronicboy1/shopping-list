@@ -148,6 +148,7 @@ export default class ShoppingList extends LitElement {
     if (!(target instanceof HTMLLIElement)) return;
     const id = target.id;
     event.dataTransfer.setData("id", id);
+    event.dataTransfer.setData("listId", this.#listId);
     event.dataTransfer.dropEffect = "move";
   };
   #handleDragOver: EventListener = (event) => {
@@ -169,7 +170,7 @@ export default class ShoppingList extends LitElement {
     const droppedLocationData = this.#listData[droppedLocationId];
     const draggedData = this.#listData[draggedId];
     if (!(draggedData && droppedLocationData)) return;
-    const newSortedArray = this.sortedData!.map(item => item.key).filter((key) => key !== draggedId);
+    const newSortedArray = this.sortedData!.map((item) => item.key).filter((key) => key !== draggedId);
     // const worker = new Worker("change-order.js");
     // worker.onmessage = (event) => set(this.#dataRef, event.data);
     // worker.postMessage({ newSortedArray, droppedLocationId, draggedData, data: this.#listData, draggedId });

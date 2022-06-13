@@ -2,11 +2,12 @@ import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, firebaseApp } from "@firebase-logic";
-import { DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
+import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
-import { ListGroups } from "./types";
+import { ListGroups, ShoppingListItem } from "./types";
 import BaseModal from "@web-components/base-modal";
+import ShoppingList from "./shopping-list";
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
   #uid!: string;
@@ -111,6 +112,31 @@ export default class AllShoppingLists extends LitElement {
     }
   };
 
+  #handleDragOver: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDrop: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof ShoppingList)) return;
+    const listId = target.getAttribute("list-id")!;
+    const draggedItemListId = event.dataTransfer.getData("listId");
+    if (listId === draggedItemListId) return;
+    const draggedItemId = event.dataTransfer.getData("id");
+    get(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`))
+      .then((result) => {
+        const data = result.val() as ShoppingListItem | null;
+        if (!data) throw Error("invalid Item ID or List ID");
+        console.log(data);
+        return remove(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`)).then(() => Promise.resolve(data));
+      })
+      .then((data) => {
+        push(child(this.#ref, `${listId}/data`), data);
+      });
+  };
+
   render() {
     if (this._initLoading) {
       return html`<div style="margin: auto; margin-top: 30vh;">
@@ -131,6 +157,8 @@ export default class AllShoppingLists extends LitElement {
             (key) =>
               html`<shopping-list
                 @deleted=${() => this.#refreshList()}
+                @dragover=${this.#handleDragOver}
+                @drop=${this.#handleDrop}
                 list-id=${key}
                 uid=${this.#uid}
               ></shopping-list>`
