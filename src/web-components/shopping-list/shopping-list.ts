@@ -1,18 +1,8 @@
-import {
-  getDatabase,
-  ref,
-  onValue,
-  set,
-  DatabaseReference,
-  push,
-  remove,
-  child,
-  get,
-  Unsubscribe,
-} from "firebase/database";
+//prettier-ignore
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
-import { state, query, property } from "lit/decorators.js";
-import styles, { listCss } from "./css";
+import { state, query } from "lit/decorators.js";
+import styles, { listCss, stickyTitles } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { firebaseApp } from "@firebase-logic";
@@ -25,9 +15,7 @@ export default class ShoppingList extends LitElement {
   #cancelCallback!: Unsubscribe;
   #clicked: string | null = null;
   #listData: ShoppingListData | null = null;
-  //@property({ attribute: "list-id", type: String })
   #listId: string = "";
-  //@property({ attribute: "uid", type: String })
   #uid: string = "";
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
@@ -35,12 +23,14 @@ export default class ShoppingList extends LitElement {
   listName: string | null = null;
   @state()
   private _adding = false;
+  @state()
+  private _initLoading = true;
   @query("form")
   form!: HTMLFormElement;
   @query("shopping-item-details")
   private _shoppingItemDetails!: ShoppingItemDetails;
 
-  static styles = [styles, sharedStyles, listCss];
+  static styles = [styles, sharedStyles, listCss, stickyTitles];
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this._shoppingItemDetails.setAttribute("uid", this.#uid);
     this._shoppingItemDetails.setAttribute("list-id", this.#listId);
@@ -65,6 +55,7 @@ export default class ShoppingList extends LitElement {
       get(child(this.#ref, "listName")).then((val) => (this.listName = val.val()));
       this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
       this.#cancelCallback = onValue(this.#dataRef, (snapshot) => {
+        this._initLoading = false;
         const data = snapshot.val() as ShoppingListData | null;
         if (!data || Object.keys(data).length === 0) {
           this.#listData = null;
@@ -214,14 +205,16 @@ export default class ShoppingList extends LitElement {
     return html`
       <div class="card">
         <h2>${this.listName}</h2>
-        <shopping-item-details></shopping-item-details>
         <form @submit=${this.#handleAddItem} autocomplete="off">
           <input @input=${this.#handleInput} id="item" name="item" minlength="1" type="text" maxlength="33" required />
-          <button id="add" type="submit">${this._adding ? html`<loading-spinner color="white" />` : "Add"}</button>
+          <button id="add" type="submit">
+            ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white" />`}
+          </button>
         </form>
         <ul>
-          ${list}
+          ${this._initLoading ? html`<loading-spinner />` : list}
         </ul>
+        <shopping-item-details></shopping-item-details>
       </div>
     `;
   }

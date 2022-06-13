@@ -2,7 +2,7 @@ import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, firebaseApp } from "@firebase-logic";
-import { DatabaseReference, get, getDatabase, push, ref, remove, Unsubscribe } from "firebase/database";
+import { DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups } from "./types";
@@ -38,6 +38,12 @@ export default class AllShoppingLists extends LitElement {
 
       loading-spinner + p {
         display: none;
+      }
+
+      label {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
       }
     `,
   ];
@@ -106,6 +112,11 @@ export default class AllShoppingLists extends LitElement {
   };
 
   render() {
+    if (this._initLoading) {
+      return html`<div style="margin: auto; margin-top: 30vh;">
+        <loading-spinner />
+      </div>`;
+    }
     return html`
       <base-modal title="Delete all Lists?">
         <div style="display: flex; flex-direction: column;">
@@ -115,7 +126,18 @@ export default class AllShoppingLists extends LitElement {
           <button type="button" @click=${() => this._deleteModal.removeAttribute("show")}>Cancel</button>
         </div>
       </base-modal>
+      ${this._listGroups
+        ? Object.keys(this._listGroups).map(
+            (key) =>
+              html`<shopping-list
+                @deleted=${() => this.#refreshList()}
+                list-id=${key}
+                uid=${this.#uid}
+              ></shopping-list>`
+          )
+        : html`<p style="margin-top: 6rem;">No Lists.</p>`}
       <div class="card">
+        <label for="list-name">New List</label>
         <form @submit=${this.#handleAddItem} autocomplete="off">
           <input
             @input=${this.#handleInput}
@@ -125,16 +147,13 @@ export default class AllShoppingLists extends LitElement {
             type="text"
             maxlength="33"
             required
+            style="height: 60px;"
           />
-          <button id="add" type="submit">${this._adding ? html`<loading-spinner color="white" />` : "Add"}</button>
+          <button id="add" type="submit" style="height: 60px;">
+            ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white"></plus-icon>`}
+          </button>
         </form>
       </div>
-      ${this._initLoading ? html`<loading-spinner />` : ""}
-      ${this._listGroups
-        ? Object.keys(this._listGroups).map(
-            (key) => html`<shopping-list @deleted=${() => this.#refreshList()} list-id=${key} uid=${this.#uid}></shopping-list>`
-          )
-        : html`<p style="margin-top: 6rem;">No Lists.</p>`}
       ${this._listGroups
         ? html`<div class="card" style="margin-bottom: 10rem">
             <button @click=${this.#handleClearAllClick} id="clear" type="button">Clear All</button>

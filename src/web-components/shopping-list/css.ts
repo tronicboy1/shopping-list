@@ -121,3 +121,21 @@ export const listCss = css`
     }
   }
 `;
+
+export const stickyTitles = css`
+  .card h2 {
+    display: inline-block;
+    position: sticky;
+    top: 0;
+    padding: 1rem 0 1rem 0;
+    margin: 0;
+    background-color: var(--primary-color);
+  }
+
+  .card {
+    padding-top: 0;
+  }
+  h2 + form {
+    margin-top: 1rem;
+  }
+`;
