@@ -69,10 +69,6 @@ export default css`
     height: 40px;
   }
 
-  button + button {
-    margin-top: 1rem;
-  }
-
   @media (prefers-color-scheme: light) {
     :host {
       --primary-color: white;
@@ -156,6 +152,7 @@ export const formCss = css`
   button + button {
     margin-top: 1rem;
   }
+
   @media (prefers-color-scheme: dark) {
     form label {
       color: white;

@@ -45,6 +45,10 @@ export default class AllShoppingLists extends LitElement {
         margin-bottom: 1rem;
         text-align: center;
       }
+
+      button + button {
+        margin-top: 1rem;
+      }
     `,
   ];
 
