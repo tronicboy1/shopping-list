@@ -217,23 +217,25 @@ export default class ShoppingList extends LitElement {
           <h2>${this.listName}</h2>
           <span>${this.sortedData?.length ?? 0}</span>
         </div>
-        <form @submit=${this.#handleAddItem} autocomplete="off">
-          <input
-            @input=${this.#handleNewItemInput}
-            id="item"
-            name="item"
-            minlength="1"
-            type="text"
-            maxlength="33"
-            required
-          />
-          <button id="add" type="submit">
-            ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white" />`}
-          </button>
-        </form>
-        <ul>
-          ${this._initLoading ? html`<loading-spinner />` : list}
-        </ul>
+        <div id="contents">
+          <form @submit=${this.#handleAddItem} autocomplete="off">
+            <input
+              @input=${this.#handleNewItemInput}
+              id="item"
+              name="item"
+              minlength="1"
+              type="text"
+              maxlength="33"
+              required
+            />
+            <button id="add" type="submit">
+              ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white" />`}
+            </button>
+          </form>
+          <ul>
+            ${this._initLoading ? html`<loading-spinner />` : list}
+          </ul>
+        </div>
         <shopping-item-details></shopping-item-details>
       </div>
     `;

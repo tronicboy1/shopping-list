@@ -48,7 +48,6 @@ code {
   color: white;
 }
 
-
 @media (prefers-color-scheme: light) {
   .card {
     --primary-color: white;

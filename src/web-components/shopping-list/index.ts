@@ -32,7 +32,8 @@ export default class AllShoppingLists extends LitElement {
       }
 
       :host([show]) {
-        display: block;
+        display: flex;
+        flex-direction: column;
       }
 
       loading-spinner + p {
@@ -164,7 +165,6 @@ export default class AllShoppingLists extends LitElement {
           )
         : html`<p style="margin-top: 6rem;">No Lists.</p>`}
       <div class="card">
-        <label for="list-name">New List</label>
         <form @submit=${this.#handleAddList} autocomplete="off">
           <input
             @input=${this.#handleInput}

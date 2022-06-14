@@ -106,8 +106,7 @@ export const listCss = css`
     flex-direction: column-reverse;
   }
 
-  :host([hide-list]) ul,
-  form {
+  :host([hide-list]) #contents {
     display: none;
   }
 
@@ -176,7 +175,7 @@ export const stickyTitles = css`
     padding: 0 1rem 0 1rem;
   }
 
-  #title + form {
+  #title + #contents {
     margin-top: 1rem;
   }
 `;
