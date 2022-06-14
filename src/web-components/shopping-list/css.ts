@@ -59,11 +59,43 @@ export default css`
 `;
 
 export const listCss = css`
-  h2 {
-    text-align: center;
+  #title {
+    width: 100%;
+    display: block;
+    position: relative;
     border-bottom: 1px solid var(--secondary-color);
-    padding-bottom: 1rem;
-    margin: 0 0 1rem 0;
+    user-select: none;
+    cursor: pointer;
+  }
+
+  #title h2 {
+    text-align: center;
+    margin: 0;
+  }
+
+  #title span {
+    display: inline-flex;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    margin: auto 0;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: var(--secondary-color);
+    padding: 0 0.35rem;
+    border-radius: 60%;
+    transition: opacity 0.3s;
+  }
+  :host([hide-list]) #title {
+    border: none;
+    margin: 0;
+  }
+  :host([hide-list]) #title span {
+    opacity: 1;
   }
 
   ul {
@@ -72,6 +104,11 @@ export const listCss = css`
     margin: 1rem 0 0 0;
     display: flex;
     flex-direction: column-reverse;
+  }
+
+  :host([hide-list]) ul,
+  form {
+    display: none;
   }
 
   ul p {
@@ -123,7 +160,7 @@ export const listCss = css`
 `;
 
 export const stickyTitles = css`
-  .card h2 {
+  #title {
     display: inline-block;
     position: sticky;
     top: 0;
@@ -135,7 +172,11 @@ export const stickyTitles = css`
   .card {
     padding-top: 0;
   }
-  h2 + form {
+  :host([hide-list]) .card {
+    padding: 0 1rem 0 1rem;
+  }
+
+  #title + form {
     margin-top: 1rem;
   }
 `;

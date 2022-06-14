@@ -1,7 +1,7 @@
 //prettier-ignore
 import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
-import { state, query } from "lit/decorators.js";
+import { state, query, property } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
@@ -18,6 +18,8 @@ export default class ShoppingList extends LitElement {
   #listData: ShoppingListData | null = null;
   #clickedItemId: string | null = null;
 
+  @property({ reflect: true, attribute: "hide-list", type: Boolean })
+  hideList = false;
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
   @state()
@@ -103,6 +105,10 @@ export default class ShoppingList extends LitElement {
         }, 400);
       }
     }
+  };
+
+  #toggleHideListOnClick: EventListener = () => {
+    this.hideList = !this.hideList;
   };
 
   #deleteItem = (id: string) => {
@@ -207,7 +213,10 @@ export default class ShoppingList extends LitElement {
 
     return html`
       <div class="card">
-        <h2>${this.listName}</h2>
+        <div @click=${this.#toggleHideListOnClick} id="title">
+          <h2>${this.listName}</h2>
+          <span>${this.sortedData?.length ?? 0}</span>
+        </div>
         <form @submit=${this.#handleAddItem} autocomplete="off">
           <input
             @input=${this.#handleNewItemInput}
