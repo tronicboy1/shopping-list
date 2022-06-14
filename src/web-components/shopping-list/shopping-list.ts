@@ -9,14 +9,15 @@ import { firebaseApp } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
 
 export default class ShoppingList extends LitElement {
-  #ref!: DatabaseReference;
-  #dataRef!: DatabaseReference;
-  #notificationRef!: DatabaseReference;
-  #cancelCallback!: Unsubscribe;
-  #clicked: string | null = null;
-  #listData: ShoppingListData | null = null;
-  #listId: string = "";
   #uid: string = "";
+  #listId: string = "";
+  #listRef!: DatabaseReference;
+  #listDataRef!: DatabaseReference;
+  #notificationRef!: DatabaseReference;
+  #cancelCallback: Unsubscribe | null = null;
+  #listData: ShoppingListData | null = null;
+  #clickedItemId: string | null = null;
+
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
   @state()
@@ -38,7 +39,7 @@ export default class ShoppingList extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.#cancelCallback();
+    if (this.#cancelCallback) this.#cancelCallback();
   }
 
   static get observedAttributes(): string[] {
@@ -49,12 +50,13 @@ export default class ShoppingList extends LitElement {
     if (name === "uid") this.#uid = value;
     if (name === "list-id") this.#listId = value;
     if (this.#uid && this.#listId) {
+      if (this.#cancelCallback) this.#cancelCallback();
       const db = getDatabase(firebaseApp);
-      this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
-      this.#dataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
-      get(child(this.#ref, "listName")).then((val) => (this.listName = val.val()));
+      this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
+      this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
+      get(child(this.#listRef, "listName")).then((val) => (this.listName = val.val()));
       this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
-      this.#cancelCallback = onValue(this.#dataRef, (snapshot) => {
+      this.#cancelCallback = onValue(this.#listDataRef, (snapshot) => {
         this._initLoading = false;
         const data = snapshot.val() as ShoppingListData | null;
         if (!data || Object.keys(data).length === 0) {
@@ -64,8 +66,8 @@ export default class ShoppingList extends LitElement {
         }
         const keys = Object.keys(data);
         if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-          keys.forEach((key, index) => (data[key].order = index));
-          set(this.#ref, data);
+          keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
+          set(this.#listRef, data);
           return;
         }
         this.#listData = data;
@@ -76,7 +78,7 @@ export default class ShoppingList extends LitElement {
     }
   }
 
-  #handleInput: EventListener = (event) => {
+  #handleNewItemInput: EventListener = (event) => {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) throw Error("Event target not input.");
     if (input.value.length === input.maxLength) {
@@ -91,25 +93,25 @@ export default class ShoppingList extends LitElement {
     if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
     const id = target.id;
     if (event instanceof MouseEvent || event instanceof TouchEvent) {
-      if (this.#clicked === id) {
+      if (this.#clickedItemId === id) {
         this.#deleteItem(id); // only delete on mouse events
-        this.#clicked = null;
+        this.#clickedItemId = null;
       } else {
-        this.#clicked = id;
+        this.#clickedItemId = id;
         setTimeout(() => {
-          this.#clicked = null;
+          this.#clickedItemId = null;
         }, 400);
       }
     }
   };
 
   #deleteItem = (id: string) => {
-    if (!(this.#listData && this.#ref)) return;
-    remove(child(this.#dataRef, id));
+    if (!(this.#listData && this.#listRef)) return;
+    remove(child(this.#listDataRef, id));
   };
 
   #handleDeleteList = () => {
-    remove(this.#ref).then(() => {
+    remove(this.#listRef).then(() => {
       const deletedEvent = new Event("deleted");
       this.dispatchEvent(deletedEvent);
     });
@@ -131,7 +133,7 @@ export default class ShoppingList extends LitElement {
       amount: 1,
       priority: false,
     };
-    push(this.#dataRef, newData)
+    push(this.#listDataRef, newData)
       .then(() => {
         fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
@@ -172,7 +174,7 @@ export default class ShoppingList extends LitElement {
     if (!(draggedData && droppedLocationData)) return;
     const newSortedArray = this.sortedData!.map((item) => item.key).filter((key) => key !== draggedId);
     // const worker = new Worker("change-order.js");
-    // worker.onmessage = (event) => set(this.#dataRef, event.data);
+    // worker.onmessage = (event) => set(this.#listDataRef, event.data);
     // worker.postMessage({ newSortedArray, droppedLocationId, draggedData, data: this.#listData, draggedId });
     const indexOfDropped = newSortedArray.findIndex((key) => key === droppedLocationId);
     const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
@@ -182,7 +184,7 @@ export default class ShoppingList extends LitElement {
     changedOrder.forEach((key, index) => {
       newData[key].order = index;
     });
-    set(this.#dataRef, newData);
+    set(this.#listDataRef, newData);
   };
 
   render() {
@@ -207,7 +209,15 @@ export default class ShoppingList extends LitElement {
       <div class="card">
         <h2>${this.listName}</h2>
         <form @submit=${this.#handleAddItem} autocomplete="off">
-          <input @input=${this.#handleInput} id="item" name="item" minlength="1" type="text" maxlength="33" required />
+          <input
+            @input=${this.#handleNewItemInput}
+            id="item"
+            name="item"
+            minlength="1"
+            type="text"
+            maxlength="33"
+            required
+          />
           <button id="add" type="submit">
             ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white" />`}
           </button>

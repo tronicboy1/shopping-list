@@ -19,10 +19,8 @@ export default class AllShoppingLists extends LitElement {
   private _deleteLoading = false;
   @state()
   private _initLoading = true;
-  @query("form")
-  form!: HTMLFormElement;
   @query("base-modal")
-  _deleteModal!: BaseModal;
+  _clearAllModal!: BaseModal;
 
   static styles = [
     baseCss,
@@ -70,16 +68,18 @@ export default class AllShoppingLists extends LitElement {
     });
   }
 
-  #handleAddItem: EventListener = (event) => {
+  #handleAddList: EventListener = (event) => {
     event.preventDefault();
     if (this._adding) return;
-    const formData = new FormData(this.form);
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw Error("This listener can only be called on a form.");
+    const formData = new FormData(form);
     const listName = String(formData.get("list-name")!).trim();
     if (listName.length > 32) return;
     this._adding = true;
     push(this.#ref, { listName, data: {} })
       .then(() => {
-        this.form.reset();
+        form.reset();
         return this.#refreshList();
       })
       .catch((error) => alert(error))
@@ -93,13 +93,13 @@ export default class AllShoppingLists extends LitElement {
     remove(this.#ref)
       .then(() => this.#refreshList())
       .finally(() => {
-        this._deleteModal.removeAttribute("show");
+        this._clearAllModal.removeAttribute("show");
         this._deleteLoading = false;
       });
   };
 
   #handleClearAllClick = () => {
-    this._deleteModal.toggleAttribute("show", true);
+    this._clearAllModal.toggleAttribute("show", true);
   };
 
   #handleInput: EventListener = (event) => {
@@ -128,8 +128,7 @@ export default class AllShoppingLists extends LitElement {
     get(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`))
       .then((result) => {
         const data = result.val() as ShoppingListItem | null;
-        if (!data) throw Error("invalid Item ID or List ID");
-        console.log(data);
+        if (!data) throw Error("invalid Item ID or List ID; No data to move.");
         return remove(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`)).then(() => Promise.resolve(data));
       })
       .then((data) => {
@@ -149,7 +148,7 @@ export default class AllShoppingLists extends LitElement {
           <button @click=${this.#clearAll} type="button" class="delete">
             ${this._deleteLoading ? html`<loading-spinner color="white" />` : "Yes"}
           </button>
-          <button type="button" @click=${() => this._deleteModal.removeAttribute("show")}>Cancel</button>
+          <button type="button" @click=${() => this._clearAllModal.removeAttribute("show")}>Cancel</button>
         </div>
       </base-modal>
       ${this._listGroups
@@ -166,7 +165,7 @@ export default class AllShoppingLists extends LitElement {
         : html`<p style="margin-top: 6rem;">No Lists.</p>`}
       <div class="card">
         <label for="list-name">New List</label>
-        <form @submit=${this.#handleAddItem} autocomplete="off">
+        <form @submit=${this.#handleAddList} autocomplete="off">
           <input
             @input=${this.#handleInput}
             id="list-name"
