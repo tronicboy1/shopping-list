@@ -63,7 +63,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public", "index.html"),
     }),
-    new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin({ filename: (data) => `${data.chunk.name}.${data.hash}.css` }),
     new CopyWebpackPlugin({
       patterns: [{ from: "public", filter: (path) => !path.includes(".html") }],
     }),

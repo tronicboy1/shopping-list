@@ -109,7 +109,14 @@ export default class ChoreDetails extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required value=${title} />
           <label for="last-completed">Last Completed</label>
-          <input type="date" id="last-completed" name="lastCompleted" required value=${date} max=${todaysDate} />
+          <input
+            type="date"
+            id="last-completed"
+            name="lastCompleted"
+            required
+            value=${todaysDate}
+            max=${todaysDate}
+          />
           <label for="memo">Memo</label>
           <textarea name="memo" id="memo" value=${memo}></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>

@@ -4,7 +4,7 @@ import template from "./template.html";
 
 export default class LoadingSpinner extends LitElement {
   @property({ attribute: true })
-  color: "blue" | "white" = "blue";
+  color: "blue" | "white" | "auto" = "auto";
 
   static styles = css`
     div {
@@ -33,12 +33,22 @@ export default class LoadingSpinner extends LitElement {
       fill: rgb(255, 255, 255);
     }
 
+    .auto {
+      fill: var(--highlight-color);
+    }
+
     @keyframes spin {
       100% {
         -webkit-transform: rotate(360deg);
         transform: rotate(360deg);
       }
     }
+
+    @media (prefers-color-scheme: dark) {
+        .auto {
+          fill: white;
+        }
+      }
   `;
   render() {
     return html`

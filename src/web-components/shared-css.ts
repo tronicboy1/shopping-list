@@ -15,22 +15,17 @@ export default css`
   }
 
   .card {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
     margin: 1rem auto;
     background-color: var(--primary-color);
     border: 1px solid var(--primary-color);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.168);
-    color: black;
     padding: 1rem;
     display: flex;
     flex-direction: column;
     transition: all 0.3s;
-  }
-
-  .card[show] {
-    display: flex;
   }
 
   .invalid {
@@ -157,6 +152,7 @@ export const formCss = css`
   button + button {
     margin-top: 1rem;
   }
+
   @media (prefers-color-scheme: dark) {
     form label {
       color: white;

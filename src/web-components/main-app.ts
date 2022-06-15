@@ -126,7 +126,7 @@ export default class MainApp extends LitElement {
     if (!this._uid) return this.#renderAuth();
 
     return html`
-      <shopping-list ?show=${this._mode === "SHOPPING"}></shopping-list>
+      <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
       <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
       <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
       <base-modal title="Settings"
