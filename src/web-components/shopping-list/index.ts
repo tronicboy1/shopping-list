@@ -178,9 +178,8 @@ export default class AllShoppingLists extends LitElement {
             type="text"
             maxlength="33"
             required
-            style="height: 60px;"
           />
-          <button id="add" type="submit" style="height: 60px;">
+          <button id="add" type="submit">
             ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white"></plus-icon>`}
           </button>
         </form>
