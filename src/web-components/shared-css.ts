@@ -15,7 +15,7 @@ export default css`
   }
 
   .card {
-    width: 90%;
+    width: 95%;
     max-width: 500px;
     margin: 1rem auto;
     background-color: var(--primary-color);
