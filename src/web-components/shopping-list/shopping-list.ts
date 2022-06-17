@@ -9,14 +9,14 @@ import { firebaseApp } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
 
 export default class ShoppingList extends LitElement {
-  #uid: string = "";
-  #listId: string = "";
+  #uid: string;
+  #listId: string;
   #listRef!: DatabaseReference;
   #listDataRef!: DatabaseReference;
   #notificationRef!: DatabaseReference;
-  #cancelCallback: Unsubscribe | null = null;
-  #listData: ShoppingListData | null = null;
-  #clickedItemId: string | null = null;
+  #cancelCallback: Unsubscribe;
+  #listData: ShoppingListData | null;
+  #clickedItemId: string | null;
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
   hideList = false;
@@ -34,6 +34,21 @@ export default class ShoppingList extends LitElement {
   private _shoppingItemDetails!: ShoppingItemDetails;
 
   static styles = [styles, sharedStyles, listCss, stickyTitles];
+
+  constructor() {
+    super();
+    this.#uid = "";
+    this.#listId = "";
+    this.#cancelCallback = () => {};
+    this.#listData = null;
+    this.#clickedItemId = null;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
+  }
+
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     this._shoppingItemDetails.setAttribute("uid", this.#uid);
     this._shoppingItemDetails.setAttribute("list-id", this.#listId);
@@ -41,7 +56,8 @@ export default class ShoppingList extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this.#cancelCallback) this.#cancelCallback();
+    this.#cancelCallback();
+    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
   }
 
   static get observedAttributes(): string[] {
@@ -52,37 +68,49 @@ export default class ShoppingList extends LitElement {
     if (name === "uid") this.#uid = value;
     if (name === "list-id") this.#listId = value;
     if (this.#uid && this.#listId) {
-      if (this.#cancelCallback) this.#cancelCallback();
+      this.#cancelCallback();
       const db = getDatabase(firebaseApp);
       this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
       this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
       get(child(this.#listRef, "listName")).then((val) => (this.listName = val.val()));
       this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
-      this.#cancelCallback = onValue(
-        this.#listDataRef,
-        (snapshot) => {
-          this._initLoading = false;
-          const data = snapshot.val() as ShoppingListData | null;
-          if (!data || Object.keys(data).length === 0) {
-            this.#listData = null;
-            this.sortedData = null;
-            return;
-          }
-          const keys = Object.keys(data);
-          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-            keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
-            set(this.#listRef, data);
-            return;
-          }
-          this.#listData = data;
-          this.sortedData = Object.keys(this.#listData)
-            .map((key) => ({ key, ...this.#listData![key] }))
-            .sort((a, b) => (a.order < b.order ? -1 : 1));
-        },
-        (error) => alert(error)
-      );
+      this.#establishOnValueListener();
     }
   }
+
+  #establishOnValueListener() {
+    if (!(this.#listDataRef && this.#listRef))
+      throw Error("List Data Ref and List Ref must be defined before calling this method.");
+    this.#cancelCallback = onValue(
+      this.#listDataRef,
+      (snapshot) => {
+        this._initLoading = false;
+        const data = snapshot.val() as ShoppingListData | null;
+        if (!data || Object.keys(data).length === 0) {
+          this.#listData = null;
+          this.sortedData = null;
+          return;
+        }
+        const keys = Object.keys(data);
+        if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+          keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
+          set(this.#listRef, data);
+          return;
+        }
+        this.#listData = data;
+        this.sortedData = Object.keys(this.#listData)
+          .map((key) => ({ key, ...this.#listData![key] }))
+          .sort((a, b) => (a.order < b.order ? -1 : 1));
+      },
+      (error) => alert(error)
+    );
+  }
+
+  #handleVisibilityChange: EventListener = () => {
+    const visibilityState = document.visibilityState;
+    if (visibilityState === "hidden") this.#cancelCallback();
+    if (visibilityState === "visible" && this.#listDataRef) this.#establishOnValueListener();
+  };
 
   #handleNewItemInput: EventListener = (event) => {
     const input = event.currentTarget;
@@ -163,11 +191,13 @@ export default class ShoppingList extends LitElement {
     event.dataTransfer.setData("listId", this.#listId);
     event.dataTransfer.dropEffect = "move";
   };
+
   #handleDragOver: EventListener = (event) => {
     if (!(event instanceof DragEvent && event.dataTransfer)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   };
+
   #handleDrop: EventListener = (event) => {
     if (!(event instanceof DragEvent && event.dataTransfer)) return;
     const target = event.currentTarget;
