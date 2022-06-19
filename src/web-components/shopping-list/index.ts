@@ -64,6 +64,12 @@ export default class AllShoppingLists extends LitElement {
         });
       }
     });
+    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
   }
 
   #refreshList() {
@@ -72,6 +78,11 @@ export default class AllShoppingLists extends LitElement {
       this._listGroups = data;
     });
   }
+
+  #handleVisibilityChange: EventListener = () => {
+    const visibilityState = document.visibilityState;
+    if (visibilityState === "visible" && this.#ref) this.#refreshList();
+  };
 
   #handleAddList: EventListener = (event) => {
     event.preventDefault();
