@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { isSupported } from "firebase/messaging";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 declare var self: ServiceWorkerGlobalScope;
 
@@ -45,6 +46,31 @@ const firebaseConfig = {
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
+
+let uid = "";
+
+onAuthStateChanged(getAuth(firebaseApp), (auth) => {
+  if (auth) {
+    uid = auth.uid;
+  } else {
+    uid = "";
+  }
+  sendAuthStateToClients(uid);
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (data === "get-auth") {
+    sendAuthStateToClients(uid);
+  }
+});
+
+const sendAuthStateToClients = (uid: string) =>
+  self.clients.matchAll().then((clients) =>
+    clients.forEach((client) => {
+      client.postMessage({ type: "auth", uid });
+    })
+  );
 
 isSupported().then(() => {
   const firebaseMessaging = getMessaging(firebaseApp);
