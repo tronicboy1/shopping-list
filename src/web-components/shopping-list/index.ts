@@ -12,6 +12,7 @@ export default class AllShoppingLists extends LitElement {
   #uid!: string;
   #hideAddListForm: boolean;
   #shoppingListsData: ListGroups | null;
+  #controller: AbortController;
   @state()
   private _adding = false;
   @state()
@@ -67,18 +68,23 @@ export default class AllShoppingLists extends LitElement {
     super();
     this.#hideAddListForm = true;
     this.#shoppingListsData = null;
+    this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      const data = event.data;
-      if (data.type === "auth") {
-        this.#uid = data.uid;
-        const db = getDatabase(firebaseApp);
-        this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
-        this.#refreshList().finally(() => {
-          this._initLoading = false;
-        });
-      }
-    });
+    navigator.serviceWorker.addEventListener(
+      "message",
+      (event) => {
+        const data = event.data;
+        if (data.type === "auth") {
+          this.#uid = data.uid;
+          const db = getDatabase(firebaseApp);
+          this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
+          this.#refreshList().finally(() => {
+            this._initLoading = false;
+          });
+        }
+      },
+      { signal: this.#controller.signal }
+    );
     const swController = navigator.serviceWorker.controller;
     if (!swController) throw Error("Service worker not initiated.");
     swController.postMessage("get-auth");
@@ -92,6 +98,7 @@ export default class AllShoppingLists extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
+    this.#controller.abort();
   }
 
   get hideAddListForm(): boolean {

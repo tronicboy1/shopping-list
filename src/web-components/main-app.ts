@@ -11,6 +11,7 @@ type Modes = "SHOPPING" | "CHORES";
 
 export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
+  #controller: AbortController;
   #db!: Database;
   #uid!: string;
 
@@ -27,16 +28,25 @@ export default class MainApp extends LitElement {
 
   constructor() {
     super();
+    this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.addEventListener("message", (event) => {
-      const data = event.data;
-      if (data.type === "auth") {
-        this.uid = data.uid;
-      }
-    });
+    navigator.serviceWorker.addEventListener(
+      "message",
+      (event) => {
+        const data = event.data;
+        if (data.type === "auth") {
+          this.uid = data.uid;
+        }
+      },
+      { signal: this.#controller.signal }
+    );
     const swController = navigator.serviceWorker.controller;
     if (!swController) throw Error("Service worker not initiated.");
     swController.postMessage("get-auth");
+  }
+
+  disconnectedCallback(): void {
+    this.#controller.abort();
   }
 
   get uid(): string {

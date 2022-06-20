@@ -72,7 +72,9 @@ export default class ShoppingList extends LitElement {
       const db = getDatabase(firebaseApp);
       this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
       this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
-      get(child(this.#listRef, "listName")).then((val) => (this.listName = val.val()));
+      get(child(this.#listRef, "listName"))
+        .then((val) => (this.listName = val.val()))
+        .finally(() => (this._initLoading = false));
       this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
       this.#establishOnValueListener();
     }
@@ -84,7 +86,7 @@ export default class ShoppingList extends LitElement {
     this.#cancelCallback = onValue(
       this.#listDataRef,
       (snapshot) => {
-        this._initLoading = false;
+        if (this.listName) this._initLoading = false;
         const data = snapshot.val() as ShoppingListData | null;
         if (!data || Object.keys(data).length === 0) {
           this.#listData = null;
@@ -102,7 +104,7 @@ export default class ShoppingList extends LitElement {
           .map((key) => ({ key, ...this.#listData![key] }))
           .sort((a, b) => (a.order < b.order ? -1 : 1));
       },
-      (error) => alert(error)
+      (error) => console.error(error)
     );
   }
 
@@ -246,7 +248,7 @@ export default class ShoppingList extends LitElement {
       : html`<button class="delete" type="button" @click=${this.#handleDeleteList}>Delete List?</button>`;
 
     return html`
-      <div class="card">
+      <div ?loading=${this._initLoading} class="card">
         <div @click=${this.#toggleHideListOnClick} id="title">
           <h2>${this.listName}</h2>
           <span>${this.sortedData?.length ?? 0}</span>
