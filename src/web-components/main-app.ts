@@ -1,5 +1,4 @@
 import { auth, firebaseApp } from "@firebase-logic";
-import { onAuthStateChanged } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
