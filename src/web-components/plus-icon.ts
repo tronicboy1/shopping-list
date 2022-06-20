@@ -4,7 +4,7 @@ import sharedCss from "./shared-css";
 
 export default class PlusIcon extends LitElement {
   @property({ attribute: true, type: String })
-  color: "primary" | "highlight" = "primary";
+  color: "primary" | "highlight" | "white" = "primary";
 
   static styles = [
     sharedCss,
