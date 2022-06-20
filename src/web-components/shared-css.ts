@@ -28,6 +28,10 @@ export default css`
     transition: all 0.3s;
   }
 
+  .card[hide] {
+    display: none;
+  }
+
   .invalid {
     background-color: var(--warning-color);
     display: block;
