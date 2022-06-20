@@ -61,7 +61,7 @@ onAuthStateChanged(getAuth(firebaseApp), (auth) => {
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data === "get-auth") {
-    sendAuthStateToClients(uid);
+    event.waitUntil(sendAuthStateToClients(uid));
   }
 });
 
