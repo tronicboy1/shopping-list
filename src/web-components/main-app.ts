@@ -1,21 +1,22 @@
 import { auth, firebaseApp } from "@firebase-logic";
 import { onAuthStateChanged } from "firebase/auth";
-import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
+import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
+import AllShoppingLists from "./shopping-list";
 
 type Modes = "SHOPPING" | "CHORES";
 
 export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
+  #db!: Database;
+  #uid!: string;
 
   @state()
   private _mode: Modes = "SHOPPING";
-  @state()
-  private _uid: string | null = null;
   @state()
   private _settings: { daysUntilDue: number } = { daysUntilDue: 7 };
   @state()
@@ -29,12 +30,13 @@ export default class MainApp extends LitElement {
     super.connectedCallback();
     onAuthStateChanged(auth, (auth) => {
       if (auth) {
-        const db = getDatabase(firebaseApp);
+        this.uid = auth.uid;
+        this.#db = getDatabase(firebaseApp);
         const messaging = getMessaging(firebaseApp);
         isSupported().then((isSupported) => {
           if (!isSupported) throw Error("Browser does not support firebase Notifications.");
           getToken(messaging).then((newFCM) => {
-            const fcmListRef = ref(db, `FCM/${auth.uid}/`);
+            const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
             get(fcmListRef).then((currentData) => {
               const oldFCMList = (currentData.val() as string[]) ?? [];
               if (oldFCMList.find((fcm) => fcm === newFCM)) return;
@@ -42,16 +44,24 @@ export default class MainApp extends LitElement {
             });
           });
         });
-        this.#settingsRef = ref(db, `${auth.uid}/SETTINGS/CHORES`);
+        this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
         get(this.#settingsRef).then((data) => {
           if (!data.exists()) return;
           const value = data.val();
           this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
         });
       }
-      this._uid = auth ? auth.uid : null;
       this._loading = false;
     });
+  }
+
+  get uid(): string {
+    return this.#uid;
+  }
+  set uid(value: string) {
+    const oldValue = this.uid;
+    this.#uid = String(value);
+    this.requestUpdate("uid", oldValue);
   }
 
   #handleModeChange = (event: CustomEvent<Modes>) => {
@@ -120,10 +130,15 @@ export default class MainApp extends LitElement {
       .finally(() => (this._settingsChangeLoading = false));
   };
 
+  #clearAllListData = () =>
+    remove(ref(this.#db, `${this.#uid}/SHOPPING-LISTS/`)).then(() => {
+      this.shadowRoot!.querySelector<AllShoppingLists>("all-shopping-lists")!.requestUpdate();
+    });
+
   render() {
     if (this._loading)
       return html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`;
-    if (!this._uid) return this.#renderAuth();
+    if (!this.uid) return this.#renderAuth();
 
     return html`
       <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
@@ -147,6 +162,7 @@ export default class MainApp extends LitElement {
             ${"Notification" in window
               ? html`<button @click=${this.#handleNotificationEnableClick} type="button">Enable Notifications</button>`
               : ""}
+            <button class="delete" type="button" @click=${this.#clearAllListData}>Clear All List Data</button>
             <button type="button" @click=${this.#handleLogoutClick}>Logout</button>
           </form>
         </div></base-modal
