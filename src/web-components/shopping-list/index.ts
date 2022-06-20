@@ -11,12 +11,10 @@ import ShoppingList from "./shopping-list";
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
   #uid!: string;
-  @state()
-  private _listGroups: ListGroups | null = null;
+  #hideAddListForm: boolean;
+  #shoppingListsData: ListGroups | null;
   @state()
   private _adding = false;
-  @state()
-  private _deleteLoading = false;
   @state()
   private _initLoading = true;
   @query("base-modal")
@@ -49,8 +47,28 @@ export default class AllShoppingLists extends LitElement {
       button + button {
         margin-top: 1rem;
       }
+
+      #open-add-list {
+        display: none;
+        width: 50px;
+        height: 50px;
+        margin: 1rem auto;
+        background-color: var(--secondary-color);
+        border: 1px solid var(--secondary-color);
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      #open-add-list[show] {
+        display: flex;
+      }
     `,
   ];
+
+  constructor() {
+    super();
+    this.#hideAddListForm = true;
+    this.#shoppingListsData = null;
+  }
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -72,10 +90,30 @@ export default class AllShoppingLists extends LitElement {
     document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
   }
 
+  get hideAddListForm(): boolean {
+    return this.#hideAddListForm;
+  }
+  set hideAddListForm(value: boolean) {
+    const oldValue = this.hideAddListForm;
+    this.#hideAddListForm = Boolean(value);
+    this.requestUpdate("hideAddListForm", oldValue);
+  }
+  get shoppingListsData(): ListGroups | null {
+    return this.#shoppingListsData;
+  }
+  set shoppingListsData(value: ListGroups | null) {
+    const oldValue = this.shoppingListsData;
+    this.#shoppingListsData = value;
+    this.requestUpdate("shoppingListsData", oldValue);
+    if (!this.shoppingListsData) {
+      this.hideAddListForm = false;
+    }
+  }
+
   #refreshList() {
     return get(this.#ref).then((result) => {
       const data = result.val() as ListGroups | null;
-      this._listGroups = data;
+      this.shoppingListsData = data;
     });
   }
 
@@ -84,6 +122,12 @@ export default class AllShoppingLists extends LitElement {
     if (visibilityState === "visible" && this.#ref) this.#refreshList();
   };
 
+  #handleOpenAddListClick: EventListener = () => {
+    this.hideAddListForm = false;
+  };
+  #handleCloseAddList = () => {
+    this.hideAddListForm = true;
+  };
   #handleAddList: EventListener = (event) => {
     event.preventDefault();
     if (this._adding) return;
@@ -101,21 +145,8 @@ export default class AllShoppingLists extends LitElement {
       .catch((error) => alert(error))
       .finally(() => {
         this._adding = false;
+        this.#handleCloseAddList();
       });
-  };
-
-  #clearAll = () => {
-    this._deleteLoading = true;
-    remove(this.#ref)
-      .then(() => this.#refreshList())
-      .finally(() => {
-        this._clearAllModal.removeAttribute("show");
-        this._deleteLoading = false;
-      });
-  };
-
-  #handleClearAllClick = () => {
-    this._clearAllModal.toggleAttribute("show", true);
   };
 
   #handleInput: EventListener = (event) => {
@@ -155,20 +186,12 @@ export default class AllShoppingLists extends LitElement {
   render() {
     if (this._initLoading) {
       return html`<div style="margin: auto; margin-top: 30vh;">
-        <loading-spinner />
+        <loading-spinner></loading-spinner>
       </div>`;
     }
     return html`
-      <base-modal title="Delete all Lists?">
-        <div style="display: flex; flex-direction: column;">
-          <button @click=${this.#clearAll} type="button" class="delete">
-            ${this._deleteLoading ? html`<loading-spinner color="white" />` : "Yes"}
-          </button>
-          <button type="button" @click=${() => this._clearAllModal.removeAttribute("show")}>Cancel</button>
-        </div>
-      </base-modal>
-      ${this._listGroups
-        ? Object.keys(this._listGroups).map(
+      ${this.shoppingListsData
+        ? Object.keys(this.shoppingListsData).map(
             (key) =>
               html`<shopping-list
                 @deleted=${() => this.#refreshList()}
@@ -178,11 +201,15 @@ export default class AllShoppingLists extends LitElement {
                 uid=${this.#uid}
               ></shopping-list>`
           )
-        : html`<p style="margin-top: 6rem;">No Lists.</p>`}
-      <div class="card">
+        : ""}
+      <div ?show=${this.hideAddListForm} id="open-add-list" @click=${this.#handleOpenAddListClick}>
+        <plus-icon color="white"></plus-icon>
+      </div>
+      <div ?hide=${this.hideAddListForm} class="card">
         <form @submit=${this.#handleAddList} autocomplete="off">
           <input
             @input=${this.#handleInput}
+            @blur=${this.#handleCloseAddList}
             id="list-name"
             name="list-name"
             minlength="1"
@@ -195,11 +222,6 @@ export default class AllShoppingLists extends LitElement {
           </button>
         </form>
       </div>
-      ${this._listGroups
-        ? html`<div class="card" style="margin-bottom: 10rem">
-            <button @click=${this.#handleClearAllClick} id="clear" type="button">Clear All</button>
-          </div>`
-        : ""}
     `;
   }
 }
