@@ -2,7 +2,7 @@ import { auth, firebaseApp } from "@firebase-logic";
 import { onAuthStateChanged } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
-import { html, LitElement, css } from "lit";
+import { html, LitElement, css, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
@@ -15,6 +15,7 @@ export default class MainApp extends LitElement {
   #controller: AbortController;
   #db!: Database;
   #uid!: string;
+  #observer!: IntersectionObserver;
 
   @state()
   private _mode: Modes = "SHOPPING";
@@ -47,6 +48,12 @@ export default class MainApp extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    this.#observer = new IntersectionObserver(
+      (entries) => {
+        console.log(entries);
+      },
+      { root: this, rootMargin: "0px", threshold: 1.0 }
+    );
     new Promise<string>((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(
         auth,
@@ -141,10 +148,6 @@ export default class MainApp extends LitElement {
       .finally(() => this._modal.removeAttribute("show"));
   };
 
-  #renderAuth() {
-    return html`<auth-handler show></auth-handler>`;
-  }
-
   static styles = [
     sharedCss,
     formCss,
@@ -179,14 +182,16 @@ export default class MainApp extends LitElement {
     });
 
   render() {
-    if (this._loading)
-      return html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`;
-    if (!this.uid) return this.#renderAuth();
-
     return html`
-      <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
-      <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
-      <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
+      ${this._loading
+        ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
+        : ""}
+      ${!(this.uid || this._loading) ? html`<auth-handler show></auth-handler>` : ""}
+      <div ?hide=${this._loading || !this.uid}>
+        <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
+        <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
+        <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
+      </div>
       <base-modal title="Settings"
         ><div id="settings-content">
           <form @submit=${this.#handleSettingsSubmit}>
