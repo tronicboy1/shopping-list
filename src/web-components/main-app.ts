@@ -65,6 +65,7 @@ export default class MainApp extends LitElement {
     this.#observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
           const target = entry.target;
           const tagName = target.tagName.toLowerCase();
           console.log("MT: intersection event. ", entry.isIntersecting, tagName, customElements.get(tagName));
