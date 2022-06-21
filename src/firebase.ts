@@ -23,3 +23,4 @@ export const appCheck = initializeAppCheck(firebaseApp, {
   isTokenAutoRefreshEnabled: true,
 });
 
+export const auth = getAuth(firebaseApp)
