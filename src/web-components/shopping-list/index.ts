@@ -226,6 +226,7 @@ export default class AllShoppingLists extends LitElement {
             minlength="1"
             type="text"
             maxlength="33"
+            autofocus
             required
           />
           <button id="add" type="submit">
