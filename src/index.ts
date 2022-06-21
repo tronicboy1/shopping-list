@@ -1,4 +1,3 @@
-import AuthHandler from "@web-components/auth-handler";
 import "./index.css";
 import LoadingSpinner from "@web-components/loading-spinner";
 import MainApp from "@web-components/main-app";
@@ -10,7 +9,6 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => alert(JSON.stringify(error)));
 }
 
-customElements.define("auth-handler", AuthHandler);
 customElements.define("loading-spinner", LoadingSpinner);
 customElements.define("plus-icon", PlusIcon);
 customElements.define("main-app", MainApp);

@@ -106,29 +106,25 @@ export default class ShoppingList extends LitElement {
   #establishOnValueListener() {
     if (!(this.#listDataRef && this.#listRef))
       throw Error("List Data Ref and List Ref must be defined before calling this method.");
-    this.#cancelCallback = onValue(
-      this.#listDataRef,
-      (snapshot) => {
-        if (this.listName) this._initLoading = false;
-        const data = snapshot.val() as ShoppingListData | null;
-        if (!data || Object.keys(data).length === 0) {
-          this.#listData = null;
-          this.sortedData = null;
-          return;
-        }
-        const keys = Object.keys(data);
-        if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-          keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
-          set(this.#listRef, data);
-          return;
-        }
-        this.#listData = data;
-        this.sortedData = Object.keys(this.#listData)
-          .map((key) => ({ key, ...this.#listData![key] }))
-          .sort((a, b) => (a.order < b.order ? -1 : 1));
-      },
-      (error) => console.error(error)
-    );
+    this.#cancelCallback = onValue(this.#listDataRef, (snapshot) => {
+      if (this.listName) this._initLoading = false;
+      const data = snapshot.val() as ShoppingListData | null;
+      if (!data || Object.keys(data).length === 0) {
+        this.#listData = null;
+        this.sortedData = null;
+        return;
+      }
+      const keys = Object.keys(data);
+      if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+        keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
+        set(this.#listRef, data);
+        return;
+      }
+      this.#listData = data;
+      this.sortedData = Object.keys(this.#listData)
+        .map((key) => ({ key, ...this.#listData![key] }))
+        .sort((a, b) => (a.order < b.order ? -1 : 1));
+    });
   }
 
   #handleVisibilityChange: EventListener = () => {

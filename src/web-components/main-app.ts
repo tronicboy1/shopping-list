@@ -68,10 +68,9 @@ export default class MainApp extends LitElement {
           if (!entry.isIntersecting) return;
           const target = entry.target;
           const tagName = target.tagName.toLowerCase();
-          console.log("MT: intersection event. ", entry.isIntersecting, tagName, customElements.get(tagName));
           if (customElements.get(tagName)) return;
           import(`@web-components/${tagName}`).then((imports) => {
-            customElements.define(tagName, imports.default);
+            customElements.define(tagName, imports.default); // import web components when brought into view
           });
         });
       },
@@ -103,8 +102,10 @@ export default class MainApp extends LitElement {
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     const allShoppingLists = this.shadowRoot!.querySelector("all-shopping-lists")!;
     const choresList = this.shadowRoot!.querySelector("chores-list")!;
+    const authHandler = this.shadowRoot!.querySelector("auth-handler")!;
     this.#observer.observe(allShoppingLists);
     this.#observer.observe(choresList);
+    this.#observer.observe(authHandler);
   }
 
   disconnectedCallback(): void {
@@ -151,7 +152,7 @@ export default class MainApp extends LitElement {
     this._modal.toggleAttribute("show", true);
   };
   #handleLogoutClick: EventListener = () => {
-    auth.signOut();
+    auth.signOut().finally(() => this._modal.removeAttribute("show"));
   };
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
@@ -205,7 +206,9 @@ export default class MainApp extends LitElement {
       ${this._loading
         ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
         : ""}
-      ${!(this.uid || this._loading) ? html`<auth-handler show></auth-handler>` : ""}
+      <div ?hide=${this.uid || this._loading}>
+        <auth-handler show></auth-handler>
+      </div>
       <div ?hide=${this._loading || !this.uid}>
         <div ?hide=${this._mode !== "SHOPPING"}>
           <all-shopping-lists show></all-shopping-lists>
