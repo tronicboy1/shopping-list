@@ -30,19 +30,21 @@ export default class MainApp extends LitElement {
     super();
     this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.addEventListener(
-      "message",
-      (event) => {
-        const data = event.data;
-        if (data.type === "auth") {
-          this.uid = data.uid;
-        }
-      },
-      { signal: this.#controller.signal }
-    );
-    const swController = navigator.serviceWorker.controller;
-    if (!swController) throw Error("Service worker not initiated.");
-    swController.postMessage("get-auth");
+    navigator.serviceWorker.ready.then((registration) => {
+      navigator.serviceWorker.addEventListener(
+        "message",
+        (event) => {
+          const data = event.data;
+          if (data.type === "auth") {
+            this.uid = data.uid;
+          }
+        },
+        { signal: this.#controller.signal }
+      );
+      const swController = navigator.serviceWorker.controller;
+      if (!swController) throw Error("Service worker not initiated.");
+      swController.postMessage("get-auth");
+    });
   }
 
   disconnectedCallback(): void {
@@ -54,6 +56,7 @@ export default class MainApp extends LitElement {
   }
   set uid(value: string) {
     const oldValue = this.uid;
+    if (oldValue === value) return;
     this.#uid = String(value);
     this.requestUpdate("uid", oldValue);
     if (this.uid) {
