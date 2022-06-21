@@ -5,10 +5,6 @@ export default css`
     box-sizing: border-box;
   }
 
-  div[hide] {
-    display: none;
-  }
-
   :host {
     --primary-color: white;
     --secondary-color: rgb(218, 218, 218);

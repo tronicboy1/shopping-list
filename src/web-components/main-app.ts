@@ -4,9 +4,9 @@ import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from 
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
+import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
-import AllShoppingLists from "./shopping-list";
 
 type Modes = "SHOPPING" | "CHORES";
 
@@ -27,6 +27,20 @@ export default class MainApp extends LitElement {
   private _settingsChangeLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
+
+  static styles = [
+    sharedCss,
+    formCss,
+    css`
+      #settings-content {
+        display: flex;
+        flex-direction: column;
+      }
+      div[hide] {
+        display: none;
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -50,9 +64,17 @@ export default class MainApp extends LitElement {
     super.connectedCallback();
     this.#observer = new IntersectionObserver(
       (entries) => {
-        console.log(entries);
+        entries.forEach((entry) => {
+          const target = entry.target;
+          const tagName = target.tagName.toLowerCase();
+          console.log("MT: intersection event. ", entry.isIntersecting, tagName, customElements.get(tagName));
+          if (customElements.get(tagName)) return;
+          import(`@web-components/${tagName}`).then((imports) => {
+            customElements.define(tagName, imports.default);
+          });
+        });
       },
-      { root: this, rootMargin: "0px", threshold: 1.0 }
+      { root: document, rootMargin: "0px", threshold: 1.0 }
     );
     new Promise<string>((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(
@@ -75,6 +97,13 @@ export default class MainApp extends LitElement {
         this._loading = false;
       })
       .catch((error) => alert(JSON.stringify(error)));
+  }
+
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    const allShoppingLists = this.shadowRoot!.querySelector("all-shopping-lists")!;
+    const choresList = this.shadowRoot!.querySelector("chores-list")!;
+    this.#observer.observe(allShoppingLists);
+    this.#observer.observe(choresList);
   }
 
   disconnectedCallback(): void {
@@ -148,17 +177,6 @@ export default class MainApp extends LitElement {
       .finally(() => this._modal.removeAttribute("show"));
   };
 
-  static styles = [
-    sharedCss,
-    formCss,
-    css`
-      #settings-content {
-        display: flex;
-        flex-direction: column;
-      }
-    `,
-  ];
-
   #handleSettingsSubmit: EventListener = (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -188,8 +206,12 @@ export default class MainApp extends LitElement {
         : ""}
       ${!(this.uid || this._loading) ? html`<auth-handler show></auth-handler>` : ""}
       <div ?hide=${this._loading || !this.uid}>
-        <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
-        <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
+        <div ?hide=${this._mode !== "SHOPPING"}>
+          <all-shopping-lists show></all-shopping-lists>
+        </div>
+        <div ?hide=${this._mode !== "CHORES"}>
+          <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
+        </div>
         <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
       </div>
       <base-modal title="Settings"
