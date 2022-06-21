@@ -46,32 +46,9 @@ onAuthStateChanged(auth, (authState) => {
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data === "get-auth") {
-    if (uid) {
-      return event.waitUntil(sendAuthStateToClients(uid));
-    }
-    event.waitUntil(
-      getUid()
-        .then((uid) => sendAuthStateToClients(uid))
-        .catch((error) => console.error(error))
-    );
+    event.waitUntil(sendAuthStateToClients(uid));
   }
 });
-
-const getUid = () =>
-  new Promise<string>((resolve, reject) => {
-    const cancelCallback = onAuthStateChanged(
-      auth,
-      (authState) => {
-        cancelCallback();
-        const uid = authState ? authState.uid : "";
-        resolve(uid);
-      },
-      (error) => {
-        cancelCallback();
-        reject(error.message);
-      }
-    );
-  });
 
 const sendAuthStateToClients = (uid: string): Promise<any> => {
   return self.clients.matchAll().then((clients) => {
