@@ -11,7 +11,7 @@ import ShoppingItemDetails from "@web-components/shopping-list/shopping-item-det
 import PlusIcon from "@web-components/plus-icon";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => alert(error));
+  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => alert(JSON.stringify(error)));
 }
 
 customElements.define("auth-handler", AuthHandler);

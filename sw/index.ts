@@ -56,18 +56,21 @@ const sendAuthStateToClients = (user: User | null) => {
     .then((clients) => clients.forEach((client) => client.postMessage({ type: "auth", uid })));
 };
 
-isSupported().then(() => {
-  const firebaseMessaging = getMessaging(firebaseApp);
-  onBackgroundMessage(firebaseMessaging, (payload) => {
-    console.log("SW: Message Received", payload);
-    const notificationData = payload.notification;
-    if (!notificationData) return;
-    const { title, body } = notificationData;
-    if (!(title && body)) return;
-    const notificationOptions: NotificationOptions = {
-      body,
-      icon: "/apple-touch-icon.png",
-    };
-    self.registration.showNotification(title, notificationOptions);
-  });
-});
+isSupported()
+  .then((isSupported) => {
+    if (!isSupported) return;
+    const firebaseMessaging = getMessaging(firebaseApp);
+    onBackgroundMessage(firebaseMessaging, (payload) => {
+      console.log("SW: Message Received", payload);
+      const notificationData = payload.notification;
+      if (!notificationData) return;
+      const { title, body } = notificationData;
+      if (!(title && body)) return;
+      const notificationOptions: NotificationOptions = {
+        body,
+        icon: "/apple-touch-icon.png",
+      };
+      self.registration.showNotification(title, notificationOptions);
+    });
+  })
+  .catch((error) => postMessage(error.message));
