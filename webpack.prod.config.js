@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
+const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 
 module.exports = {
   entry: "./src/index.ts",
@@ -71,9 +72,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public", "index.html"),
     }),
+    new WebpackManifestPlugin({ fileName: "manifest.json" }),
     new MiniCssExtractPlugin({ filename: (data) => `${data.chunk.name}.${data.hash}.css` }),
     new CopyWebpackPlugin({
-      patterns: [{ from: "public", filter: (path) => !path.includes(".html") }],
+      patterns: [{ from: "public", filter: (path) => !(path.includes(".html") || path.includes("manifest.json")) }],
     }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: "production",

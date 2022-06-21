@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {
-  entry: { "firebase-messaging-sw": "./sw/index.ts", "list-listener": "./sw/web-workers/list-listener/index.ts" },
+  entry: { "firebase-messaging-sw": "./sw/index.ts" },
   mode: "production",
   module: {
     rules: [
