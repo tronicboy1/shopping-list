@@ -35,25 +35,51 @@ self.addEventListener("notificationclose", (event) => {
   console.log("SW: Notification Closed.", event);
 });
 
-let user: User | null = null;
+let uid: string = "";
+const auth = getAuth(firebaseApp);
 
-onAuthStateChanged(getAuth(firebaseApp), (auth) => {
-  user = auth;
-  sendAuthStateToClients(user);
+onAuthStateChanged(auth, (authState) => {
+  uid = authState ? authState.uid : "";
+  sendAuthStateToClients(uid);
 });
 
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data === "get-auth") {
-    event.waitUntil(sendAuthStateToClients(user));
+    if (uid) {
+      return event.waitUntil(sendAuthStateToClients(uid));
+    }
+    event.waitUntil(
+      getUid()
+        .then((uid) => sendAuthStateToClients(uid))
+        .catch((error) => console.error(error))
+    );
   }
 });
 
-const sendAuthStateToClients = (user: User | null) => {
-  const uid = user ? user.uid : "";
-  return self.clients
-    .matchAll()
-    .then((clients) => clients.forEach((client) => client.postMessage({ type: "auth", uid })));
+const getUid = () =>
+  new Promise<string>((resolve, reject) => {
+    const cancelCallback = onAuthStateChanged(
+      auth,
+      (authState) => {
+        cancelCallback();
+        const uid = authState ? authState.uid : "";
+        resolve(uid);
+      },
+      (error) => {
+        cancelCallback();
+        reject(error.message);
+      }
+    );
+  });
+
+const sendAuthStateToClients = (uid: string): Promise<any> => {
+  return self.clients.matchAll().then((clients) => {
+    if (!clients.length) {
+      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
+    }
+    clients.forEach((client) => client.postMessage({ type: "auth", uid }));
+  });
 };
 
 isSupported()

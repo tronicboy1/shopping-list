@@ -41,9 +41,7 @@ export default class MainApp extends LitElement {
         },
         { signal: this.#controller.signal }
       );
-      const swController = navigator.serviceWorker.controller;
-      if (!swController) throw Error("Service worker not initiated.");
-      swController.postMessage("get-auth");
+      registration.active!.postMessage("get-auth");
     });
   }
 
