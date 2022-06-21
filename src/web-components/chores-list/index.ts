@@ -16,6 +16,7 @@ export interface Chore {
 customElements.define("chore-details", ChoreDetails);
 
 export default class ChoresList extends LitElement {
+  #uid: string;
   #ref!: DatabaseReference;
   #unsubscribe: Unsubscribe;
   #controller: AbortController;
@@ -30,6 +31,7 @@ export default class ChoresList extends LitElement {
 
   constructor() {
     super();
+    this.#uid = "";
     this.#unsubscribe = () => {};
     this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
@@ -38,10 +40,11 @@ export default class ChoresList extends LitElement {
       (event) => {
         const data = event.data;
         if (data.type === "auth") {
-          const uid = data.uid;
-          this._choreDetails.setAttribute("uid", uid);
+          if (data.uid === this.#uid) return;
+          this.#uid = data.uid;
+          this._choreDetails.setAttribute("uid", this.#uid);
           const db = getDatabase(firebaseApp);
-          this.#ref = ref(db, `${uid}/CHORES/`);
+          this.#ref = ref(db, `${this.#uid}/CHORES/`);
           const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
           onValue(query, (snapshot) => {
             const value = snapshot.val();

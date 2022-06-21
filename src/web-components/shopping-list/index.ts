@@ -9,7 +9,7 @@ import BaseModal from "@web-components/base-modal";
 import ShoppingList from "./shopping-list";
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
-  #uid!: string;
+  #uid: string;
   #hideAddListForm: boolean;
   #shoppingListsData: ListGroups | null;
   #controller: AbortController;
@@ -68,6 +68,7 @@ export default class AllShoppingLists extends LitElement {
     super();
     this.#hideAddListForm = true;
     this.#shoppingListsData = null;
+    this.#uid = "";
     this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
     navigator.serviceWorker.addEventListener(
@@ -75,6 +76,7 @@ export default class AllShoppingLists extends LitElement {
       (event) => {
         const data = event.data;
         if (data.type === "auth") {
+          if (this.#uid === data.uid) return;
           this.#uid = data.uid;
           const db = getDatabase(firebaseApp);
           this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
