@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 
 module.exports = {
-  entry: "./sw/index.ts",
+  entry: { "firebase-messaging-sw": "./sw/index.ts", "list-listener": "./sw/web-workers/list-listener/index.ts" },
   mode: "production",
   module: {
     rules: [
@@ -20,10 +20,9 @@ module.exports = {
     extensions: [".ts", ".js"],
   },
   output: {
-    filename: "firebase-messaging-sw.js",
+    filename: "[name].js",
     path: path.resolve(__dirname, "public"),
     clean: false,
-    iife: false,
   },
   plugins: [
     new webpack.EnvironmentPlugin({
