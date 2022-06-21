@@ -78,7 +78,6 @@ export default class ShoppingList extends LitElement {
       this.#cancelCallback();
       const db = getDatabase(firebaseApp);
       this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
-      console.log(`${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
       this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
       get(child(this.#listRef, "listName"))
         .then((val) => (this.listName = val.val()))
