@@ -135,6 +135,10 @@ export default class AllShoppingLists extends LitElement {
 
   #handleOpenAddListClick: EventListener = () => {
     this.hideAddListForm = false;
+    this.updateComplete.then((result) => {
+      const input = this.shadowRoot!.querySelector<HTMLInputElement>("input#list-name")!;
+      input.focus();
+    });
   };
   #handleCloseAddList = () => {
     this.hideAddListForm = true;
@@ -226,7 +230,6 @@ export default class AllShoppingLists extends LitElement {
             minlength="1"
             type="text"
             maxlength="33"
-            autofocus
             required
           />
           <button id="add" type="submit">
