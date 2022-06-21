@@ -13,7 +13,9 @@ export interface Chore {
   memo: string;
 }
 
-customElements.define("chore-details", ChoreDetails);
+if (!customElements.get("chore-details")) {
+  import("./chore-details").then((imports) => customElements.define("chore-details", imports.default));
+}
 
 export default class ChoresList extends LitElement {
   #uid: string;

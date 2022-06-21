@@ -7,6 +7,18 @@ import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import BaseModal from "@web-components/base-modal";
 import ShoppingList from "./shopping-list";
+
+if (!customElements.get("shopping-list")) {
+  import("@web-components/all-shopping-lists/shopping-list").then((imports) => {
+    customElements.define("shopping-list", imports.default);
+  });
+}
+if (!customElements.get("shopping-item-details")) {
+  import("@web-components/all-shopping-lists/shopping-item-details").then((imports) => {
+    customElements.define("shopping-item-details", imports.default);
+  });
+}
+
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
   #uid: string;
