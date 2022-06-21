@@ -24,12 +24,17 @@ export default css`
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.168);
     padding: 1rem;
     display: flex;
+    opacity: 1;
     flex-direction: column;
     transition: all 0.3s;
   }
 
   .card[hide] {
     display: none;
+  }
+
+  .card[loading] {
+    opacity: 0;
   }
 
   .invalid {

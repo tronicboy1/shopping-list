@@ -6,7 +6,7 @@ const webpack = require("webpack");
 const port = 9000;
 
 module.exports = {
-  entry: "./src/index.ts",
+  entry: { main: "./src/index.ts", },
   mode: "development",
   devtool: "inline-source-map",
   module: {
@@ -63,12 +63,13 @@ module.exports = {
     port,
   },
   output: {
-    filename: "bundle.js",
+    filename: "[name].js",
     path: path.resolve(__dirname, "dist"),
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public", "index.html"),
+      chunks: ["main"]
     }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: "development",

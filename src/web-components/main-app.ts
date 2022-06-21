@@ -1,5 +1,4 @@
 import { auth, firebaseApp } from "@firebase-logic";
-import { onAuthStateChanged } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
@@ -12,6 +11,7 @@ type Modes = "SHOPPING" | "CHORES";
 
 export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
+  #controller: AbortController;
   #db!: Database;
   #uid!: string;
 
@@ -26,33 +26,27 @@ export default class MainApp extends LitElement {
   @query("base-modal")
   private _modal!: BaseModal;
 
-  connectedCallback() {
-    super.connectedCallback();
-    onAuthStateChanged(auth, (auth) => {
-      if (auth) {
-        this.uid = auth.uid;
-        this.#db = getDatabase(firebaseApp);
-        const messaging = getMessaging(firebaseApp);
-        isSupported().then((isSupported) => {
-          if (!isSupported) throw Error("Browser does not support firebase Notifications.");
-          getToken(messaging).then((newFCM) => {
-            const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
-            get(fcmListRef).then((currentData) => {
-              const oldFCMList = (currentData.val() as string[]) ?? [];
-              if (oldFCMList.find((fcm) => fcm === newFCM)) return;
-              set(fcmListRef, [...oldFCMList, newFCM]);
-            });
-          });
-        });
-        this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
-        get(this.#settingsRef).then((data) => {
-          if (!data.exists()) return;
-          const value = data.val();
-          this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
-        });
-      }
-      this._loading = false;
-    });
+  constructor() {
+    super();
+    this.#controller = new AbortController();
+    if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
+    navigator.serviceWorker.addEventListener(
+      "message",
+      (event) => {
+        const data = event.data;
+        if (data.type === "auth") {
+          this.uid = data.uid;
+        }
+      },
+      { signal: this.#controller.signal }
+    );
+    const swController = navigator.serviceWorker.controller;
+    if (!swController) throw Error("Service worker not initiated.");
+    swController.postMessage("get-auth");
+  }
+
+  disconnectedCallback(): void {
+    this.#controller.abort();
   }
 
   get uid(): string {
@@ -62,6 +56,28 @@ export default class MainApp extends LitElement {
     const oldValue = this.uid;
     this.#uid = String(value);
     this.requestUpdate("uid", oldValue);
+    if (this.uid) {
+      this.#db = getDatabase(firebaseApp);
+      const messaging = getMessaging(firebaseApp);
+      isSupported().then((isSupported) => {
+        if (!isSupported) throw Error("Browser does not support firebase Notifications.");
+        getToken(messaging).then((newFCM) => {
+          const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
+          get(fcmListRef).then((currentData) => {
+            const oldFCMList = (currentData.val() as string[]) ?? [];
+            if (oldFCMList.find((fcm) => fcm === newFCM)) return;
+            set(fcmListRef, [...oldFCMList, newFCM]);
+          });
+        });
+      });
+      this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
+      get(this.#settingsRef).then((data) => {
+        if (!data.exists()) return;
+        const value = data.val();
+        this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
+      });
+    }
+    if (this._loading) this._loading = false;
   }
 
   #handleModeChange = (event: CustomEvent<Modes>) => {

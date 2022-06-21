@@ -1,3 +1,8 @@
+/**
+ * I tested using web workers for onValue listeners but the result was much slower
+ * than simply running the listeners in the main thread.
+ */
+
 //prettier-ignore
 import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
@@ -10,6 +15,7 @@ import { ShoppingListData, ShoppingListItem } from "./types";
 
 export default class ShoppingList extends LitElement {
   #uid: string;
+  // #worker!: Worker;
   #listId: string;
   #listRef!: DatabaseReference;
   #listDataRef!: DatabaseReference;
@@ -42,6 +48,7 @@ export default class ShoppingList extends LitElement {
     this.#cancelCallback = () => {};
     this.#listData = null;
     this.#clickedItemId = null;
+    // this.#setupWebWorker();
   }
 
   connectedCallback() {
@@ -72,11 +79,29 @@ export default class ShoppingList extends LitElement {
       const db = getDatabase(firebaseApp);
       this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
       this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
-      get(child(this.#listRef, "listName")).then((val) => (this.listName = val.val()));
+      get(child(this.#listRef, "listName"))
+        .then((val) => (this.listName = val.val()))
+        .finally(() => {
+          this._initLoading = false;
+        });
       this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
       this.#establishOnValueListener();
+      //this.#worker.postMessage({ uid: this.#uid, listId: this.#listId });
     }
   }
+
+  // #setupWebWorker() {
+  //   this.#worker = new Worker("/list-listener.js");
+  //   this.#worker.onerror = (event) => console.error(event);
+  //   this.#worker.onmessage = (
+  //     event: MessageEvent<{ raw: ShoppingListData | null; sorted: (ShoppingListItem & { key: string })[] | null }>
+  //   ) => {
+  //     const { raw, sorted } = event.data;
+  //     this.#listData = raw;
+  //     this.sortedData = sorted
+  //     if (this.listName) this._initLoading = false;
+  //   };
+  // }
 
   #establishOnValueListener() {
     if (!(this.#listDataRef && this.#listRef))
@@ -84,7 +109,7 @@ export default class ShoppingList extends LitElement {
     this.#cancelCallback = onValue(
       this.#listDataRef,
       (snapshot) => {
-        this._initLoading = false;
+        if (this.listName) this._initLoading = false;
         const data = snapshot.val() as ShoppingListData | null;
         if (!data || Object.keys(data).length === 0) {
           this.#listData = null;
@@ -102,7 +127,7 @@ export default class ShoppingList extends LitElement {
           .map((key) => ({ key, ...this.#listData![key] }))
           .sort((a, b) => (a.order < b.order ? -1 : 1));
       },
-      (error) => alert(error)
+      (error) => console.error(error)
     );
   }
 
@@ -110,6 +135,11 @@ export default class ShoppingList extends LitElement {
     const visibilityState = document.visibilityState;
     if (visibilityState === "hidden") this.#cancelCallback();
     if (visibilityState === "visible" && this.#listDataRef) this.#establishOnValueListener();
+    // if (visibilityState === "hidden") this.#worker.terminate();
+    // if (visibilityState === "visible" && this.#listDataRef) {
+    //   this.#setupWebWorker();
+    //   this.#worker.postMessage({ uid: this.#uid, listId: this.#listId });
+    // }
   };
 
   #handleNewItemInput: EventListener = (event) => {
@@ -246,7 +276,7 @@ export default class ShoppingList extends LitElement {
       : html`<button class="delete" type="button" @click=${this.#handleDeleteList}>Delete List?</button>`;
 
     return html`
-      <div class="card">
+      <div ?loading=${this._initLoading} class="card">
         <div @click=${this.#toggleHideListOnClick} id="title">
           <h2>${this.listName}</h2>
           <span>${this.sortedData?.length ?? 0}</span>

@@ -13,6 +13,8 @@
 
 /public/firebase-messaging-sw.js
 /public/firebase-messaging-sw.js.LICENSE.txt
+/public/list-listener.js
+/public/list-listener.js.LICENSE.txt
 
 # misc
 .DS_Store

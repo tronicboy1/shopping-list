@@ -1,7 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, firebaseApp } from "@firebase-logic";
+import { firebaseApp } from "@firebase-logic";
 import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
@@ -13,6 +12,7 @@ export default class AllShoppingLists extends LitElement {
   #uid!: string;
   #hideAddListForm: boolean;
   #shoppingListsData: ListGroups | null;
+  #controller: AbortController;
   @state()
   private _adding = false;
   @state()
@@ -68,26 +68,37 @@ export default class AllShoppingLists extends LitElement {
     super();
     this.#hideAddListForm = true;
     this.#shoppingListsData = null;
+    this.#controller = new AbortController();
+    if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
+    navigator.serviceWorker.addEventListener(
+      "message",
+      (event) => {
+        const data = event.data;
+        if (data.type === "auth") {
+          this.#uid = data.uid;
+          const db = getDatabase(firebaseApp);
+          this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
+          this.#refreshList().finally(() => {
+            this._initLoading = false;
+          });
+        }
+      },
+      { signal: this.#controller.signal }
+    );
+    const swController = navigator.serviceWorker.controller;
+    if (!swController) throw Error("Service worker not initiated.");
+    swController.postMessage("get-auth");
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-    onAuthStateChanged(auth, (auth) => {
-      if (auth) {
-        this.#uid = auth.uid;
-        const db = getDatabase(firebaseApp);
-        this.#ref = ref(db, `${auth.uid}/SHOPPING-LISTS/`);
-        this.#refreshList().finally(() => {
-          this._initLoading = false;
-        });
-      }
-    });
     document.addEventListener("visibilitychange", this.#handleVisibilityChange);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
+    this.#controller.abort();
   }
 
   get hideAddListForm(): boolean {
@@ -215,6 +226,7 @@ export default class AllShoppingLists extends LitElement {
             minlength="1"
             type="text"
             maxlength="33"
+            autofocus
             required
           />
           <button id="add" type="submit">

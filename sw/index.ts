@@ -1,6 +1,7 @@
-import { initializeApp } from "firebase/app";
 import { isSupported } from "firebase/messaging";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { firebaseApp } from "./firebase";
 
 declare var self: ServiceWorkerGlobalScope;
 
@@ -34,30 +35,42 @@ self.addEventListener("notificationclose", (event) => {
   console.log("SW: Notification Closed.", event);
 });
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBZ3KUebo7OAtHJQRwEJr2VEpH1yWktahE",
-  authDomain: "shopping-list-app-d0386.firebaseapp.com",
-  databaseURL: "https://shopping-list-app-d0386-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "shopping-list-app-d0386",
-  storageBucket: "shopping-list-app-d0386.appspot.com",
-  messagingSenderId: "302654429160",
-  appId: "1:302654429160:web:b1d02796a6b4d7fa92365d",
+let user: User | null = null;
+
+onAuthStateChanged(getAuth(firebaseApp), (auth) => {
+  user = auth;
+  sendAuthStateToClients(user);
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (data === "get-auth") {
+    event.waitUntil(sendAuthStateToClients(user));
+  }
+});
+
+const sendAuthStateToClients = (user: User | null) => {
+  const uid = user ? user.uid : "";
+  return self.clients
+    .matchAll()
+    .then((clients) => clients.forEach((client) => client.postMessage({ type: "auth", uid })));
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-
-isSupported().then(() => {
-  const firebaseMessaging = getMessaging(firebaseApp);
-  onBackgroundMessage(firebaseMessaging, (payload) => {
-    console.log("SW: Message Received", payload);
-    const notificationData = payload.notification;
-    if (!notificationData) return;
-    const { title, body } = notificationData;
-    if (!(title && body)) return;
-    const notificationOptions: NotificationOptions = {
-      body,
-      icon: "/apple-touch-icon.png",
-    };
-    self.registration.showNotification(title, notificationOptions);
-  });
-});
+isSupported()
+  .then((isSupported) => {
+    if (!isSupported) return;
+    const firebaseMessaging = getMessaging(firebaseApp);
+    onBackgroundMessage(firebaseMessaging, (payload) => {
+      console.log("SW: Message Received", payload);
+      const notificationData = payload.notification;
+      if (!notificationData) return;
+      const { title, body } = notificationData;
+      if (!(title && body)) return;
+      const notificationOptions: NotificationOptions = {
+        body,
+        icon: "/apple-touch-icon.png",
+      };
+      self.registration.showNotification(title, notificationOptions);
+    });
+  })
+  .catch((error) => postMessage(error.message));

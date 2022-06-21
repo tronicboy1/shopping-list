@@ -1,8 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
-export const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBZ3KUebo7OAtHJQRwEJr2VEpH1yWktahE",
   authDomain: "shopping-list-app-d0386.firebaseapp.com",
   databaseURL: "https://shopping-list-app-d0386-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -13,14 +11,3 @@ export const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
-
-if (process.env.NODE_ENV === "development") {
-  //@ts-ignore
-  self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-}
-export const appCheck = initializeAppCheck(firebaseApp, {
-  provider: new ReCaptchaV3Provider("6LcuLlsgAAAAADL_n_1hS7zeQMKX6xbi10jQYIYR"),
-  isTokenAutoRefreshEnabled: true,
-});
-
-export const auth = getAuth(firebaseApp)
