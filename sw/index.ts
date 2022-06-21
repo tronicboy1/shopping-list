@@ -1,6 +1,6 @@
 import { isSupported } from "firebase/messaging";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { firebaseApp } from "./firebase";
 
 declare var self: ServiceWorkerGlobalScope;
@@ -73,7 +73,7 @@ isSupported()
         body,
         icon: "/apple-touch-icon.png",
       };
-      self.registration.showNotification(title, notificationOptions);
+      self.registration.showNotification(title, notificationOptions).catch((error) => console.error(error));
     });
   })
-  .catch((error) => postMessage(error.message));
+  .catch((error) => console.error(error));

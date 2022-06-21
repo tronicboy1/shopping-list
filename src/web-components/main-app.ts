@@ -1,4 +1,5 @@
 import { auth, firebaseApp } from "@firebase-logic";
+import { onAuthStateChanged } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css } from "lit";
@@ -41,8 +42,32 @@ export default class MainApp extends LitElement {
         },
         { signal: this.#controller.signal }
       );
-      registration.active!.postMessage("get-auth");
     });
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    new Promise<string>((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (authState) => {
+          unsubscribe();
+          const uid = authState ? authState.uid : "";
+          resolve(uid);
+        },
+        (error) => {
+          reject(error.name);
+        }
+      );
+    })
+      .then((uid) => {
+        this.uid = uid;
+        return this.updateComplete;
+      })
+      .then(() => {
+        this._loading = false;
+      })
+      .catch((error) => alert(JSON.stringify(error)));
   }
 
   disconnectedCallback(): void {
@@ -64,11 +89,13 @@ export default class MainApp extends LitElement {
         if (!isSupported) throw Error("Browser does not support firebase Notifications.");
         getToken(messaging).then((newFCM) => {
           const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
-          get(fcmListRef).then((currentData) => {
-            const oldFCMList = (currentData.val() as string[]) ?? [];
-            if (oldFCMList.find((fcm) => fcm === newFCM)) return;
-            set(fcmListRef, [...oldFCMList, newFCM]);
-          });
+          return get(fcmListRef)
+            .then((currentData) => {
+              const oldFCMList = (currentData.val() as string[]) ?? [];
+              if (oldFCMList.find((fcm) => fcm === newFCM)) return;
+              set(fcmListRef, [...oldFCMList, newFCM]);
+            })
+            .catch((error) => alert(JSON.stringify(error)));
         });
       });
       this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
@@ -78,7 +105,6 @@ export default class MainApp extends LitElement {
         this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
       });
     }
-    if (this._loading) this._loading = false;
   }
 
   #handleModeChange = (event: CustomEvent<Modes>) => {

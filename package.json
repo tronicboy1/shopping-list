@@ -11,7 +11,8 @@
     "start": "webpack serve",
     "build": "webpack --config webpack.sw.config.js && webpack --config webpack.prod.config.js",
     "mkcert": "mkcert -key-file key.pem -cert-file cert.pem example.com *.example.com localhost",
-    "build-sw": "webpack --config webpack.sw.config.js"
+    "build-sw": "webpack --config webpack.sw.config.js",
+    "dev-sw": "webpack --config webpack.sw-dev.config.js"
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",
