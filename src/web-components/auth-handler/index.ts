@@ -21,8 +21,6 @@ export default class AuthHandler extends LitElement {
   private _loading = false;
   @query("form")
   private _form!: HTMLFormElement;
-  @query("button#submit")
-  private _submitButton!: HTMLButtonElement;
 
   static styles = [sharedCss, css];
 

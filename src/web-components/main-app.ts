@@ -22,7 +22,9 @@ export default class MainApp extends LitElement {
   @state()
   private _settings: { daysUntilDue: number } = { daysUntilDue: 7 };
   @state()
-  private _loading = true;
+  private _authLoading = true;
+  @state()
+  private _listsLoading = true;
   @state()
   private _settingsChangeLoading = false;
   @query("base-modal")
@@ -38,6 +40,9 @@ export default class MainApp extends LitElement {
       }
       div[hide] {
         display: none;
+      }
+      div[invisible] {
+        opacity: 0;
       }
     `,
   ];
@@ -94,7 +99,7 @@ export default class MainApp extends LitElement {
         return this.updateComplete;
       })
       .then(() => {
-        this._loading = false;
+        this._authLoading = false;
       })
       .catch((error) => alert(JSON.stringify(error)));
   }
@@ -130,8 +135,8 @@ export default class MainApp extends LitElement {
           return get(fcmListRef)
             .then((currentData) => {
               const oldFCMList = (currentData.val() as string[]) ?? [];
-              if (oldFCMList.find((fcm) => fcm === newFCM)) return;
-              set(fcmListRef, [...oldFCMList, newFCM]);
+              if (oldFCMList.find((fcm) => fcm === newFCM)) return; // should also add check for old FCMs to be removed
+              set(fcmListRef, [...oldFCMList, newFCM]); // save device's fcm in database for use with notifications
             })
             .catch((error) => alert(JSON.stringify(error)));
         });
@@ -148,12 +153,20 @@ export default class MainApp extends LitElement {
   #handleModeChange = (event: CustomEvent<Modes>) => {
     this._mode = event.detail;
   };
+
   #handleSettingsClick: EventListener = (event) => {
     this._modal.toggleAttribute("show", true);
   };
+
   #handleLogoutClick: EventListener = () => {
     auth.signOut().finally(() => this._modal.removeAttribute("show"));
   };
+
+  #handleListsLoaded: EventListener = () => {
+    console.log("lists loaded");
+    this._listsLoading = false;
+  };
+
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
       .then(() => {
@@ -203,18 +216,18 @@ export default class MainApp extends LitElement {
 
   render() {
     return html`
-      ${this._loading
+      ${this._authLoading || this._listsLoading
         ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
         : ""}
-      <div ?hide=${this.uid || this._loading}>
+      <div ?hide=${this.uid || this._authLoading}>
         <auth-handler show></auth-handler>
       </div>
-      <div ?hide=${this._loading || !this.uid}>
-        <div ?hide=${this._mode !== "SHOPPING"}>
-          <all-shopping-lists show></all-shopping-lists>
+      <div ?hide=${this._authLoading || !this.uid}>
+        <div ?hide=${this._mode !== "SHOPPING"} ?invisible=${this._listsLoading}>
+          <all-shopping-lists @shopping-lists-loaded=${this.#handleListsLoaded}></all-shopping-lists>
         </div>
         <div ?hide=${this._mode !== "CHORES"}>
-          <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
+          <chores-list days-until-due=${this._settings.daysUntilDue}></chores-list>
         </div>
         <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
       </div>

@@ -134,6 +134,8 @@ export const formCss = css`
     min-height: 80px;
     padding: 0.5rem;
     font-size: 1.2rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
   }
 
   form input + button,
@@ -156,6 +158,8 @@ export const formCss = css`
   form input[type="checkbox"] {
     height: 45px;
     width: 45px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
   }
 
   button + button {
