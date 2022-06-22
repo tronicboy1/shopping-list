@@ -6,6 +6,14 @@ import { firebaseApp } from "./firebase";
 declare var self: ServiceWorkerGlobalScope;
 
 const auth = getAuth(firebaseApp);
+let uid: string = "";
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (data === "get-auth") {
+    event.waitUntil(sendAuthStateToClients(uid));
+  }
+});
 
 self.addEventListener("install", (event) => {
   console.log("SW: Installing.", event);
@@ -15,9 +23,6 @@ const addMultipleResourcesToCache = (links: string[]) => caches.open("v1").then(
 
 const sendAuthStateToClients = (uid: string): Promise<any> => {
   return self.clients.matchAll().then((clients) => {
-    if (!clients.length) {
-      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
-    }
     clients.forEach((client) => client.postMessage({ type: "auth", uid }));
   });
 };
@@ -33,21 +38,10 @@ self.addEventListener("activate", (event) => {
       })
       .catch((error) => console.error("SW: Resource Caching Failed.", error))
   );
-
-  let uid: string = "";
-
   onAuthStateChanged(auth, (authState) => {
     uid = authState ? authState.uid : "";
     sendAuthStateToClients(uid);
   });
-
-  self.addEventListener("message", (event) => {
-    const data = event.data;
-    if (data === "get-auth") {
-      event.waitUntil(sendAuthStateToClients(uid));
-    }
-  });
-
   isSupported()
     .then((isSupported) => {
       if (!isSupported) return;
