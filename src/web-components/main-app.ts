@@ -163,7 +163,6 @@ export default class MainApp extends LitElement {
   };
 
   #handleListsLoaded: EventListener = () => {
-    console.log("lists loaded");
     this._listsLoading = false;
   };
 
