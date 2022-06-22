@@ -277,6 +277,7 @@ export default class ShoppingList extends LitElement {
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
           >
+            ${item.hasImage ? html`<div id="has-image"><image-icon></image-icon></div>` : ""}
             <span>${item.item}</span>
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
           </li>`

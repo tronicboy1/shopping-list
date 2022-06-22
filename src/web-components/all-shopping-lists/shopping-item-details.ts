@@ -2,7 +2,7 @@ import { firebaseApp } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
-import { html, LitElement } from "lit";
+import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { ShoppingListItem } from "./types";
 //prettier-ignore
@@ -31,7 +31,19 @@ export default class ShoppingItemDetails extends LitElement {
   @query("img#image-preview")
   private _imgPreview!: HTMLImageElement;
 
-  static styles = [sharedCss, formCss];
+  static styles = [
+    sharedCss,
+    formCss,
+    css`
+      #file-label-icon {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -90,7 +102,6 @@ export default class ShoppingItemDetails extends LitElement {
     const image = formData.get("image");
     if (!(image instanceof File)) throw TypeError("Image must be of File type.");
     const hasImage = Boolean(image.name || this._data!.hasImage);
-    console.log(hasImage);
     this._editLoading = true;
     const newData: ShoppingListItem = {
       item,
@@ -163,7 +174,9 @@ export default class ShoppingItemDetails extends LitElement {
         <form @submit=${this.#handleEditSubmit}>
           <img id="image-preview" />
           <label class="file-label" for="image">
-            ${this._fileLabelTitle ? this._fileLabelTitle : html`<camera-plus-icon></camera-plus-icon>`}
+            ${this._fileLabelTitle
+              ? this._fileLabelTitle
+              : html`<div id="file-label-icon"><camera-plus-icon></camera-plus-icon></div>`}
           </label>
           <input
             id="image"

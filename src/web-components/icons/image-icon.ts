@@ -5,10 +5,6 @@ export default class ImageIcon extends LitElement {
     :host {
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem;
     }
     svg {
       width: auto;

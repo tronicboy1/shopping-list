@@ -56,6 +56,22 @@ export default css`
     height: 54px;
     border-radius: 8px;
   }
+
+  #has-image {
+    display: inline-flex;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    top: 0;
+    margin: auto 0;
+    align-items: center;
+    justify-content: center;
+    height: 43px;
+    width: 43px;
+    padding: 0 0.35rem;
+    border-radius: 60%;
+    transition: opacity 0.3s;
+  }
 `;
 
 export const listCss = css`
@@ -119,6 +135,7 @@ export const listCss = css`
     display: flex;
     flex-direction: row;
     justify-content: center;
+    position: relative;
     align-items: center;
     border: 1px var(--secondary-color) solid;
     background: var(--secondary-color);
