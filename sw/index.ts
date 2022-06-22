@@ -22,6 +22,49 @@ self.addEventListener("activate", (event) => {
       })
       .catch((error) => console.error("SW: Resource Caching Failed.", error))
   );
+
+  let uid: string = "";
+  const auth = getAuth(firebaseApp);
+
+  onAuthStateChanged(auth, (authState) => {
+    uid = authState ? authState.uid : "";
+    sendAuthStateToClients(uid);
+  });
+
+  self.addEventListener("message", (event) => {
+    const data = event.data;
+    if (data === "get-auth") {
+      event.waitUntil(sendAuthStateToClients(uid));
+    }
+  });
+
+  const sendAuthStateToClients = (uid: string): Promise<any> => {
+    return self.clients.matchAll().then((clients) => {
+      if (!clients.length) {
+        return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
+      }
+      clients.forEach((client) => client.postMessage({ type: "auth", uid }));
+    });
+  };
+
+  isSupported()
+    .then((isSupported) => {
+      if (!isSupported) return;
+      const firebaseMessaging = getMessaging(firebaseApp);
+      onBackgroundMessage(firebaseMessaging, (payload) => {
+        console.log("SW: Message Received", payload);
+        const notificationData = payload.notification;
+        if (!notificationData) return;
+        const { title, body } = notificationData;
+        if (!(title && body)) return;
+        const notificationOptions: NotificationOptions = {
+          body,
+          icon: "/apple-touch-icon.png",
+        };
+        self.registration.showNotification(title, notificationOptions).catch((error) => console.error(error));
+      });
+    })
+    .catch((error) => console.error(error));
 });
 
 const addNewResourceToCache = (request: Request, response: Response) =>
@@ -59,46 +102,3 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("notificationclose", (event) => {
   console.log("SW: Notification Closed.", event);
 });
-
-let uid: string = "";
-const auth = getAuth(firebaseApp);
-
-onAuthStateChanged(auth, (authState) => {
-  uid = authState ? authState.uid : "";
-  sendAuthStateToClients(uid);
-});
-
-self.addEventListener("message", (event) => {
-  const data = event.data;
-  if (data === "get-auth") {
-    event.waitUntil(sendAuthStateToClients(uid));
-  }
-});
-
-const sendAuthStateToClients = (uid: string): Promise<any> => {
-  return self.clients.matchAll().then((clients) => {
-    if (!clients.length) {
-      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
-    }
-    clients.forEach((client) => client.postMessage({ type: "auth", uid }));
-  });
-};
-
-isSupported()
-  .then((isSupported) => {
-    if (!isSupported) return;
-    const firebaseMessaging = getMessaging(firebaseApp);
-    onBackgroundMessage(firebaseMessaging, (payload) => {
-      console.log("SW: Message Received", payload);
-      const notificationData = payload.notification;
-      if (!notificationData) return;
-      const { title, body } = notificationData;
-      if (!(title && body)) return;
-      const notificationOptions: NotificationOptions = {
-        body,
-        icon: "/apple-touch-icon.png",
-      };
-      self.registration.showNotification(title, notificationOptions).catch((error) => console.error(error));
-    });
-  })
-  .catch((error) => console.error(error));
