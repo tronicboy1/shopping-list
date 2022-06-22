@@ -22,6 +22,8 @@ export default class ShoppingItemDetails extends LitElement {
   };
   @state()
   private _editLoading = false;
+  @state()
+  private _fileLabelTitle = "";
   @query("base-modal")
   private _modal!: BaseModal;
   @query("label.file-label")
@@ -50,7 +52,7 @@ export default class ShoppingItemDetails extends LitElement {
     if (name === "list-id") this.#listId = value;
     if (this.#key && this.#uid && this.#listId) {
       this._imgPreview.src = "";
-      this._fileLabel.textContent = "Add Image";
+      this._fileLabelTitle = "";
       const db = getDatabase(firebaseApp);
       this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data/${this.#key}`);
       get(this.#ref)
@@ -59,6 +61,11 @@ export default class ShoppingItemDetails extends LitElement {
           this._data = data.val();
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
+          if (this._data.hasImage) {
+            return getBlob(getStorageRef(this.#storageRef, this.#key!))
+              .then((blob) => this.#convertBlobToB64(blob))
+              .then((b64Img) => this._imgPreview.setAttribute("src", b64Img));
+          }
         })
         .catch(() => this._modal.removeAttribute("show"))
         .finally(() => {
@@ -67,11 +74,6 @@ export default class ShoppingItemDetails extends LitElement {
             activeEl.blur(); // fix stupid ios auto focus bug
           }
         });
-
-      getBlob(getStorageRef(this.#storageRef, this.#key))
-        .then((blob) => this.#convertBlobToB64(blob))
-        .then((b64Img) => this._imgPreview.setAttribute("src", b64Img))
-        .catch(() => {});
     }
   }
 
@@ -86,6 +88,9 @@ export default class ShoppingItemDetails extends LitElement {
     const memo = formData.get("memo")!.toString().trim();
     const priority = formData.get("priority")?.toString() === "on";
     const image = formData.get("image");
+    if (!(image instanceof File)) throw TypeError("Image must be of File type.");
+    const hasImage = Boolean(image.name || this._data!.hasImage);
+    console.log(hasImage);
     this._editLoading = true;
     const newData: ShoppingListItem = {
       item,
@@ -94,6 +99,7 @@ export default class ShoppingItemDetails extends LitElement {
       priority,
       order: this._data!.order!,
       dateAdded: this._data!.dateAdded ?? new Date().getTime(),
+      hasImage,
     };
     set(this.#ref, newData)
       .then(() => {
@@ -103,8 +109,7 @@ export default class ShoppingItemDetails extends LitElement {
         this._editLoading = false;
         form.reset();
       });
-    if (image) {
-      if (!(image instanceof File)) throw TypeError("Image must be of File type.");
+    if (hasImage) {
       uploadBytes(getStorageRef(this.#storageRef, this.#key!), image);
     }
   };
@@ -133,12 +138,12 @@ export default class ShoppingItemDetails extends LitElement {
     if (!(target instanceof HTMLInputElement) || !target.files)
       throw TypeError("This Listener must be used with a File Input.");
     if (!target.files.length) {
-      this._fileLabel.textContent = "New Image";
+      this._fileLabel.textContent = "";
       return;
     }
     const file = target.files[0];
     const name = file.name.length > 15 ? file.name.substring(0, 7) + "..." : file.name;
-    this._fileLabel.textContent = name;
+    this._fileLabelTitle = name;
 
     this.#convertBlobToB64(file).then((b64) => {
       this._imgPreview.setAttribute("src", b64);
@@ -156,6 +161,18 @@ export default class ShoppingItemDetails extends LitElement {
     return html`
       <base-modal title="Details">
         <form @submit=${this.#handleEditSubmit}>
+          <img id="image-preview" />
+          <label class="file-label" for="image">
+            ${this._fileLabelTitle ? this._fileLabelTitle : html`<camera-plus-icon></camera-plus-icon>`}
+          </label>
+          <input
+            id="image"
+            name="image"
+            type="file"
+            accept="image/png, image/jpeg"
+            size="4000000"
+            @input=${this.#handleFileInput}
+          />
           <label for="item">Name</label>
           <input type="text" id="item" name="item" maxlength="32" minlength="1" value=${item} />
           <div class="checkbox-group">
@@ -166,16 +183,6 @@ export default class ShoppingItemDetails extends LitElement {
           <input type="date" id="date-added" name="dateAdded" value=${dateAdded} readonly />
           <label for="amount">Quantity</label>
           <input id="amount" name="amount" type="number" min="1" value=${amount} />
-          <img id="image-preview" />
-          <label class="file-label" for="image">New Image</label>
-          <input
-            id="image"
-            name="image"
-            type="file"
-            accept="image/png, image/jpeg"
-            size="4000000"
-            @input=${this.#handleFileInput}
-          />
           <label for="memo">Memo</label>
           <textarea id="memo" name="memo" .value=${memo}></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>

@@ -174,8 +174,8 @@ export const formCss = css`
     justify-content: center;
     font-size: 1.1rem;
     width: 60%;
-    height: 45px;
-    margin: 1rem auto 1rem auto;
+    height: 60px;
+    margin: 1rem auto 2rem auto;
     background-color: var(--secondary-color);
     border-radius: 4px;
     cursor: pointer;

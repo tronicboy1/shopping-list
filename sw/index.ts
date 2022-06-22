@@ -68,9 +68,9 @@ self.addEventListener("message", (event) => {
 
 const sendAuthStateToClients = (uid: string): Promise<any> => {
   return self.clients.matchAll().then((clients) => {
-    if (!clients.length) {
-      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
-    }
+    // if (!clients.length) {
+    //   return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
+    // }
     clients.forEach((client) => client.postMessage({ type: "auth", uid }));
   });
 };

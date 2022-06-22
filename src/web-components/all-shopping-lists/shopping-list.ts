@@ -207,6 +207,7 @@ export default class ShoppingList extends LitElement {
       memo: "",
       amount: 1,
       priority: false,
+      hasImage: false,
     };
     push(this.#listDataRef, newData)
       .then(() => {
