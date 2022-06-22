@@ -12,12 +12,15 @@ import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { firebaseApp } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
+import { getStorage, ref as getStorageRef, StorageReference, FirebaseStorage, deleteObject } from "firebase/storage";
 
 export default class ShoppingList extends LitElement {
   #uid: string;
   // #worker!: Worker;
   #listId: string;
   #listRef!: DatabaseReference;
+  #storage: FirebaseStorage;
+  #storageRef!: StorageReference;
   #listDataRef!: DatabaseReference;
   #notificationRef!: DatabaseReference;
   #cancelCallback: Unsubscribe;
@@ -48,6 +51,7 @@ export default class ShoppingList extends LitElement {
     this.#cancelCallback = () => {};
     this.#listData = null;
     this.#clickedItemId = null;
+    this.#storage = getStorage(firebaseApp);
     // this.#setupWebWorker();
   }
 
@@ -72,7 +76,11 @@ export default class ShoppingList extends LitElement {
   }
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
     if (!value) return;
-    if (name === "uid") this.#uid = value;
+    if (name === "uid") {
+      if (value === this.#uid) return;
+      this.#uid = value;
+      this.#storageRef = getStorageRef(this.#storage, this.#uid);
+    }
     if (name === "list-id") this.#listId = value;
     if (this.#uid && this.#listId) {
       this.#cancelCallback();
@@ -172,7 +180,10 @@ export default class ShoppingList extends LitElement {
   #deleteItem = (id: string) => {
     if (!(this.#listData && this.#listRef)) return;
     remove(child(this.#listDataRef, id));
+    deleteObject(getStorageRef(this.#storageRef, id)).catch(() => {});
   };
+
+  #handleDeleteEvent = (event: CustomEvent<string>) => this.#deleteItem(event.detail);
 
   #handleDeleteList = () => {
     remove(this.#listRef).then(() => {
@@ -296,7 +307,7 @@ export default class ShoppingList extends LitElement {
             ${this._initLoading ? html`<loading-spinner />` : list}
           </ul>
         </div>
-        <shopping-item-details></shopping-item-details>
+        <shopping-item-details @delete-item=${this.#handleDeleteEvent}></shopping-item-details>
       </div>
     `;
   }
