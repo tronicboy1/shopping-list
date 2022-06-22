@@ -96,6 +96,7 @@ export default class MainApp extends LitElement {
     })
       .then((uid) => {
         this.uid = uid;
+        if (!this.uid) this._listsLoading = false;
         return this.updateComplete;
       })
       .then(() => {
