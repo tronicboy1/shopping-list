@@ -56,22 +56,6 @@ export default css`
     height: 54px;
     border-radius: 8px;
   }
-
-  #has-image {
-    display: inline-flex;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    top: 0;
-    margin: auto 0;
-    align-items: center;
-    justify-content: center;
-    height: 43px;
-    width: 43px;
-    padding: 0 0.35rem;
-    border-radius: 60%;
-    transition: opacity 0.3s;
-  }
 `;
 
 export const listCss = css`
@@ -151,6 +135,12 @@ export const listCss = css`
     -webkit-user-select: none;
   }
 
+  li span {
+    width: 80%;
+    margin: 0 auto;
+    word-wrap: break-word;
+  }
+
   li[priority] {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
@@ -159,6 +149,22 @@ export const listCss = css`
   li small {
     font-size: 1rem;
     margin-left: 0.5rem;
+  }
+
+  #has-image {
+    display: inline-flex;
+    position: absolute;
+    left: 8px;
+    bottom: 0;
+    top: 0;
+    margin: auto 0;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--highlight-color);
+    height: 43px;
+    width: 43px;
+    border-radius: 4px;
+    transition: opacity 0.3s;
   }
 
   li:hover {
