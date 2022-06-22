@@ -20,6 +20,7 @@ self.addEventListener("activate", (event) => {
         const resourcesToCache = Object.keys(data).map((key) => data[key]);
         addMultipleResourcesToCache(resourcesToCache).catch((error) => console.error("SW: Caching Failed.", error));
       })
+      .catch((error) => console.error("SW: Resource Caching Failed.", error))
   );
 });
 
