@@ -2,11 +2,12 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const fs = require("fs");
 const webpack = require("webpack");
+const { WebpackManifestPlugin } = require("webpack-manifest-plugin");
 
 const port = 9000;
 
 module.exports = {
-  entry: { main: "./src/index.ts", },
+  entry: { main: "./src/index.ts" },
   mode: "development",
   devtool: "inline-source-map",
   module: {
@@ -65,11 +66,13 @@ module.exports = {
   output: {
     filename: "[name].js",
     path: path.resolve(__dirname, "dist"),
+    publicPath: "/",
   },
   plugins: [
+    new WebpackManifestPlugin({ fileName: "public-manifest.json" }),
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "public", "index.html"),
-      chunks: ["main"]
+      chunks: ["main"],
     }),
     new webpack.EnvironmentPlugin({
       NODE_ENV: "development",

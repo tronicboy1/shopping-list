@@ -1,11 +1,12 @@
 import { auth, firebaseApp } from "@firebase-logic";
+import { onAuthStateChanged } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
-import { html, LitElement, css } from "lit";
+import { html, LitElement, css, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
+import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
-import AllShoppingLists from "./shopping-list";
 
 type Modes = "SHOPPING" | "CHORES";
 
@@ -14,17 +15,37 @@ export default class MainApp extends LitElement {
   #controller: AbortController;
   #db!: Database;
   #uid!: string;
+  #observer!: IntersectionObserver;
 
   @state()
   private _mode: Modes = "SHOPPING";
   @state()
   private _settings: { daysUntilDue: number } = { daysUntilDue: 7 };
   @state()
-  private _loading = true;
+  private _authLoading = true;
+  @state()
+  private _listsLoading = true;
   @state()
   private _settingsChangeLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
+
+  static styles = [
+    sharedCss,
+    formCss,
+    css`
+      #settings-content {
+        display: flex;
+        flex-direction: column;
+      }
+      div[hide] {
+        display: none;
+      }
+      div[invisible] {
+        opacity: 0;
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -41,8 +62,55 @@ export default class MainApp extends LitElement {
         },
         { signal: this.#controller.signal }
       );
-      registration.active!.postMessage("get-auth");
     });
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.#observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = entry.target;
+          const tagName = target.tagName.toLowerCase();
+          if (customElements.get(tagName)) return;
+          import(`@web-components/${tagName}`).then((imports) => {
+            customElements.define(tagName, imports.default); // import web components when brought into view
+          });
+        });
+      },
+      { root: document, rootMargin: "0px", threshold: 1.0 }
+    );
+    new Promise<string>((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (authState) => {
+          unsubscribe();
+          const uid = authState ? authState.uid : "";
+          resolve(uid);
+        },
+        (error) => {
+          reject(error.name);
+        }
+      );
+    })
+      .then((uid) => {
+        this.uid = uid;
+        return this.updateComplete;
+      })
+      .then(() => {
+        this._authLoading = false;
+      })
+      .catch((error) => alert(JSON.stringify(error)));
+  }
+
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    const allShoppingLists = this.shadowRoot!.querySelector("all-shopping-lists")!;
+    const choresList = this.shadowRoot!.querySelector("chores-list")!;
+    const authHandler = this.shadowRoot!.querySelector("auth-handler")!;
+    this.#observer.observe(allShoppingLists);
+    this.#observer.observe(choresList);
+    this.#observer.observe(authHandler);
   }
 
   disconnectedCallback(): void {
@@ -64,11 +132,13 @@ export default class MainApp extends LitElement {
         if (!isSupported) throw Error("Browser does not support firebase Notifications.");
         getToken(messaging).then((newFCM) => {
           const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
-          get(fcmListRef).then((currentData) => {
-            const oldFCMList = (currentData.val() as string[]) ?? [];
-            if (oldFCMList.find((fcm) => fcm === newFCM)) return;
-            set(fcmListRef, [...oldFCMList, newFCM]);
-          });
+          return get(fcmListRef)
+            .then((currentData) => {
+              const oldFCMList = (currentData.val() as string[]) ?? [];
+              if (oldFCMList.find((fcm) => fcm === newFCM)) return; // should also add check for old FCMs to be removed
+              set(fcmListRef, [...oldFCMList, newFCM]); // save device's fcm in database for use with notifications
+            })
+            .catch((error) => alert(JSON.stringify(error)));
         });
       });
       this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
@@ -78,18 +148,24 @@ export default class MainApp extends LitElement {
         this._settings = { daysUntilDue: value.daysUntilDue ?? 7 };
       });
     }
-    if (this._loading) this._loading = false;
   }
 
   #handleModeChange = (event: CustomEvent<Modes>) => {
     this._mode = event.detail;
   };
+
   #handleSettingsClick: EventListener = (event) => {
     this._modal.toggleAttribute("show", true);
   };
+
   #handleLogoutClick: EventListener = () => {
-    auth.signOut();
+    auth.signOut().finally(() => this._modal.removeAttribute("show"));
   };
+
+  #handleListsLoaded: EventListener = () => {
+    this._listsLoading = false;
+  };
+
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
       .then(() => {
@@ -115,21 +191,6 @@ export default class MainApp extends LitElement {
       .finally(() => this._modal.removeAttribute("show"));
   };
 
-  #renderAuth() {
-    return html`<auth-handler show></auth-handler>`;
-  }
-
-  static styles = [
-    sharedCss,
-    formCss,
-    css`
-      #settings-content {
-        display: flex;
-        flex-direction: column;
-      }
-    `,
-  ];
-
   #handleSettingsSubmit: EventListener = (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -153,14 +214,22 @@ export default class MainApp extends LitElement {
     });
 
   render() {
-    if (this._loading)
-      return html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`;
-    if (!this.uid) return this.#renderAuth();
-
     return html`
-      <all-shopping-lists ?show=${this._mode === "SHOPPING"}></all-shopping-lists>
-      <chores-list days-until-due=${this._settings.daysUntilDue} ?show=${this._mode === "CHORES"}></chores-list>
-      <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
+      ${this._authLoading || this._listsLoading
+        ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
+        : ""}
+      <div ?hide=${this.uid || this._authLoading}>
+        <auth-handler show></auth-handler>
+      </div>
+      <div ?hide=${this._authLoading || !this.uid}>
+        <div ?hide=${this._mode !== "SHOPPING"} ?invisible=${this._listsLoading}>
+          <all-shopping-lists @shopping-lists-loaded=${this.#handleListsLoaded}></all-shopping-lists>
+        </div>
+        <div ?hide=${this._mode !== "CHORES"}>
+          <chores-list days-until-due=${this._settings.daysUntilDue}></chores-list>
+        </div>
+        <button-bar @settings-click=${this.#handleSettingsClick} @mode-change=${this.#handleModeChange}></button-bar>
+      </div>
       <base-modal title="Settings"
         ><div id="settings-content">
           <form @submit=${this.#handleSettingsSubmit}>

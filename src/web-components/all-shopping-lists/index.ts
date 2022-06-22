@@ -1,12 +1,12 @@
 import { css, html, LitElement } from "lit";
-import { query, state } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
 import { firebaseApp } from "@firebase-logic";
 import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
-import BaseModal from "@web-components/base-modal";
 import ShoppingList from "./shopping-list";
+
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
   #uid: string;
@@ -15,23 +15,15 @@ export default class AllShoppingLists extends LitElement {
   #controller: AbortController;
   @state()
   private _adding = false;
-  @state()
-  private _initLoading = true;
-  @query("base-modal")
-  _clearAllModal!: BaseModal;
 
   static styles = [
     baseCss,
     sharedCss,
     css`
       :host {
-        display: none;
-        width: 100%;
-      }
-
-      :host([show]) {
         display: flex;
         flex-direction: column;
+        width: 100%;
       }
 
       loading-spinner + p {
@@ -81,12 +73,38 @@ export default class AllShoppingLists extends LitElement {
           const db = getDatabase(firebaseApp);
           this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
           this.#refreshList().finally(() => {
-            this._initLoading = false;
+            const loadedEvent = new Event("firebase-loaded");
+            this.dispatchEvent(loadedEvent);
           });
         }
       },
       { signal: this.#controller.signal }
     );
+    const allLoadingPromises: Promise<any>[] = [];
+    allLoadingPromises.push(
+      new Promise((resolve, reject) => {
+        const loadedEventListener = () => {
+          this.removeEventListener("firebase-loaded", loadedEventListener);
+          resolve(42);
+        };
+
+        this.addEventListener("firebase-loaded", loadedEventListener);
+      })
+    );
+    allLoadingPromises.push(
+      import("@web-components/all-shopping-lists/shopping-list").then((imports) =>
+        customElements.define("shopping-list", imports.default)
+      )
+    );
+    allLoadingPromises.push(
+      import("@web-components/all-shopping-lists/shopping-item-details").then((imports) =>
+        customElements.define("shopping-item-details", imports.default)
+      )
+    );
+    Promise.all(allLoadingPromises).then(() => {
+      const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
+      this.dispatchEvent(loadedEvent);
+    });
     const swController = navigator.serviceWorker.controller;
     if (!swController) throw Error("Service worker not initiated.");
     swController.postMessage("get-auth");
@@ -201,11 +219,6 @@ export default class AllShoppingLists extends LitElement {
   };
 
   render() {
-    if (this._initLoading) {
-      return html`<div style="margin: auto; margin-top: 30vh;">
-        <loading-spinner></loading-spinner>
-      </div>`;
-    }
     return html`
       ${this.shoppingListsData
         ? Object.keys(this.shoppingListsData).map(

@@ -3,15 +3,13 @@ const webpack = require("webpack");
 
 module.exports = {
   entry: { "firebase-messaging-sw": "./sw/index.ts" },
-  mode: "production",
+  mode: "development",
+  devtool: "inline-source-map",
   module: {
     rules: [
       {
         test: /\.ts$/,
-        loader: "babel-loader",
-        options: {
-          presets: ["@babel/preset-env", "@babel/preset-typescript"],
-        },
+        use: { loader: "ts-loader", options: { configFile: "tsconfig.dev.json" } },
         exclude: /node_modules/,
       },
     ],
@@ -26,7 +24,7 @@ module.exports = {
   },
   plugins: [
     new webpack.EnvironmentPlugin({
-      NODE_ENV: "production",
+      NODE_ENV: "development",
       FRONTEND_URI: "https://shopping-list-app-d0386.web.app/",
       NOTIFICATION_URI: "https://shopping-list-notifications.herokuapp.com/",
     }),

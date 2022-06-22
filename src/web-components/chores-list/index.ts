@@ -13,8 +13,6 @@ export interface Chore {
   memo: string;
 }
 
-customElements.define("chore-details", ChoreDetails);
-
 export default class ChoresList extends LitElement {
   #uid: string;
   #ref!: DatabaseReference;
@@ -34,6 +32,9 @@ export default class ChoresList extends LitElement {
     this.#uid = "";
     this.#unsubscribe = () => {};
     this.#controller = new AbortController();
+    if (!customElements.get("chore-details")) {
+      import("./chore-details").then((imports) => customElements.define("chore-details", imports.default));
+    }
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
     navigator.serviceWorker.addEventListener(
       "message",
