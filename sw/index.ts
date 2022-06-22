@@ -5,17 +5,33 @@ import { firebaseApp } from "./firebase";
 
 declare var self: ServiceWorkerGlobalScope;
 
+const addMultipleResourcesToCache = (links: string[]) => caches.open("v1").then((cache) => cache.addAll(links));
+
 self.addEventListener("install", (event) => {
   console.log("SW: Installing.", event);
+  event.waitUntil(
+    fetch("/public-manifest.json")
+      .then((result) => result.json())
+      .then((data: { [key: string]: string }) => {
+        const resourcesToCache = Object.keys(data).map((key) => data[key]);
+        return addMultipleResourcesToCache(resourcesToCache);
+      })
+      .catch((error) => console.error("SW: Caching Failed.", error))
+      .finally(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
   console.log("SW: Activated.", event);
 });
 
-self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
-});
+const cacheFirst = (request: Request) =>
+  caches.match(request).then((cacheResponse) => {
+    if (cacheResponse) return cacheResponse;
+    return fetch(request);
+  });
+
+self.addEventListener("fetch", (event) => event.respondWith(cacheFirst(event.request)));
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
