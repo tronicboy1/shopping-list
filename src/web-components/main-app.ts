@@ -24,7 +24,7 @@ export default class MainApp extends LitElement {
   @state()
   private _authLoading = true;
   @state()
-  private _listsLoading = true;
+  private _listsLoading = false;
   @state()
   private _settingsChangeLoading = false;
   @query("base-modal")
@@ -96,7 +96,7 @@ export default class MainApp extends LitElement {
     })
       .then((uid) => {
         this.uid = uid;
-        if (!this.uid) this._listsLoading = false;
+        if (this.uid) this._listsLoading = true;
         return this.updateComplete;
       })
       .then(() => {
@@ -166,6 +166,9 @@ export default class MainApp extends LitElement {
   #handleListsLoaded: EventListener = () => {
     this._listsLoading = false;
   };
+  #handleLoggedInEvent: EventListener = () => {
+    this._listsLoading = true;
+  }
 
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
@@ -219,8 +222,8 @@ export default class MainApp extends LitElement {
       ${this._authLoading || this._listsLoading
         ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
         : ""}
-      <div ?hide=${this.uid || this._authLoading}>
-        <auth-handler show></auth-handler>
+      <div ?hide=${this.uid || this._authLoading || this._listsLoading}>
+        <auth-handler @logged-in=${this.#handleLoggedInEvent} show></auth-handler>
       </div>
       <div ?hide=${this._authLoading || !this.uid}>
         <div ?hide=${this._mode !== "SHOPPING"} ?invisible=${this._listsLoading}>
