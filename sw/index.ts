@@ -5,11 +5,22 @@ import { firebaseApp } from "./firebase";
 
 declare var self: ServiceWorkerGlobalScope;
 
+const auth = getAuth(firebaseApp);
+
 self.addEventListener("install", (event) => {
   console.log("SW: Installing.", event);
 });
 
 const addMultipleResourcesToCache = (links: string[]) => caches.open("v1").then((cache) => cache.addAll(links));
+
+const sendAuthStateToClients = (uid: string): Promise<any> => {
+  return self.clients.matchAll().then((clients) => {
+    if (!clients.length) {
+      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
+    }
+    clients.forEach((client) => client.postMessage({ type: "auth", uid }));
+  });
+};
 
 self.addEventListener("activate", (event) => {
   console.log("SW: Activated.", event);
@@ -24,7 +35,6 @@ self.addEventListener("activate", (event) => {
   );
 
   let uid: string = "";
-  const auth = getAuth(firebaseApp);
 
   onAuthStateChanged(auth, (authState) => {
     uid = authState ? authState.uid : "";
@@ -37,15 +47,6 @@ self.addEventListener("activate", (event) => {
       event.waitUntil(sendAuthStateToClients(uid));
     }
   });
-
-  const sendAuthStateToClients = (uid: string): Promise<any> => {
-    return self.clients.matchAll().then((clients) => {
-      if (!clients.length) {
-        return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
-      }
-      clients.forEach((client) => client.postMessage({ type: "auth", uid }));
-    });
-  };
 
   isSupported()
     .then((isSupported) => {
