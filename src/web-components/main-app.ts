@@ -24,7 +24,7 @@ export default class MainApp extends LitElement {
   @state()
   private _authLoading = true;
   @state()
-  private _listsLoading = true;
+  private _listsLoading = false;
   @state()
   private _settingsChangeLoading = false;
   @query("base-modal")
@@ -96,7 +96,7 @@ export default class MainApp extends LitElement {
     })
       .then((uid) => {
         this.uid = uid;
-        if (!this.uid) this._listsLoading = false;
+        if (this.uid) this._listsLoading = true;
         return this.updateComplete;
       })
       .then(() => {
