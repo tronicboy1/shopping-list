@@ -38,7 +38,9 @@ const cacheFirst = (request: Request) =>
     });
   });
 
-self.addEventListener("fetch", (event) => event.respondWith(cacheFirst(event.request)));
+self.addEventListener("fetch", (event) =>
+  event.respondWith(process.env.NODE_ENV === "production" ? cacheFirst(event.request) : fetch(event.request))
+);
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
