@@ -7,6 +7,7 @@ div {
   left: 0;
   right: 0;
   margin: auto;
+  z-index: 3;
   height: 10vh;
   min-height: 100pxs;
   width: 95%;
