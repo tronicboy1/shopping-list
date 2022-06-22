@@ -82,7 +82,7 @@ export const listCss = css`
     border-bottom: 1px solid var(--secondary-color);
     user-select: none;
     cursor: pointer;
-    z-index: 100;
+    z-index: 2;
   }
 
   #title h2 {
