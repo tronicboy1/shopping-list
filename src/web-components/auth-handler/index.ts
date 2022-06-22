@@ -16,7 +16,7 @@ export default class AuthHandler extends LitElement {
   @state()
   private _mode: "LOGIN" | "REGISTER" = "LOGIN";
   @state()
-  private _error: string | null = null;
+  private _error = ""
   @state()
   private _loading = false;
   @query("form")
@@ -26,7 +26,7 @@ export default class AuthHandler extends LitElement {
 
   #handleSubmit: EventListener = (event) => {
     event.preventDefault();
-    this._error = null;
+    this._error = "";
     const formData = new FormData(this._form);
     const formDataObj = Object.fromEntries(formData) as unknown;
     const data = formDataObj as FormData;
@@ -46,6 +46,7 @@ export default class AuthHandler extends LitElement {
         .then((credentials) => {
           this.removeAttribute("show");
           this._form.reset();
+          this.#dispatchLoggedInEvent();
         })
         .catch((error) => {
           if (!(error instanceof Error)) return;
@@ -58,6 +59,7 @@ export default class AuthHandler extends LitElement {
         .then(() => {
           this.removeAttribute("show");
           this._form.reset();
+          this.#dispatchLoggedInEvent();
         })
         .catch((error) => {
           console.log();
@@ -67,13 +69,19 @@ export default class AuthHandler extends LitElement {
     }
   };
 
+  #dispatchLoggedInEvent() {
+    const loggedInEvent = new Event("logged-in", { bubbles: true });
+    this.dispatchEvent(loggedInEvent);
+  }
+
   #handleLoginClick: EventListener = () => {
     this._mode = "LOGIN";
+    this._error = ""
   };
   #handleRegisterClick: EventListener = () => {
     this._mode = "REGISTER";
+    this._error = ""
   };
-
 
   render() {
     const loginTemplate = html`
