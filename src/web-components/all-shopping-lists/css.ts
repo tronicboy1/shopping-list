@@ -136,9 +136,12 @@ export const listCss = css`
   }
 
   li span {
-    width: 80%;
-    margin: 0 auto;
     word-wrap: break-word;
+  }
+
+  li div + span {
+    width: 60%;
+    margin: 0 auto;
   }
 
   li[priority] {
