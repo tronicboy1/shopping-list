@@ -10,14 +10,16 @@ const addMultipleResourcesToCache = (links: string[]) => caches.open("v1").then(
 self.addEventListener("install", (event) => {
   console.log("SW: Installing.", event);
   event.waitUntil(
-    fetch("/public-manifest.json")
-      .then((result) => result.json())
-      .then((data: { [key: string]: string }) => {
-        const resourcesToCache = Object.keys(data).map((key) => data[key]);
-        return addMultipleResourcesToCache(resourcesToCache);
-      })
-      .catch((error) => console.error("SW: Caching Failed.", error))
-      .finally(() => self.skipWaiting())
+    Promise.race([
+      fetch("/public-manifest.json")
+        .then((result) => result.json())
+        .then((data: { [key: string]: string }) => {
+          const resourcesToCache = Object.keys(data).map((key) => data[key]);
+          return addMultipleResourcesToCache(resourcesToCache);
+        })
+        .catch((error) => console.error("SW: Caching Failed.", error)),
+      new Promise((_, reject) => setTimeout(() => reject("Caching timed out."), 1000)),
+    ]).finally(() => self.skipWaiting())
   );
 });
 
@@ -62,7 +64,7 @@ onAuthStateChanged(auth, (authState) => {
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data === "get-auth") {
-    event.waitUntil(sendAuthStateToClients(uid));
+    sendAuthStateToClients(uid);
   }
 });
 
