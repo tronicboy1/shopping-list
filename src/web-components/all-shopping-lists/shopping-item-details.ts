@@ -132,6 +132,7 @@ export default class ShoppingItemDetails extends LitElement {
       .then(() => {
         this._modal.removeAttribute("show");
       })
+      .catch(() => alert("File size must be less than 1MB."))
       .finally(() => {
         this._editLoading = false;
         form.reset();
@@ -196,7 +197,7 @@ export default class ShoppingItemDetails extends LitElement {
             name="image"
             type="file"
             accept="image/png, image/jpeg"
-            size="900000"
+            size="1000000"
             @input=${this.#handleFileInput}
           />
           <label for="item">Name</label>
