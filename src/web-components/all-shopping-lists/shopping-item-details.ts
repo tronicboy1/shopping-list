@@ -1,20 +1,18 @@
 import { firebaseApp } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
-import { DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
+import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
 import { css, html, LitElement } from "lit";
 import { query, state } from "lit/decorators.js";
 import { ShoppingListItem } from "./types";
 //prettier-ignore
-import { FirebaseStorage, getStorage, ref as getStorageRef, StorageReference, uploadBytes, getBlob } from "firebase/storage";
+import { getStorage, ref as getStorageRef, uploadBytes, getBlob } from "firebase/storage";
 
 export default class ShoppingItemDetails extends LitElement {
   #uid: string | null = null;
   #key: string | null = null;
   #listId: string | null = null;
   #ref!: DatabaseReference;
-  #storage: FirebaseStorage;
-  #storageRef!: StorageReference;
   @state()
   private _data: { item: string; dateAdded: number } & Partial<ShoppingListItem> = {
     dateAdded: 1654820213036,
@@ -47,7 +45,6 @@ export default class ShoppingItemDetails extends LitElement {
 
   constructor() {
     super();
-    this.#storage = getStorage(firebaseApp);
   }
 
   static get observedAttributes(): string[] {
@@ -58,7 +55,6 @@ export default class ShoppingItemDetails extends LitElement {
     if (name === "uid") {
       if (this.#uid === value) return;
       this.#uid = value;
-      this.#storageRef = getStorageRef(this.#storage, this.#uid);
     }
     if (name === "key") this.#key = value;
     if (name === "list-id") this.#listId = value;
@@ -73,8 +69,9 @@ export default class ShoppingItemDetails extends LitElement {
           this._data = data.val();
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
-          if (this._data.hasImage) {
-            return getBlob(getStorageRef(this.#storageRef, this.#key!))
+          if (this._data.imagePath) {
+            const storage = getStorage(firebaseApp);
+            return getBlob(getStorageRef(storage, this._data.imagePath))
               .then((blob) => this.#convertBlobToB64(blob))
               .then((b64Img) => this._imgPreview.setAttribute("src", b64Img));
           }
@@ -91,6 +88,8 @@ export default class ShoppingItemDetails extends LitElement {
 
   #handleEditSubmit: EventListener = (event) => {
     event.preventDefault();
+    if (!(this.#uid && this.#key && this._data))
+      throw TypeError("Key, Uid, and item data must be defined for edit submit.");
     const form = event.currentTarget;
     if (!(form instanceof HTMLFormElement)) throw Error("Submit event origin not a Form Element");
     const formData = new FormData(form);
@@ -101,18 +100,35 @@ export default class ShoppingItemDetails extends LitElement {
     const priority = formData.get("priority")?.toString() === "on";
     const image = formData.get("image");
     if (!(image instanceof File)) throw TypeError("Image must be of File type.");
-    const hasImage = Boolean(image.name || this._data!.hasImage);
+    const hasImage = Boolean(image.name || this._data.imagePath);
     this._editLoading = true;
-    const newData: ShoppingListItem = {
-      item,
-      amount,
-      memo,
-      priority,
-      order: this._data!.order!,
-      dateAdded: this._data!.dateAdded ?? new Date().getTime(),
-      hasImage,
-    };
-    set(this.#ref, newData)
+    new Promise<string>((resolve, reject) => {
+      if (hasImage) {
+        const extensionTestResult = image.name.match(/\.[0-9a-z]+$/);
+        const extension = extensionTestResult ? extensionTestResult[0] : "";
+        const storage = getStorage(firebaseApp);
+        const ref = getStorageRef(storage, `${this.#uid}/${this.#key + extension}`);
+        uploadBytes(ref, image)
+          .then((result) => {
+            resolve(result.metadata.fullPath);
+          })
+          .catch((error) => reject(error));
+        return;
+      }
+      resolve("");
+    })
+      .then((imagePath) => {
+        const newData: ShoppingListItem = {
+          item,
+          amount,
+          memo,
+          priority,
+          order: this._data!.order!,
+          dateAdded: this._data!.dateAdded ?? new Date().getTime(),
+          imagePath,
+        };
+        return set(this.#ref, newData);
+      })
       .then(() => {
         this._modal.removeAttribute("show");
       })
@@ -120,9 +136,6 @@ export default class ShoppingItemDetails extends LitElement {
         this._editLoading = false;
         form.reset();
       });
-    if (hasImage) {
-      uploadBytes(getStorageRef(this.#storageRef, this.#key!), image);
-    }
   };
 
   #handleDeleteClick: EventListener = () => {
@@ -183,7 +196,7 @@ export default class ShoppingItemDetails extends LitElement {
             name="image"
             type="file"
             accept="image/png, image/jpeg"
-            size="4000000"
+            size="900000"
             @input=${this.#handleFileInput}
           />
           <label for="item">Name</label>
