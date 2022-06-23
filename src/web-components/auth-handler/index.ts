@@ -1,10 +1,20 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  isSignInWithEmailLink,
+  sendSignInLinkToEmail,
+  signInWithEmailAndPassword,
+  signInWithEmailLink,
+  signInWithPopup,
+} from "firebase/auth";
 import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";
 import css from "./css";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@firebase-logic";
+import BaseModal from "@web-components/base-modal";
+import googleIcon from "../../../public/btn_google_signin_light_normal_web@2x.png";
 
 interface FormData {
   email: string;
@@ -16,13 +26,27 @@ export default class AuthHandler extends LitElement {
   @state()
   private _mode: "LOGIN" | "REGISTER" = "LOGIN";
   @state()
-  private _error = ""
+  private _error = "";
   @state()
   private _loading = false;
-  @query("form")
+  @query("form.login-form")
   private _form!: HTMLFormElement;
+  @query("base-modal#email-login-modal")
+  private _emailLoginModal!: BaseModal;
 
   static styles = [sharedCss, css];
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      this._loading = true;
+      const email = localStorage.getItem("email");
+      if (!email) throw Error("Email was not in local storage.");
+      signInWithEmailLink(auth, email, window.location.href)
+        .then(() => this.#dispatchLoggedInEvent())
+        .finally(() => (this._loading = false));
+    }
+  }
 
   #handleSubmit: EventListener = (event) => {
     event.preventDefault();
@@ -76,11 +100,38 @@ export default class AuthHandler extends LitElement {
 
   #handleLoginClick: EventListener = () => {
     this._mode = "LOGIN";
-    this._error = ""
+    this._error = "";
   };
   #handleRegisterClick: EventListener = () => {
     this._mode = "REGISTER";
-    this._error = ""
+    this._error = "";
+  };
+
+  #handleEmailAddressSignInClick: EventListener = (event) => {
+    event.preventDefault();
+    this._emailLoginModal.toggleAttribute("show", true);
+  };
+  #handleEmailAddressSignInSubmit: EventListener = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw TypeError("Must be form element.");
+    const formData = new FormData(form);
+    const email = String(formData.get("email"));
+    if (!email) return;
+    localStorage.setItem("email", email);
+    this._loading = true;
+    sendSignInLinkToEmail(auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true })
+      .then(() => {
+        this._emailLoginModal.removeAttribute("show");
+        alert("Please check your inbox for the login Email.");
+      })
+      .catch((error) => alert(JSON.stringify(error)))
+      .finally(() => (this._loading = false));
+  };
+
+  #handleGoogleSignInClick: EventListener = () => {
+    const googleProvider = new GoogleAuthProvider();
+    signInWithPopup(auth, googleProvider).then(() => this.#dispatchLoggedInEvent());
   };
 
   render() {
@@ -110,6 +161,18 @@ export default class AuthHandler extends LitElement {
     `;
 
     return html`
+      <base-modal id="email-login-modal" title="Login with Email">
+        <form @submit=${this.#handleEmailAddressSignInSubmit}>
+          <div class="form-group">
+            <label for="email-login-email">Email</label>
+            <input id="email-login-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <button id="submit" type="submit">
+            ${this._loading ? html`<loading-spinner color="white" />` : "Send Login Email"}
+          </button>
+        </form>
+      </base-modal>
+
       <div class="card">
         <h1>Shopping List</h1>
         <div class="button-group">
@@ -139,6 +202,10 @@ export default class AuthHandler extends LitElement {
             ${this._loading ? html`<loading-spinner color="white" />` : "Submit"}
           </button>
         </form>
+        <div id="third-party">
+          <google-icon @click=${this.#handleGoogleSignInClick}></google-icon>
+        </div>
+        <a @click=${this.#handleEmailAddressSignInClick}>Or Sign in with only your Email Address?</a>
       </div>
     `;
   }

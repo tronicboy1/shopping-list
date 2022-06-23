@@ -25,6 +25,8 @@ export const appCheck = initializeAppCheck(firebaseApp, {
 
 export const auth = getAuth(firebaseApp);
 
+auth.useDeviceLanguage();
+
 export const getAuthStateOnce = () =>
   new Promise<string>((resolve, reject) => {
     const unsubscribe = onAuthStateChanged(

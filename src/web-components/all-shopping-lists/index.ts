@@ -129,7 +129,6 @@ export default class AllShoppingLists extends LitElement {
   }
 
   #loadAllResources() {
-    console.log("load list resources");
     const allLoadingPromises: Promise<any>[] = [this.#refreshList()];
     if (!customElements.get("shopping-list")) {
       allLoadingPromises.push(

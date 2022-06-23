@@ -5,6 +5,12 @@ export default css`
     text-align: center;
     margin-bottom: 2rem;
   }
+
+  a {
+    margin: 1rem 0;
+    text-align: center;
+    cursor: pointer;
+  }
   .form-group {
     margin-bottom: 1rem;
     display: flex;
@@ -64,7 +70,7 @@ export default css`
     flex: 1 0;
   }
 
-  .login-form {
+  form {
     display: flex;
     flex-direction: column;
   }
@@ -94,6 +100,25 @@ export default css`
     border: 1px solid var(--danger-color);
     border-radius: 4px;
     display: block;
+  }
+
+  #third-party {
+    width: 60%;
+    margin: 2rem auto 1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #third-party * {
+    width: auto;
+    height: 50px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+  }
+
+  #third-party *:last-child {
+    margin-bottom: 0;
   }
 
   @media (prefers-color-scheme: dark) {
