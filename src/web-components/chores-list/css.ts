@@ -4,8 +4,6 @@ export default css`
   :host {
     display: block;
     width: 100%;
-    animation: fadeIn 0.5s forwards;
-    opacity: 0;
   }
 
   ul {
