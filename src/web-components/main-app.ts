@@ -1,5 +1,5 @@
-import { firebaseApp } from "@firebase-logic";
-import { onAuthStateChanged, getAuth } from "firebase/auth";
+import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { getAuth } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
@@ -82,19 +82,7 @@ export default class MainApp extends LitElement {
       },
       { root: document, rootMargin: "0px", threshold: 1.0 }
     );
-    new Promise<string>((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(
-        getAuth(firebaseApp),
-        (authState) => {
-          unsubscribe();
-          const uid = authState ? authState.uid : "";
-          resolve(uid);
-        },
-        (error) => {
-          reject(error.name);
-        }
-      );
-    })
+    getAuthStateOnce()
       .then((uid) => {
         this.uid = uid;
         if (this.uid) this._listsLoading = true;
