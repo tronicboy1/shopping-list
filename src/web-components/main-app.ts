@@ -1,5 +1,5 @@
-import { auth, firebaseApp } from "@firebase-logic";
-import { onAuthStateChanged } from "firebase/auth";
+import { firebaseApp } from "@firebase-logic";
+import { onAuthStateChanged, getAuth } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
@@ -67,6 +67,7 @@ export default class MainApp extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    document.addEventListener("visibilitychange", this.#handleVisibilityChange, { signal: this.#controller.signal });
     this.#observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -83,7 +84,7 @@ export default class MainApp extends LitElement {
     );
     new Promise<string>((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(
-        auth,
+        getAuth(firebaseApp),
         (authState) => {
           unsubscribe();
           const uid = authState ? authState.uid : "";
@@ -151,6 +152,11 @@ export default class MainApp extends LitElement {
     }
   }
 
+  #handleVisibilityChange: EventListener = () => {
+    const visibilityState = document.visibilityState;
+    if (visibilityState === "visible") getAuth(firebaseApp);
+  };
+
   #handleModeChange = (event: CustomEvent<Modes>) => {
     this._mode = event.detail;
   };
@@ -160,7 +166,9 @@ export default class MainApp extends LitElement {
   };
 
   #handleLogoutClick: EventListener = () => {
-    auth.signOut().finally(() => this._modal.removeAttribute("show"));
+    getAuth(firebaseApp)
+      .signOut()
+      .finally(() => this._modal.removeAttribute("show"));
   };
 
   #handleListsLoaded: EventListener = () => {
@@ -168,7 +176,7 @@ export default class MainApp extends LitElement {
   };
   #handleLoggedInEvent: EventListener = () => {
     this._listsLoading = true;
-  }
+  };
 
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
