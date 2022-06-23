@@ -209,6 +209,7 @@ export default class ShoppingList extends LitElement {
     };
     push(this.#listDataRef, newData)
       .then(() => {
+        if (process.env.NODE_ENV !== "production") return; // do not send notification in Dev mode
         fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
         );
