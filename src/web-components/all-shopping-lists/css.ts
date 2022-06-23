@@ -6,6 +6,11 @@ export default css`
     flex-direction: row;
   }
 
+  :host {
+    animation: fadeIn 0.5s forwards;
+    opacity: 0;
+  }
+
   p {
     text-align: center;
     color: rgb(184, 184, 184);

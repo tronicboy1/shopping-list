@@ -1,7 +1,18 @@
 import { css } from "lit";
 
 export default css`
+  :host {
+    animation: fadeIn 0.5s forwards;
+    opacity: 0;
+  }
+
   h1 {
+    text-align: center;
+    font-size: 4rem;
+    margin: 1rem 0 0 0;
+  }
+
+  h3 {
     text-align: center;
     margin-bottom: 2rem;
   }

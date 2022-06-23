@@ -27,6 +27,8 @@ export default class MainApp extends LitElement {
   private _listsLoading = false;
   @state()
   private _settingsChangeLoading = false;
+  @state()
+  private _logoutLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
 
@@ -111,6 +113,7 @@ export default class MainApp extends LitElement {
     return this.#uid;
   }
   set uid(value: string) {
+    if (this._logoutLoading) this._logoutLoading = false;
     const oldValue = this.uid;
     if (oldValue === value) return;
     this.#uid = String(value);
@@ -156,6 +159,10 @@ export default class MainApp extends LitElement {
   #handleLogoutClick: EventListener = () => {
     getAuth(firebaseApp)
       .signOut()
+      .then(() => {
+        this._mode = "SHOPPING";
+        this._logoutLoading = true;
+      })
       .finally(() => this._modal.removeAttribute("show"));
   };
 
@@ -215,13 +222,13 @@ export default class MainApp extends LitElement {
 
   render() {
     return html`
-      ${this._authLoading || this._listsLoading
+      ${this._authLoading || this._listsLoading || this._logoutLoading
         ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
         : ""}
       <div ?hide=${this.uid || this._authLoading || this._listsLoading}>
         <auth-handler @logged-in=${this.#handleLoggedInEvent} show></auth-handler>
       </div>
-      <div ?hide=${this._authLoading || !this.uid}>
+      <div ?hide=${this._authLoading || this._logoutLoading || !this.uid}>
         <div ?hide=${this._mode !== "SHOPPING"} ?invisible=${this._listsLoading}>
           <all-shopping-lists @shopping-lists-loaded=${this.#handleListsLoaded}></all-shopping-lists>
         </div>
