@@ -8,7 +8,7 @@ import CameraPlusIcon from "@web-components/icons/camera-plus-icon";
 import ImageIcon from "@web-components/icons/image-icon";
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/firebase-messaging-sw.js").catch((error) => alert(JSON.stringify(error)));
+  navigator.serviceWorker.register("/firebase-messaging-sw.js");
 }
 
 customElements.define("loading-spinner", LoadingSpinner);
