@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 export const firebaseConfig = {
@@ -23,4 +23,19 @@ export const appCheck = initializeAppCheck(firebaseApp, {
   isTokenAutoRefreshEnabled: true,
 });
 
-export const auth = getAuth(firebaseApp)
+export const auth = getAuth(firebaseApp);
+
+export const getAuthStateOnce = () =>
+  new Promise<string>((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(
+      getAuth(firebaseApp),
+      (authState) => {
+        unsubscribe();
+        const uid = authState ? authState.uid : "";
+        resolve(uid);
+      },
+      (error) => {
+        reject(error.name);
+      }
+    );
+  });
