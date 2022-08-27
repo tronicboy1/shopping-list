@@ -1,5 +1,5 @@
-import { auth, firebaseApp } from "@firebase-logic";
-import { onAuthStateChanged } from "firebase/auth";
+import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { getAuth } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
@@ -27,6 +27,8 @@ export default class MainApp extends LitElement {
   private _listsLoading = false;
   @state()
   private _settingsChangeLoading = false;
+  @state()
+  private _logoutLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
 
@@ -67,6 +69,7 @@ export default class MainApp extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    document.addEventListener("visibilitychange", this.#handleVisibilityChange, { signal: this.#controller.signal });
     this.#observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -81,19 +84,7 @@ export default class MainApp extends LitElement {
       },
       { root: document, rootMargin: "0px", threshold: 1.0 }
     );
-    new Promise<string>((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(
-        auth,
-        (authState) => {
-          unsubscribe();
-          const uid = authState ? authState.uid : "";
-          resolve(uid);
-        },
-        (error) => {
-          reject(error.name);
-        }
-      );
-    })
+    getAuthStateOnce()
       .then((uid) => {
         this.uid = uid;
         if (this.uid) this._listsLoading = true;
@@ -122,6 +113,7 @@ export default class MainApp extends LitElement {
     return this.#uid;
   }
   set uid(value: string) {
+    if (this._logoutLoading) this._logoutLoading = false;
     const oldValue = this.uid;
     if (oldValue === value) return;
     this.#uid = String(value);
@@ -151,6 +143,11 @@ export default class MainApp extends LitElement {
     }
   }
 
+  #handleVisibilityChange: EventListener = () => {
+    const visibilityState = document.visibilityState;
+    if (visibilityState === "visible") getAuth(firebaseApp);
+  };
+
   #handleModeChange = (event: CustomEvent<Modes>) => {
     this._mode = event.detail;
   };
@@ -160,7 +157,13 @@ export default class MainApp extends LitElement {
   };
 
   #handleLogoutClick: EventListener = () => {
-    auth.signOut().finally(() => this._modal.removeAttribute("show"));
+    getAuth(firebaseApp)
+      .signOut()
+      .then(() => {
+        this._mode = "SHOPPING";
+        this._logoutLoading = true;
+      })
+      .finally(() => this._modal.removeAttribute("show"));
   };
 
   #handleListsLoaded: EventListener = () => {
@@ -168,7 +171,7 @@ export default class MainApp extends LitElement {
   };
   #handleLoggedInEvent: EventListener = () => {
     this._listsLoading = true;
-  }
+  };
 
   #handleNotificationEnableClick: EventListener = () => {
     Notification.requestPermission()
@@ -219,13 +222,13 @@ export default class MainApp extends LitElement {
 
   render() {
     return html`
-      ${this._authLoading || this._listsLoading
+      ${this._authLoading || this._listsLoading || this._logoutLoading
         ? html`<loading-spinner style="position: fixed; top: 30%; left: 0; right: 0;"></loading-spinner>`
         : ""}
       <div ?hide=${this.uid || this._authLoading || this._listsLoading}>
         <auth-handler @logged-in=${this.#handleLoggedInEvent} show></auth-handler>
       </div>
-      <div ?hide=${this._authLoading || !this.uid}>
+      <div ?hide=${this._authLoading || this._logoutLoading || !this.uid}>
         <div ?hide=${this._mode !== "SHOPPING"} ?invisible=${this._listsLoading}>
           <all-shopping-lists @shopping-lists-loaded=${this.#handleListsLoaded}></all-shopping-lists>
         </div>

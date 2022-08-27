@@ -5,6 +5,7 @@ export interface ShoppingListItem {
   memo: string;
   dateAdded: number;
   amount: number;
+  imagePath: string;
   priority: boolean;
   order: number;
 }

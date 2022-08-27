@@ -66,6 +66,7 @@ export const listCss = css`
     border-bottom: 1px solid var(--secondary-color);
     user-select: none;
     cursor: pointer;
+    z-index: 2;
   }
 
   #title h2 {
@@ -119,6 +120,7 @@ export const listCss = css`
     display: flex;
     flex-direction: row;
     justify-content: center;
+    position: relative;
     align-items: center;
     border: 1px var(--secondary-color) solid;
     background: var(--secondary-color);
@@ -133,6 +135,15 @@ export const listCss = css`
     -webkit-user-select: none;
   }
 
+  li span {
+    word-wrap: break-word;
+  }
+
+  li div + span {
+    width: 60%;
+    margin: 0 auto;
+  }
+
   li[priority] {
     background-color: var(--danger-color);
     border-color: var(--danger-color);
@@ -141,6 +152,22 @@ export const listCss = css`
   li small {
     font-size: 1rem;
     margin-left: 0.5rem;
+  }
+
+  #has-image {
+    display: inline-flex;
+    position: absolute;
+    left: 8px;
+    bottom: 0;
+    top: 0;
+    margin: auto 0;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--highlight-color);
+    height: 43px;
+    width: 43px;
+    border-radius: 4px;
+    transition: opacity 0.3s;
   }
 
   li:hover {

@@ -12,6 +12,7 @@ import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { firebaseApp } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
+import { getStorage, ref as getStorageRef, deleteObject } from "firebase/storage";
 
 export default class ShoppingList extends LitElement {
   #uid: string;
@@ -72,20 +73,19 @@ export default class ShoppingList extends LitElement {
   }
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
     if (!value) return;
-    if (name === "uid") this.#uid = value;
+    if (name === "uid") {
+      if (value === this.#uid) return;
+      this.#uid = value;
+    }
     if (name === "list-id") this.#listId = value;
     if (this.#uid && this.#listId) {
       this.#cancelCallback();
-      const db = getDatabase(firebaseApp);
-      this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
-      this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
+      this.#establishOnValueListener();
       get(child(this.#listRef, "listName"))
         .then((val) => (this.listName = val.val()))
         .finally(() => {
           this._initLoading = false;
         });
-      this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
-      this.#establishOnValueListener();
       //this.#worker.postMessage({ uid: this.#uid, listId: this.#listId });
     }
   }
@@ -104,8 +104,11 @@ export default class ShoppingList extends LitElement {
   // }
 
   #establishOnValueListener() {
-    if (!(this.#listDataRef && this.#listRef))
-      throw Error("List Data Ref and List Ref must be defined before calling this method.");
+    if (!(this.#uid && this.#listId)) throw Error("uid and listId must be defined before calling this method.");
+    const db = getDatabase(firebaseApp);
+    this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
+    this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
+    this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
     this.#cancelCallback = onValue(this.#listDataRef, (snapshot) => {
       if (this.listName) this._initLoading = false;
       const data = snapshot.val() as ShoppingListData | null;
@@ -171,8 +174,14 @@ export default class ShoppingList extends LitElement {
 
   #deleteItem = (id: string) => {
     if (!(this.#listData && this.#listRef)) return;
+    const data = this.#listData[id];
+    if (!data) throw TypeError("Cannot delete item that does not exist.");
     remove(child(this.#listDataRef, id));
+    const storageRef = getStorageRef(getStorage(firebaseApp), data.imagePath);
+    deleteObject(storageRef).catch(() => {});
   };
+
+  #handleDeleteEvent = (event: CustomEvent<string>) => this.#deleteItem(event.detail);
 
   #handleDeleteList = () => {
     remove(this.#listRef).then(() => {
@@ -196,9 +205,11 @@ export default class ShoppingList extends LitElement {
       memo: "",
       amount: 1,
       priority: false,
+      imagePath: "",
     };
     push(this.#listDataRef, newData)
       .then(() => {
+        if (process.env.NODE_ENV !== "production") return; // do not send notification in Dev mode
         fetch(process.env.NOTIFICATION_URI!).then(() =>
           set(this.#notificationRef, { item: newData.item, uid: this.#uid })
         );
@@ -265,6 +276,7 @@ export default class ShoppingList extends LitElement {
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
           >
+            ${item.imagePath ? html`<div id="has-image"><image-icon></image-icon></div>` : ""}
             <span>${item.item}</span>
             ${item.amount && item.amount > 1 ? html`<small>x${item.amount}</small>` : ""}
           </li>`
@@ -296,7 +308,7 @@ export default class ShoppingList extends LitElement {
             ${this._initLoading ? html`<loading-spinner />` : list}
           </ul>
         </div>
-        <shopping-item-details></shopping-item-details>
+        <shopping-item-details @delete-item=${this.#handleDeleteEvent}></shopping-item-details>
       </div>
     `;
   }

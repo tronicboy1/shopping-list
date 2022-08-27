@@ -1,10 +1,20 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  isSignInWithEmailLink,
+  sendPasswordResetEmail,
+  sendSignInLinkToEmail,
+  signInWithEmailAndPassword,
+  signInWithEmailLink,
+  signInWithPopup,
+} from "firebase/auth";
 import { html, LitElement } from "lit";
 import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";
 import css from "./css";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@firebase-logic";
+import BaseModal from "@web-components/base-modal";
 
 interface FormData {
   email: string;
@@ -16,18 +26,35 @@ export default class AuthHandler extends LitElement {
   @state()
   private _mode: "LOGIN" | "REGISTER" = "LOGIN";
   @state()
-  private _error = ""
+  private _error = "";
   @state()
   private _loading = false;
-  @query("form")
-  private _form!: HTMLFormElement;
+  @query("base-modal#email-login-modal")
+  private _emailLoginModal!: BaseModal;
+  @query("base-modal#reset-password")
+  private _resetPasswordModal!: BaseModal;
 
   static styles = [sharedCss, css];
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      this._loading = true;
+      const email = localStorage.getItem("email");
+      if (!email) throw Error("Email was not in local storage.");
+      signInWithEmailLink(auth, email, window.location.href)
+        .then(() => this.#dispatchLoggedInEvent())
+        .catch((error) => alert("Invalid login link."))
+        .finally(() => (this._loading = false));
+    }
+  }
 
   #handleSubmit: EventListener = (event) => {
     event.preventDefault();
     this._error = "";
-    const formData = new FormData(this._form);
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw TypeError("Invalid form element.");
+    const formData = new FormData(form);
     const formDataObj = Object.fromEntries(formData) as unknown;
     const data = formDataObj as FormData;
     const isRegister = Boolean(data["password-confirm"]);
@@ -45,7 +72,7 @@ export default class AuthHandler extends LitElement {
       createUserWithEmailAndPassword(auth, data.email, data.password)
         .then((credentials) => {
           this.removeAttribute("show");
-          this._form.reset();
+          form.reset();
           this.#dispatchLoggedInEvent();
         })
         .catch((error) => {
@@ -58,11 +85,10 @@ export default class AuthHandler extends LitElement {
       signInWithEmailAndPassword(auth, data.email, data.password)
         .then(() => {
           this.removeAttribute("show");
-          this._form.reset();
+          form.reset();
           this.#dispatchLoggedInEvent();
         })
         .catch((error) => {
-          console.log();
           if (error instanceof FirebaseError) this._error = error.message;
         })
         .finally(() => (this._loading = false));
@@ -76,11 +102,52 @@ export default class AuthHandler extends LitElement {
 
   #handleLoginClick: EventListener = () => {
     this._mode = "LOGIN";
-    this._error = ""
+    this._error = "";
   };
   #handleRegisterClick: EventListener = () => {
     this._mode = "REGISTER";
-    this._error = ""
+    this._error = "";
+  };
+
+  #handleEmailAddressSignInClick: EventListener = (event) => {
+    event.preventDefault();
+    this._emailLoginModal.toggleAttribute("show", true);
+  };
+  #handleEmailAddressSignInSubmit: EventListener = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw TypeError("Must be form element.");
+    const formData = new FormData(form);
+    const email = String(formData.get("email"));
+    if (!email) return;
+    localStorage.setItem("email", email);
+    this._loading = true;
+    sendSignInLinkToEmail(auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true })
+      .then(() => {
+        this._emailLoginModal.removeAttribute("show");
+        alert("Please check your inbox for the login Email.");
+      })
+      .catch((error) => alert(JSON.stringify(error)))
+      .finally(() => (this._loading = false));
+  };
+
+  #handleGoogleSignInClick: EventListener = () => {
+    const googleProvider = new GoogleAuthProvider();
+    signInWithPopup(auth, googleProvider).then(() => this.#dispatchLoggedInEvent());
+  };
+
+  #handleForgotPasswordClick: EventListener = () => {
+    this._resetPasswordModal.toggleAttribute("show", true);
+  };
+  #handleResetPasswordSubmit: EventListener = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw TypeError("Must be form element.");
+    const formData = new FormData(form);
+    const email = String(formData.get("email"));
+    if (!email) return;
+    localStorage.setItem("email", email);
+    sendPasswordResetEmail(auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true });
   };
 
   render() {
@@ -92,6 +159,7 @@ export default class AuthHandler extends LitElement {
       <div class="form-group">
         <label for="password">Password</label>
         <input id="password" name="password" type="password" required autocomplete="current-password" />
+        <a @click=${this.#handleForgotPasswordClick}>Forgot password?</a>
       </div>
     `;
     const registerTemplate = html`
@@ -110,8 +178,33 @@ export default class AuthHandler extends LitElement {
     `;
 
     return html`
+      <base-modal id="email-login-modal" title="Send Login Email">
+        <form @submit=${this.#handleEmailAddressSignInSubmit}>
+          <div class="form-group">
+            <label for="email-login-email">Email</label>
+            <input id="email-login-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <button id="submit" type="submit">
+            ${this._loading ? html`<loading-spinner color="white" />` : "Send Login Email"}
+          </button>
+        </form>
+      </base-modal>
+
+      <base-modal id="reset-password" title="Reset Password">
+        <form @submit=${this.#handleResetPasswordSubmit}>
+          <div class="form-group">
+            <label for="reset-password-email">Email</label>
+            <input id="reset-password-email" name="email" type="email" required autocomplete="email" />
+          </div>
+          <button id="submit" type="submit">
+            ${this._loading ? html`<loading-spinner color="white" />` : "Send Password Reset Email"}
+          </button>
+        </form>
+      </base-modal>
+
       <div class="card">
-        <h1>Shopping List</h1>
+        <h1>Listo</h1>
+        <h3>An elegant List Manager</h3>
         <div class="button-group">
           <button
             @click=${this.#handleLoginClick}
@@ -139,6 +232,10 @@ export default class AuthHandler extends LitElement {
             ${this._loading ? html`<loading-spinner color="white" />` : "Submit"}
           </button>
         </form>
+        <div id="third-party">
+          <google-icon @click=${this.#handleGoogleSignInClick}></google-icon>
+        </div>
+        <a @click=${this.#handleEmailAddressSignInClick}>Or Sign in with only your Email Address?</a>
       </div>
     `;
   }

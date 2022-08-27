@@ -98,6 +98,15 @@ export default css`
       color: white;
     }
   }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
 `;
 
 export const formCss = css`
@@ -159,6 +168,33 @@ export const formCss = css`
     height: 45px;
     width: 45px;
     border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+  }
+
+  form input[type="file"] {
+    opacity: 0;
+    height: 0;
+    width: 0;
+  }
+
+  form label.file-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    width: 60%;
+    height: 60px;
+    margin: 1rem auto 2rem auto;
+    background-color: var(--secondary-color);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  form img {
+    max-height: 400px;
+    max-width: 100%;
+    width: auto;
+    margin: 1rem auto 0 auto;
     border-radius: 4px;
   }
 

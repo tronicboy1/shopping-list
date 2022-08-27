@@ -8,17 +8,26 @@ declare var self: ServiceWorkerGlobalScope;
 const addMultipleResourcesToCache = (links: string[]) => caches.open("v1").then((cache) => cache.addAll(links));
 
 self.addEventListener("install", (event) => {
-  console.log("SW: Installing.", event);
-  event.waitUntil(
-    fetch("/public-manifest.json")
-      .then((result) => result.json())
-      .then((data: { [key: string]: string }) => {
-        const resourcesToCache = Object.keys(data).map((key) => data[key]);
-        return addMultipleResourcesToCache(resourcesToCache);
-      })
-      .catch((error) => console.error("SW: Caching Failed.", error))
-      .finally(() => self.skipWaiting())
-  );
+  console.log("SW: Installing. Mode: " + process.env.NODE_ENV, event);
+  if (process.env.NODE_ENV === "production") {
+    event.waitUntil(
+      caches.delete("v1").then(() =>
+        Promise.race([
+          fetch("/public-manifest.json")
+            .then((result) => result.json())
+            .then((data: { [key: string]: string }) => {
+              const resourcesToCache = Object.keys(data).map((key) => data[key]);
+              return addMultipleResourcesToCache(resourcesToCache);
+            })
+            .catch((error) => console.error("SW: Caching Failed.", error)),
+          new Promise((_, reject) => setTimeout(() => reject("Caching timed out."), 1000)),
+        ]).finally(() => self.skipWaiting())
+      )
+    );
+  } else {
+    caches.delete("v1");
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
@@ -62,15 +71,15 @@ onAuthStateChanged(auth, (authState) => {
 self.addEventListener("message", (event) => {
   const data = event.data;
   if (data === "get-auth") {
-    event.waitUntil(sendAuthStateToClients(uid));
+    sendAuthStateToClients(uid);
   }
 });
 
 const sendAuthStateToClients = (uid: string): Promise<any> => {
   return self.clients.matchAll().then((clients) => {
-    if (!clients.length) {
-      return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
-    }
+    // if (!clients.length) {
+    //   return self.clients.claim().then(() => sendAuthStateToClients(uid)); // there are time where the clients are not registered after first boot
+    // }
     clients.forEach((client) => client.postMessage({ type: "auth", uid }));
   });
 };

@@ -1,4 +1,4 @@
-import { firebaseApp } from "@firebase-logic";
+import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { Unsubscribe } from "firebase/auth";
 //prettier-ignore
@@ -41,28 +41,38 @@ export default class ChoresList extends LitElement {
       (event) => {
         const data = event.data;
         if (data.type === "auth") {
-          if (data.uid === this.#uid) return;
-          this.#uid = data.uid;
-          this._choreDetails.setAttribute("uid", this.#uid);
-          const db = getDatabase(firebaseApp);
-          this.#ref = ref(db, `${this.#uid}/CHORES/`);
-          const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
-          onValue(query, (snapshot) => {
-            const value = snapshot.val();
-            this._choresData = value;
-          });
+          this.uid = data.uid;
         }
       },
       { signal: this.#controller.signal }
     );
-    const swController = navigator.serviceWorker.controller;
-    if (!swController) throw Error("Service worker not initiated.");
-    swController.postMessage("get-auth");
+    getAuthStateOnce().then((uid) => {
+      this.uid = uid;
+    });
   }
 
   disconnectedCallback(): void {
     this.#unsubscribe();
     this.#controller.abort();
+  }
+
+  get uid(): string {
+    return this.#uid;
+  }
+  set uid(value: string) {
+    if (value === this.#uid) return;
+    this.#uid = value;
+    this.#unsubscribe();
+    if (this.#uid) {
+      this._choreDetails.setAttribute("uid", this.#uid);
+      const db = getDatabase(firebaseApp);
+      this.#ref = ref(db, `${this.#uid}/CHORES/`);
+      const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
+      this.#unsubscribe = onValue(query, (snapshot) => {
+        const value = snapshot.val();
+        this._choresData = value;
+      });
+    }
   }
 
   #handleFormSubmit: EventListener = (event) => {
