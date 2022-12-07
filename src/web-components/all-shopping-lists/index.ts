@@ -1,11 +1,12 @@
 import { css, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
-import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { firebaseApp, uid$ } from "@firebase-logic";
 import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
+import { first } from "rxjs";
 
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
@@ -73,9 +74,7 @@ export default class AllShoppingLists extends LitElement {
       },
       { signal: this.#controller.signal }
     );
-    getAuthStateOnce().then((uid) => {
-      this.uid = uid;
-    });
+    uid$.pipe(first()).subscribe((uid) => (this.uid = uid));
   }
 
   connectedCallback(): void {

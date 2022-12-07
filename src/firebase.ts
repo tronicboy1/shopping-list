@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { Observable, shareReplay, filter, OperatorFunction, map } from "rxjs";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBZ3KUebo7OAtHJQRwEJr2VEpH1yWktahE",
@@ -41,3 +42,16 @@ export const getAuthStateOnce = () =>
       }
     );
   });
+
+export const authState$ = new Observable<User | null>((observer) => {
+  return onAuthStateChanged(
+    getAuth(firebaseApp),
+    (user) => observer.next(user),
+    (error) => observer.error(error)
+  );
+}).pipe(shareReplay(1));
+
+export const uid$ = authState$.pipe(
+  filter((user) => Boolean(user)) as OperatorFunction<User | null, User>,
+  map((user) => user.uid)
+);
