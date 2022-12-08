@@ -90,9 +90,15 @@ export default class ShoppingList extends LitElement {
       .subscribe();
     this.subscriptions.add(
       combineLatest([uid$, this.listId$, this.isVisible$])
-        .pipe(switchMap(([uid, listId, isVisible]) => (isVisible ? this.getListData(uid, listId) : of({}))))
+        .pipe(
+          switchMap(([uid, listId, isVisible]) => {
+            this._initLoading = true
+            return isVisible ? this.getListData(uid, listId) : of({});
+          })
+        )
         .subscribe((data) => {
           this.#listData = data;
+          this._initLoading = false;
           this.sortedData = Object.keys(this.#listData)
             .map((key) => ({ key, ...this.#listData![key] }))
             .sort((a, b) => (a.order < b.order ? -1 : 1));
@@ -111,6 +117,11 @@ export default class ShoppingList extends LitElement {
         },
         complete: () => (this._initLoading = false),
       });
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.subscriptions.unsubscribe();
   }
 
   private getDatabaseRef(uid: string, listId: string, data = true) {
