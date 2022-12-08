@@ -113,10 +113,18 @@ export default class AllShoppingLists extends LitElement {
   }
 
   #refreshList() {
-    return get(this.#ref).then((result) => {
-      const data = result.val() as ListGroups | null;
-      this.shoppingListsData = data;
-    });
+    this.dispatchEvent(new Event("loading"));
+    const db = getDatabase(firebaseApp);
+    this.#ref = ref(db, `${this.uid}/SHOPPING-LISTS/`);
+    return get(this.#ref)
+      .then((result) => {
+        const data = result.val() as ListGroups | null;
+        this.shoppingListsData = data;
+      })
+      .finally(() => {
+        const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
+        this.dispatchEvent(loadedEvent);
+      });
   }
 
   #loadAllResources() {
