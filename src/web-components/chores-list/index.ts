@@ -1,10 +1,11 @@
-import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { firebaseApp, uid$ } from "@firebase-logic";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { Unsubscribe } from "firebase/auth";
 //prettier-ignore
 import { DatabaseReference, getDatabase, onValue, orderByChild, push, query as firebaseQuery, ref } from "firebase/database";
 import { html, LitElement } from "lit";
 import { property, query, state } from "lit/decorators.js";
+import { first } from "rxjs";
 import ChoreDetails from "./chore-details";
 import css from "./css";
 export interface Chore {
@@ -35,20 +36,8 @@ export default class ChoresList extends LitElement {
     if (!customElements.get("chore-details")) {
       import("./chore-details").then((imports) => customElements.define("chore-details", imports.default));
     }
-    if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.addEventListener(
-      "message",
-      (event) => {
-        const data = event.data;
-        if (data.type === "auth") {
-          this.uid = data.uid;
-        }
-      },
-      { signal: this.#controller.signal }
-    );
-    getAuthStateOnce().then((uid) => {
-      this.uid = uid;
-    });
+
+    uid$.subscribe((uid) => (this.uid = uid));
   }
 
   disconnectedCallback(): void {

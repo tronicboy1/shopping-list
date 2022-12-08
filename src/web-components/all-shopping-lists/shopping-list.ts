@@ -4,26 +4,41 @@
  */
 
 //prettier-ignore
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe } from "firebase/database";
+import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe, DataSnapshot } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query, property } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
-import { firebaseApp } from "@firebase-logic";
+import { firebaseApp, uid$ } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
 import { getStorage, ref as getStorageRef, deleteObject } from "firebase/storage";
+import {
+  BehaviorSubject,
+  combineLatest,
+  filter,
+  first,
+  forkJoin,
+  fromEvent,
+  map,
+  mergeMap,
+  Observable,
+  of,
+  OperatorFunction,
+  Subscription,
+  switchMap,
+  tap,
+} from "rxjs";
 
 export default class ShoppingList extends LitElement {
-  #uid: string;
-  // #worker!: Worker;
-  #listId: string;
-  #listRef!: DatabaseReference;
-  #listDataRef!: DatabaseReference;
   #notificationRef!: DatabaseReference;
-  #cancelCallback: Unsubscribe;
   #listData: ShoppingListData | null;
   #clickedItemId: string | null;
+  private listIdSubject = new BehaviorSubject<string | null>(null);
+  private listId$ = this.listIdSubject.pipe(filter((id) => Boolean(id)) as OperatorFunction<string | null, string>);
+  private subscriptions = new Subscription();
+  private uidAndListId$ = combineLatest([uid$, this.listId$]);
+  private isVisible$ = new BehaviorSubject(true);
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
   hideList = false;
@@ -44,9 +59,6 @@ export default class ShoppingList extends LitElement {
 
   constructor() {
     super();
-    this.#uid = "";
-    this.#listId = "";
-    this.#cancelCallback = () => {};
     this.#listData = null;
     this.#clickedItemId = null;
     // this.#setupWebWorker();
@@ -54,92 +66,91 @@ export default class ShoppingList extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
+    fromEvent(document, "visibilitychange")
+      .pipe(
+        map(() => {
+          const visibilityState = document.visibilityState;
+          return visibilityState === "visible";
+        })
+      )
+      .subscribe((val) => this.isVisible$.next(val));
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, listId]) => forkJoin([of(uid), of(listId), this.getListData(uid, listId).pipe(first())])),
+        mergeMap(([uid, listId, data]) => {
+          const keys = Object.keys(data);
+          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
+            keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
+            return set(this.getDatabaseRef(uid, listId), data);
+          }
+          return of();
+        })
+      )
+      .subscribe();
+    this.subscriptions.add(
+      combineLatest([uid$, this.listId$, this.isVisible$])
+        .pipe(switchMap(([uid, listId, isVisible]) => (isVisible ? this.getListData(uid, listId) : of({}))))
+        .subscribe((data) => {
+          this.#listData = data;
+          this.sortedData = Object.keys(this.#listData)
+            .map((key) => ({ key, ...this.#listData![key] }))
+            .sort((a, b) => (a.order < b.order ? -1 : 1));
+        })
+    );
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, listId]) =>
+          get(child(ref(getDatabase(firebaseApp), `${uid}/SHOPPING-LISTS/${listId}/`), "listName"))
+        )
+      )
+      .subscribe({
+        next: (val) => {
+          this.listName = val.val();
+        },
+        complete: () => (this._initLoading = false),
+      });
+  }
+
+  private getDatabaseRef(uid: string, listId: string, data = true) {
+    return ref(getDatabase(firebaseApp), `${uid}/SHOPPING-LISTS/${listId}/${data ? "data" : ""}`);
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    this._shoppingItemDetails.setAttribute("uid", this.#uid);
-    this._shoppingItemDetails.setAttribute("list-id", this.#listId);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.#cancelCallback();
-    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
-  }
-
-  static get observedAttributes(): string[] {
-    return ["uid", "list-id"];
-  }
-  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (!value) return;
-    if (name === "uid") {
-      if (value === this.#uid) return;
-      this.#uid = value;
-    }
-    if (name === "list-id") this.#listId = value;
-    if (this.#uid && this.#listId) {
-      this.#cancelCallback();
-      this.#establishOnValueListener();
-      get(child(this.#listRef, "listName"))
-        .then((val) => (this.listName = val.val()))
-        .finally(() => {
-          this._initLoading = false;
-        });
-      //this.#worker.postMessage({ uid: this.#uid, listId: this.#listId });
-    }
-  }
-
-  // #setupWebWorker() {
-  //   this.#worker = new Worker("/list-listener.js");
-  //   this.#worker.onerror = (event) => console.error(event);
-  //   this.#worker.onmessage = (
-  //     event: MessageEvent<{ raw: ShoppingListData | null; sorted: (ShoppingListItem & { key: string })[] | null }>
-  //   ) => {
-  //     const { raw, sorted } = event.data;
-  //     this.#listData = raw;
-  //     this.sortedData = sorted
-  //     if (this.listName) this._initLoading = false;
-  //   };
-  // }
-
-  #establishOnValueListener() {
-    if (!(this.#uid && this.#listId)) throw Error("uid and listId must be defined before calling this method.");
-    const db = getDatabase(firebaseApp);
-    this.#listRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/`);
-    this.#listDataRef = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data`);
-    this.#notificationRef = ref(db, `NOTIFICATIONS/${this.#uid}`);
-    this.#cancelCallback = onValue(this.#listDataRef, (snapshot) => {
-      if (this.listName) this._initLoading = false;
-      const data = snapshot.val() as ShoppingListData | null;
-      if (!data || Object.keys(data).length === 0) {
-        this.#listData = null;
-        this.sortedData = null;
-        return;
-      }
-      const keys = Object.keys(data);
-      if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-        keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
-        set(this.#listRef, data);
-        return;
-      }
-      this.#listData = data;
-      this.sortedData = Object.keys(this.#listData)
-        .map((key) => ({ key, ...this.#listData![key] }))
-        .sort((a, b) => (a.order < b.order ? -1 : 1));
+    this.uidAndListId$.subscribe(([uid, listId]) => {
+      this._shoppingItemDetails.setAttribute("uid", uid);
+      this._shoppingItemDetails.setAttribute("list-id", listId);
     });
   }
 
-  #handleVisibilityChange: EventListener = () => {
-    const visibilityState = document.visibilityState;
-    if (visibilityState === "hidden") this.#cancelCallback();
-    if (visibilityState === "visible" && this.#listDataRef) this.#establishOnValueListener();
-    // if (visibilityState === "hidden") this.#worker.terminate();
-    // if (visibilityState === "visible" && this.#listDataRef) {
-    //   this.#setupWebWorker();
-    //   this.#worker.postMessage({ uid: this.#uid, listId: this.#listId });
-    // }
-  };
+  static get observedAttributes(): string[] {
+    return ["list-id"];
+  }
+  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
+    if (!value) return;
+    if (name === "list-id") {
+      this.listIdSubject.next(value);
+    }
+  }
+
+  private getListData(uid: string, listId: string) {
+    return new Observable<DataSnapshot>((observer) => {
+      return onValue(
+        this.getDatabaseRef(uid, listId),
+        (snapshot) => observer.next(snapshot),
+        (err) => observer.error(err)
+      );
+    }).pipe(
+      map((snapshot) => {
+        const data = snapshot.val() as ShoppingListData | null;
+        if (!data || Object.keys(data).length === 0) {
+          return {};
+        }
+        return data;
+      })
+    );
+  }
 
   #handleNewItemInput: EventListener = (event) => {
     const input = event.currentTarget;
@@ -173,21 +184,34 @@ export default class ShoppingList extends LitElement {
   };
 
   #deleteItem = (id: string) => {
-    if (!(this.#listData && this.#listRef)) return;
+    if (!this.#listData) return;
     const data = this.#listData[id];
     if (!data) throw TypeError("Cannot delete item that does not exist.");
-    remove(child(this.#listDataRef, id));
     const storageRef = getStorageRef(getStorage(firebaseApp), data.imagePath);
-    deleteObject(storageRef).catch(() => {});
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, farmId]) =>
+          forkJoin([remove(child(this.getDatabaseRef(uid, farmId), id)), deleteObject(storageRef).catch(() => {})])
+        )
+      )
+      .subscribe();
   };
 
   #handleDeleteEvent = (event: CustomEvent<string>) => this.#deleteItem(event.detail);
 
   #handleDeleteList = () => {
-    remove(this.#listRef).then(() => {
-      const deletedEvent = new Event("deleted");
-      this.dispatchEvent(deletedEvent);
-    });
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, listId]) => remove(this.getDatabaseRef(uid, listId, false)))
+      )
+      .subscribe({
+        next: () => {
+          const deletedEvent = new Event("deleted");
+          this.dispatchEvent(deletedEvent);
+        },
+      });
   };
 
   #handleAddItem: EventListener = async (event) => {
@@ -207,16 +231,28 @@ export default class ShoppingList extends LitElement {
       priority: false,
       imagePath: "",
     };
-    push(this.#listDataRef, newData)
-      .then(() => {
-        if (process.env.NODE_ENV !== "production") return; // do not send notification in Dev mode
-        fetch(process.env.NOTIFICATION_URI!).then(() =>
-          set(this.#notificationRef, { item: newData.item, uid: this.#uid })
-        );
-      })
-      .catch((error) => alert(error))
-      .finally(() => (this._adding = false));
-    this.form.reset();
+    let uidCache: string;
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, listId]) => {
+          uidCache = uid;
+          return push(this.getDatabaseRef(uid, listId), newData);
+        }),
+        tap({
+          next: () => {
+            if (process.env.NODE_ENV !== "production") return; // do not send notification in Dev mode
+            fetch(process.env.NOTIFICATION_URI!).then(() =>
+              set(this.#notificationRef, { item: newData.item, uid: uidCache })
+            );
+          },
+        })
+      )
+      .subscribe({
+        next: () => this.form.reset(),
+        error: (error) => alert(error),
+        complete: () => (this._adding = false),
+      });
   };
 
   #handleDragStart: EventListener = (event) => {
@@ -225,7 +261,7 @@ export default class ShoppingList extends LitElement {
     if (!(target instanceof HTMLLIElement)) return;
     const id = target.id;
     event.dataTransfer.setData("id", id);
-    event.dataTransfer.setData("listId", this.#listId);
+    event.dataTransfer.setData("listId", this.listIdSubject.getValue()!);
     event.dataTransfer.dropEffect = "move";
   };
 
@@ -261,11 +297,16 @@ export default class ShoppingList extends LitElement {
     changedOrder.forEach((key, index) => {
       newData[key].order = index;
     });
-    set(this.#listDataRef, newData);
+    this.uidAndListId$
+      .pipe(
+        first(),
+        mergeMap(([uid, listId]) => set(this.getDatabaseRef(uid, listId), newData))
+      )
+      .subscribe();
   };
 
   render() {
-    const list = this.sortedData
+    const list = this.sortedData?.length
       ? this.sortedData.map(
           (item) => html`<li
             id=${item.key!}

@@ -1,6 +1,5 @@
 import { css, html, LitElement } from "lit";
 import { property } from "lit/decorators.js";
-import template from "./template.html";
 
 export default class LoadingSpinner extends LitElement {
   @property({ attribute: true })

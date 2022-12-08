@@ -1,11 +1,12 @@
 import { css, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
-import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { firebaseApp, uid$ } from "@firebase-logic";
 import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
+import { first, Subscription } from "rxjs";
 
 export default class AllShoppingLists extends LitElement {
   #ref!: DatabaseReference;
@@ -15,6 +16,8 @@ export default class AllShoppingLists extends LitElement {
   #controller: AbortController;
   @state()
   private _adding = false;
+
+  private subscriptions = new Subscription();
 
   static styles = [
     baseCss,
@@ -62,20 +65,7 @@ export default class AllShoppingLists extends LitElement {
     this.#shoppingListsData = null;
     this.#uid = "";
     this.#controller = new AbortController();
-    if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.addEventListener(
-      "message",
-      (event) => {
-        const data = event.data;
-        if (data.type === "auth") {
-          this.uid = data.uid;
-        }
-      },
-      { signal: this.#controller.signal }
-    );
-    getAuthStateOnce().then((uid) => {
-      this.uid = uid;
-    });
+    this.subscriptions.add(uid$.subscribe((uid) => (this.uid = uid)));
   }
 
   connectedCallback(): void {
@@ -87,6 +77,7 @@ export default class AllShoppingLists extends LitElement {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
     this.#controller.abort();
+    this.subscriptions.unsubscribe();
   }
 
   get uid(): string {

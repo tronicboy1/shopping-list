@@ -1,4 +1,4 @@
-import { firebaseApp, getAuthStateOnce } from "@firebase-logic";
+import { firebaseApp, uid$ } from "@firebase-logic";
 import { getAuth } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
@@ -7,6 +7,7 @@ import { state, query } from "lit/decorators.js";
 import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
+import { first, mergeMap } from "rxjs";
 
 type Modes = "SHOPPING" | "CHORES";
 
@@ -53,18 +54,7 @@ export default class MainApp extends LitElement {
     super();
     this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    navigator.serviceWorker.ready.then((registration) => {
-      navigator.serviceWorker.addEventListener(
-        "message",
-        (event) => {
-          const data = event.data;
-          if (data.type === "auth") {
-            this.uid = data.uid;
-          }
-        },
-        { signal: this.#controller.signal }
-      );
-    });
+    uid$.subscribe((uid) => (this.uid = uid));
   }
 
   connectedCallback(): void {
@@ -84,16 +74,21 @@ export default class MainApp extends LitElement {
       },
       { root: document, rootMargin: "0px", threshold: 1.0 }
     );
-    getAuthStateOnce()
-      .then((uid) => {
-        this.uid = uid;
-        if (this.uid) this._listsLoading = true;
-        return this.updateComplete;
-      })
-      .then(() => {
-        this._authLoading = false;
-      })
-      .catch((error) => alert(JSON.stringify(error)));
+    uid$
+      .pipe(
+        first(),
+        mergeMap((uid) => {
+          this.uid = uid;
+          if (this.uid) this._listsLoading = true;
+          return this.updateComplete;
+        })
+      )
+      .subscribe({
+        complete: () => {
+          this._authLoading = false;
+        },
+        error: (error) => alert(JSON.stringify(error)),
+      });
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
