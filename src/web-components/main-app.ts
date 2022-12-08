@@ -1,4 +1,4 @@
-import { firebaseApp, uid$ } from "@firebase-logic";
+import { authState$, firebaseApp, uid$ } from "@firebase-logic";
 import { getAuth } from "firebase/auth";
 import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
@@ -15,7 +15,7 @@ export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
   #controller: AbortController;
   #db!: Database;
-  #uid!: string;
+  #uid?: string;
   #observer!: IntersectionObserver;
 
   @state()
@@ -74,17 +74,16 @@ export default class MainApp extends LitElement {
       },
       { root: document, rootMargin: "0px", threshold: 1.0 }
     );
-    uid$
+    authState$
       .pipe(
-        first(),
-        mergeMap((uid) => {
-          this.uid = uid;
+        mergeMap((user) => {
+          this.uid = user?.uid;
           if (this.uid) this._listsLoading = true;
           return this.updateComplete;
         })
       )
       .subscribe({
-        complete: () => {
+        next: () => {
           this._authLoading = false;
         },
         error: (error) => alert(JSON.stringify(error)),
@@ -104,10 +103,10 @@ export default class MainApp extends LitElement {
     this.#controller.abort();
   }
 
-  get uid(): string {
+  get uid(): string | undefined {
     return this.#uid;
   }
-  set uid(value: string) {
+  set uid(value: string | undefined) {
     if (this._logoutLoading) this._logoutLoading = false;
     const oldValue = this.uid;
     if (oldValue === value) return;
