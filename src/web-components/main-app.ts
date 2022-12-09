@@ -1,6 +1,6 @@
-import { authState$, firebaseApp, uid$ } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import { getAuth } from "firebase/auth";
-import { Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
+import { DatabaseReference, get, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
 import { state, query } from "lit/decorators.js";
@@ -14,7 +14,6 @@ type Modes = "SHOPPING" | "CHORES";
 export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
   #controller: AbortController;
-  #db!: Database;
   #uid?: string;
   #observer!: IntersectionObserver;
 
@@ -54,7 +53,7 @@ export default class MainApp extends LitElement {
     super();
     this.#controller = new AbortController();
     if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
-    uid$.subscribe((uid) => (this.uid = uid));
+    Firebase.uid$.subscribe((uid) => (this.uid = uid));
   }
 
   connectedCallback(): void {
@@ -74,7 +73,7 @@ export default class MainApp extends LitElement {
       },
       { root: document, rootMargin: "0px", threshold: 1.0 }
     );
-    authState$
+    Firebase.authState$
       .pipe(
         mergeMap((user) => {
           this.uid = user?.uid;
@@ -113,12 +112,11 @@ export default class MainApp extends LitElement {
     this.#uid = String(value);
     this.requestUpdate("uid", oldValue);
     if (this.uid) {
-      this.#db = getDatabase(firebaseApp);
-      const messaging = getMessaging(firebaseApp);
+      const messaging = getMessaging(Firebase.app);
       isSupported().then((isSupported) => {
         if (!isSupported) throw Error("Browser does not support firebase Notifications.");
         getToken(messaging).then((newFCM) => {
-          const fcmListRef = ref(this.#db, `FCM/${this.uid}/`);
+          const fcmListRef = ref(Firebase.db, `FCM/${this.uid}/`);
           return get(fcmListRef)
             .then((currentData) => {
               const oldFCMList = (currentData.val() as string[]) ?? [];
@@ -128,7 +126,7 @@ export default class MainApp extends LitElement {
             .catch((error) => alert(JSON.stringify(error)));
         });
       });
-      this.#settingsRef = ref(this.#db, `${this.uid}/SETTINGS/CHORES`);
+      this.#settingsRef = ref(Firebase.db, `${this.uid}/SETTINGS/CHORES`);
       get(this.#settingsRef).then((data) => {
         if (!data.exists()) return;
         const value = data.val();
@@ -139,7 +137,7 @@ export default class MainApp extends LitElement {
 
   #handleVisibilityChange: EventListener = () => {
     const visibilityState = document.visibilityState;
-    if (visibilityState === "visible") getAuth(firebaseApp);
+    if (visibilityState === "visible") getAuth(Firebase.app);
   };
 
   #handleModeChange = (event: CustomEvent<Modes>) => {
@@ -151,7 +149,7 @@ export default class MainApp extends LitElement {
   };
 
   #handleLogoutClick: EventListener = () => {
-    getAuth(firebaseApp)
+    Firebase.auth
       .signOut()
       .then(() => {
         this._mode = "SHOPPING";
@@ -210,7 +208,7 @@ export default class MainApp extends LitElement {
   };
 
   #clearAllListData = () =>
-    remove(ref(this.#db, `${this.#uid}/SHOPPING-LISTS/`)).then(() => {
+    remove(ref(Firebase.db, `${this.#uid}/SHOPPING-LISTS/`)).then(() => {
       this.shadowRoot!.querySelector<AllShoppingLists>("all-shopping-lists")!.requestUpdate();
     });
 

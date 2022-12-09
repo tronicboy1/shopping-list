@@ -1,4 +1,4 @@
-import { firebaseApp, uid$ } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { Unsubscribe } from "firebase/auth";
 //prettier-ignore
@@ -37,7 +37,7 @@ export default class ChoresList extends LitElement {
       import("./chore-details").then((imports) => customElements.define("chore-details", imports.default));
     }
 
-    uid$.subscribe((uid) => (this.uid = uid));
+    Firebase.uid$.subscribe((uid) => (this.uid = uid));
   }
 
   disconnectedCallback(): void {
@@ -54,8 +54,7 @@ export default class ChoresList extends LitElement {
     this.#unsubscribe();
     if (this.#uid) {
       this._choreDetails.setAttribute("uid", this.#uid);
-      const db = getDatabase(firebaseApp);
-      this.#ref = ref(db, `${this.#uid}/CHORES/`);
+      this.#ref = ref(Firebase.db, `${this.#uid}/CHORES/`);
       const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
       this.#unsubscribe = onValue(query, (snapshot) => {
         const value = snapshot.val();

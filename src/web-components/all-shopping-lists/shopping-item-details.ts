@@ -1,4 +1,4 @@
-import { firebaseApp } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
@@ -61,8 +61,7 @@ export default class ShoppingItemDetails extends LitElement {
     if (this.#key && this.#uid && this.#listId) {
       this._imgPreview.src = "";
       this._fileLabelTitle = "";
-      const db = getDatabase(firebaseApp);
-      this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data/${this.#key}`);
+      this.#ref = ref(Firebase.db, `${this.#uid}/SHOPPING-LISTS/${this.#listId}/data/${this.#key}`);
       get(this.#ref)
         .then((data) => {
           if (!data.exists()) throw Error("No data found.");
@@ -70,8 +69,7 @@ export default class ShoppingItemDetails extends LitElement {
           this._modal.toggleAttribute("show", true);
           this._modal.shadowRoot!.getElementById("modal-container")!.scrollTo({ top: 0 });
           if (this._data.imagePath) {
-            const storage = getStorage(firebaseApp);
-            return getBlob(getStorageRef(storage, this._data.imagePath))
+            return getBlob(getStorageRef(Firebase.storage, this._data.imagePath))
               .then((blob) => this.#convertBlobToB64(blob))
               .then((b64Img) => this._imgPreview.setAttribute("src", b64Img));
           }
@@ -106,8 +104,7 @@ export default class ShoppingItemDetails extends LitElement {
       if (hasImage) {
         const extensionTestResult = image.name.match(/\.[0-9a-z]+$/);
         const extension = extensionTestResult ? extensionTestResult[0] : "";
-        const storage = getStorage(firebaseApp);
-        const ref = getStorageRef(storage, `${this.#uid}/${this.#key + extension}`);
+        const ref = getStorageRef(Firebase.storage, `${this.#uid}/${this.#key + extension}`);
         uploadBytes(ref, image)
           .then((result) => {
             resolve(result.metadata.fullPath);

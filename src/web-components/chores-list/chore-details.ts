@@ -1,4 +1,4 @@
-import { firebaseApp } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { child, Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
@@ -35,7 +35,7 @@ export default class ChoreDetails extends LitElement {
 
   constructor() {
     super();
-    this.#db = getDatabase(firebaseApp);
+    this.#db = Firebase.db;
   }
 
   static get observedAttributes(): string[] {

@@ -10,7 +10,7 @@ import { state, query, property } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
-import { firebaseApp, uid$ } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
 import { getStorage, ref as getStorageRef, deleteObject } from "firebase/storage";
 import {
@@ -37,7 +37,7 @@ export default class ShoppingList extends LitElement {
   private listIdSubject = new BehaviorSubject<string | null>(null);
   private listId$ = this.listIdSubject.pipe(filter((id) => Boolean(id)) as OperatorFunction<string | null, string>);
   private subscriptions = new Subscription();
-  private uidAndListId$ = combineLatest([uid$, this.listId$]);
+  private uidAndListId$ = combineLatest([Firebase.uid$, this.listId$]);
   private isVisible$ = new BehaviorSubject(true);
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
@@ -89,7 +89,7 @@ export default class ShoppingList extends LitElement {
       )
       .subscribe();
     this.subscriptions.add(
-      combineLatest([uid$, this.listId$, this.isVisible$])
+      combineLatest([Firebase.uid$, this.listId$, this.isVisible$])
         .pipe(
           switchMap(([uid, listId, isVisible]) => {
             this._initLoading = true
@@ -108,7 +108,7 @@ export default class ShoppingList extends LitElement {
       .pipe(
         first(),
         mergeMap(([uid, listId]) =>
-          get(child(ref(getDatabase(firebaseApp), `${uid}/SHOPPING-LISTS/${listId}/`), "listName"))
+          get(child(ref(Firebase.db, `${uid}/SHOPPING-LISTS/${listId}/`), "listName"))
         )
       )
       .subscribe({
@@ -125,7 +125,7 @@ export default class ShoppingList extends LitElement {
   }
 
   private getDatabaseRef(uid: string, listId: string, data = true) {
-    return ref(getDatabase(firebaseApp), `${uid}/SHOPPING-LISTS/${listId}/${data ? "data" : ""}`);
+    return ref(Firebase.db, `${uid}/SHOPPING-LISTS/${listId}/${data ? "data" : ""}`);
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -198,7 +198,7 @@ export default class ShoppingList extends LitElement {
     if (!this.#listData) return;
     const data = this.#listData[id];
     if (!data) throw TypeError("Cannot delete item that does not exist.");
-    const storageRef = getStorageRef(getStorage(firebaseApp), data.imagePath);
+    const storageRef = getStorageRef(Firebase.storage, data.imagePath);
     this.uidAndListId$
       .pipe(
         first(),

@@ -1,6 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
-import { firebaseApp, uid$ } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
@@ -65,7 +65,7 @@ export default class AllShoppingLists extends LitElement {
     this.#shoppingListsData = null;
     this.#uid = "";
     this.#controller = new AbortController();
-    this.subscriptions.add(uid$.subscribe((uid) => (this.uid = uid)));
+    this.subscriptions.add(Firebase.uid$.subscribe((uid) => (this.uid = uid)));
   }
 
   connectedCallback(): void {
@@ -87,8 +87,7 @@ export default class AllShoppingLists extends LitElement {
     if (this.#uid === value) return;
     this.#uid = value;
     if (this.#uid) {
-      const db = getDatabase(firebaseApp);
-      this.#ref = ref(db, `${this.#uid}/SHOPPING-LISTS/`);
+      this.#ref = ref(Firebase.db, `${this.#uid}/SHOPPING-LISTS/`);
       this.#loadAllResources();
     }
   }
@@ -114,8 +113,7 @@ export default class AllShoppingLists extends LitElement {
 
   #refreshList() {
     this.dispatchEvent(new Event("loading"));
-    const db = getDatabase(firebaseApp);
-    this.#ref = ref(db, `${this.uid}/SHOPPING-LISTS/`);
+    this.#ref = ref(Firebase.db, `${this.uid}/SHOPPING-LISTS/`);
     return get(this.#ref)
       .then((result) => {
         const data = result.val() as ListGroups | null;

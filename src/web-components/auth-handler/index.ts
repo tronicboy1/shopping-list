@@ -13,7 +13,7 @@ import { state, query } from "lit/decorators.js";
 import sharedCss from "@web-components/shared-css";
 import css from "./css";
 import { FirebaseError } from "firebase/app";
-import { auth } from "@firebase-logic";
+import { Firebase } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 
 interface FormData {
@@ -38,11 +38,11 @@ export default class AuthHandler extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (isSignInWithEmailLink(auth, window.location.href)) {
+    if (isSignInWithEmailLink(Firebase.auth, window.location.href)) {
       this._loading = true;
       const email = localStorage.getItem("email");
       if (!email) throw Error("Email was not in local storage.");
-      signInWithEmailLink(auth, email, window.location.href)
+      signInWithEmailLink(Firebase.auth, email, window.location.href)
         .then(() => this.#dispatchLoggedInEvent())
         .catch((error) => alert("Invalid login link."))
         .finally(() => (this._loading = false));
@@ -69,7 +69,7 @@ export default class AuthHandler extends LitElement {
         return;
       }
       this._loading = true;
-      createUserWithEmailAndPassword(auth, data.email, data.password)
+      createUserWithEmailAndPassword(Firebase.auth, data.email, data.password)
         .then((credentials) => {
           this.removeAttribute("show");
           form.reset();
@@ -82,7 +82,7 @@ export default class AuthHandler extends LitElement {
         .finally(() => (this._loading = false));
     } else {
       this._loading = true;
-      signInWithEmailAndPassword(auth, data.email, data.password)
+      signInWithEmailAndPassword(Firebase.auth, data.email, data.password)
         .then(() => {
           this.removeAttribute("show");
           form.reset();
@@ -122,7 +122,7 @@ export default class AuthHandler extends LitElement {
     if (!email) return;
     localStorage.setItem("email", email);
     this._loading = true;
-    sendSignInLinkToEmail(auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true })
+    sendSignInLinkToEmail(Firebase.auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true })
       .then(() => {
         this._emailLoginModal.removeAttribute("show");
         alert("Please check your inbox for the login Email.");
@@ -133,7 +133,7 @@ export default class AuthHandler extends LitElement {
 
   #handleGoogleSignInClick: EventListener = () => {
     const googleProvider = new GoogleAuthProvider();
-    signInWithPopup(auth, googleProvider).then(() => this.#dispatchLoggedInEvent());
+    signInWithPopup(Firebase.auth, googleProvider).then(() => this.#dispatchLoggedInEvent());
   };
 
   #handleForgotPasswordClick: EventListener = () => {
@@ -147,7 +147,7 @@ export default class AuthHandler extends LitElement {
     const email = String(formData.get("email"));
     if (!email) return;
     localStorage.setItem("email", email);
-    sendPasswordResetEmail(auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true });
+    sendPasswordResetEmail(Firebase.auth, email, { url: process.env.FRONTEND_URI!, handleCodeInApp: true });
   };
 
   render() {
