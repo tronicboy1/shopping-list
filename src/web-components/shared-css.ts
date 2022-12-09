@@ -33,10 +33,6 @@ export default css`
     display: none;
   }
 
-  .card[loading] {
-    opacity: 0;
-  }
-
   .invalid {
     background-color: var(--warning-color);
     display: block;

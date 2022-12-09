@@ -280,9 +280,6 @@ export default class ShoppingList extends LitElement {
     const draggedData = this.#listData[draggedId];
     if (!(draggedData && droppedLocationData)) return;
     const newSortedArray = this.sortedData!.map((item) => item.key).filter((key) => key !== draggedId);
-    // const worker = new Worker("change-order.js");
-    // worker.onmessage = (event) => set(this.#listDataRef, event.data);
-    // worker.postMessage({ newSortedArray, droppedLocationId, draggedData, data: this.#listData, draggedId });
     const indexOfDropped = newSortedArray.findIndex((key) => key === droppedLocationId);
     const itemsUpToDropped = newSortedArray.slice(0, indexOfDropped);
     const itemsAfterDropped = newSortedArray.slice(indexOfDropped);
@@ -319,7 +316,7 @@ export default class ShoppingList extends LitElement {
       : html`<button class="delete" type="button" @click=${this.#handleDeleteList}>Delete List?</button>`;
 
     return html`
-      <div ?loading=${this._initLoading} class="card">
+      <div class="card">
         <div @click=${this.#toggleHideListOnClick} id="title">
           <h2>${this.listName}</h2>
           <span>${this.sortedData?.length ?? 0}</span>
