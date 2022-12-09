@@ -10,8 +10,4 @@ export interface ShoppingListItem {
   order: number;
 }
 
-export interface ListGroups {
-  [id: string]: {
-    [id: string]: ShoppingListItem;
-  };
-}
+export type ListGroups = Record<string, { data: ShoppingListItem; listName: string }>;

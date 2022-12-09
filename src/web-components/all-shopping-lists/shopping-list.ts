@@ -42,10 +42,17 @@ export default class ShoppingList extends LitElement {
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
   hideList = false;
+  @property({ type: String, attribute: "list-name" })
+  listName = "";
+  set listId(val: string) {
+    this.listIdSubject.next(val);
+  }
+  @property({ attribute: "list-id", type: String })
+  get listId() {
+    return this.listIdSubject.getValue() ?? "";
+  }
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
-  @state()
-  listName: string | null = null;
   @state()
   private _adding = false;
   @state()
@@ -61,7 +68,6 @@ export default class ShoppingList extends LitElement {
     super();
     this.#listData = null;
     this.#clickedItemId = null;
-    // this.#setupWebWorker();
   }
 
   connectedCallback() {
@@ -92,7 +98,7 @@ export default class ShoppingList extends LitElement {
       combineLatest([Firebase.uid$, this.listId$, this.isVisible$])
         .pipe(
           switchMap(([uid, listId, isVisible]) => {
-            this._initLoading = true
+            this._initLoading = true;
             return isVisible ? this.getListData(uid, listId) : of({});
           })
         )
@@ -104,19 +110,6 @@ export default class ShoppingList extends LitElement {
             .sort((a, b) => (a.order < b.order ? -1 : 1));
         })
     );
-    this.uidAndListId$
-      .pipe(
-        first(),
-        mergeMap(([uid, listId]) =>
-          get(child(ref(Firebase.db, `${uid}/SHOPPING-LISTS/${listId}/`), "listName"))
-        )
-      )
-      .subscribe({
-        next: (val) => {
-          this.listName = val.val();
-        },
-        complete: () => (this._initLoading = false),
-      });
   }
 
   disconnectedCallback(): void {
@@ -133,16 +126,6 @@ export default class ShoppingList extends LitElement {
       this._shoppingItemDetails.setAttribute("uid", uid);
       this._shoppingItemDetails.setAttribute("list-id", listId);
     });
-  }
-
-  static get observedAttributes(): string[] {
-    return ["list-id"];
-  }
-  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (!value) return;
-    if (name === "list-id") {
-      this.listIdSubject.next(value);
-    }
   }
 
   private getListData(uid: string, listId: string) {

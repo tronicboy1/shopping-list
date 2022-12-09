@@ -1,23 +1,166 @@
 import { css, html, LitElement } from "lit";
 import { state } from "lit/decorators.js";
 import { Firebase } from "@firebase-logic";
-import { child, DatabaseReference, get, getDatabase, push, ref, remove } from "firebase/database";
+import { child, get, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
-import { first, Subscription } from "rxjs";
+import { first, map, mergeMap, Observable, ReplaySubject, shareReplay, Subscription, switchMap, tap } from "rxjs";
 
 export default class AllShoppingLists extends LitElement {
-  #ref!: DatabaseReference;
-  #uid: string;
-  #hideAddListForm: boolean;
-  #shoppingListsData: ListGroups | null;
   #controller: AbortController;
   @state()
   private _adding = false;
 
   private subscriptions = new Subscription();
+  private refreshSubject = new ReplaySubject<void>(1);
+  private shoppingListsCache$?: Observable<ListGroups>;
+  get shoppingLists$() {
+    return (this.shoppingListsCache$ ||= this.refreshSubject.pipe(
+      switchMap(() => Firebase.uid$),
+      switchMap((uid) => get(ref(Firebase.db, `${uid}/SHOPPING-LISTS/`))),
+      tap(() => this.dispatchEvent(new Event("shopping-lists-loaded"))),
+      map((result) => result.val() ?? {}),
+      shareReplay(1)
+    ));
+  }
+  @state()
+  hideAddListForm = true;
+  @state()
+  shoppingListsData: ListGroups = {};
+
+  constructor() {
+    super();
+    this.#controller = new AbortController();
+    this.refreshSubject.next();
+    this.#loadAllResources();
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.shoppingLists$.subscribe({
+      next: (listData) => {
+        this.shoppingListsData = listData;
+      },
+      error: console.error,
+    });
+    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
+    this.#controller.abort();
+    this.subscriptions.unsubscribe();
+  }
+
+  #loadAllResources() {
+    const allLoadingPromises: Promise<any>[] = [];
+    if (!customElements.get("shopping-list")) {
+      allLoadingPromises.push(
+        import("@web-components/all-shopping-lists/shopping-list").then((imports) =>
+          customElements.define("shopping-list", imports.default)
+        )
+      );
+    }
+    if (!customElements.get("shopping-item-details")) {
+      allLoadingPromises.push(
+        import("@web-components/all-shopping-lists/shopping-item-details").then((imports) =>
+          customElements.define("shopping-item-details", imports.default)
+        )
+      );
+    }
+    return Promise.all(allLoadingPromises).then(() => {
+      const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
+      this.dispatchEvent(loadedEvent);
+    });
+  }
+
+  #handleVisibilityChange: EventListener = () => {
+    const visibilityState = document.visibilityState;
+    if (visibilityState === "visible") this.refreshSubject.next();
+  };
+
+  #handleOpenAddListClick: EventListener = () => {
+    this.hideAddListForm = false;
+    this.updateComplete.then((result) => {
+      const input = this.shadowRoot!.querySelector<HTMLInputElement>("input#list-name")!;
+      input.focus();
+    });
+  };
+  #handleCloseAddList = () => {
+    this.hideAddListForm = true;
+  };
+  #handleAddList: EventListener = (event) => {
+    event.preventDefault();
+    if (this._adding) return;
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) throw Error("This listener can only be called on a form.");
+    const formData = new FormData(form);
+    const listName = String(formData.get("list-name")!).trim();
+    if (listName.length > 32) return;
+    this._adding = true;
+    Firebase.uid$
+      .pipe(
+        first(),
+        mergeMap((uid) => push(ref(Firebase.db, `${uid}/SHOPPING-LISTS/`), { listName, data: {} }))
+      )
+      .subscribe({
+        next: () => {
+          form.reset();
+          this.refreshSubject.next();
+        },
+        error: (error) => alert(error),
+        complete: () => {
+          this._adding = false;
+          this.#handleCloseAddList();
+        },
+      });
+  };
+
+  #handleInput: EventListener = (event) => {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) throw Error("Event target not input.");
+    if (input.value.length === input.maxLength) {
+      input.setAttribute("class", "invalid");
+    } else {
+      input.removeAttribute("class");
+    }
+  };
+
+  #handleDragOver: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  };
+  #handleDrop: EventListener = (event) => {
+    if (!(event instanceof DragEvent && event.dataTransfer)) return;
+    const target = event.currentTarget;
+    if (!(target instanceof ShoppingList)) return;
+    const listId = target.getAttribute("list-id")!;
+    const draggedItemListId = event.dataTransfer.getData("listId");
+    if (listId === draggedItemListId) return;
+    const draggedItemId = event.dataTransfer.getData("id");
+
+    let refCache: ReturnType<typeof ref>;
+    Firebase.uid$
+      .pipe(
+        first(),
+        mergeMap((uid) => {
+          refCache = ref(Firebase.db, `${uid}/SHOPPING-LISTS/`);
+          return get(child(refCache, `${draggedItemListId}/data/${draggedItemId}`));
+        }),
+        map((result) => {
+          const data = result.val() as ShoppingListItem | null;
+          if (!data) throw Error("invalid Item ID or List ID; No data to move.");
+          return data;
+        }),
+        mergeMap((data) => push(child(refCache, `${listId}/data`), data)),
+        mergeMap(() => remove(child(refCache, `${draggedItemListId}/data/${draggedItemId}`)))
+      )
+      .subscribe();
+  };
 
   static styles = [
     baseCss,
@@ -59,178 +202,18 @@ export default class AllShoppingLists extends LitElement {
     `,
   ];
 
-  constructor() {
-    super();
-    this.#hideAddListForm = true;
-    this.#shoppingListsData = null;
-    this.#uid = "";
-    this.#controller = new AbortController();
-    this.subscriptions.add(Firebase.uid$.subscribe((uid) => (this.uid = uid)));
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
-    this.#controller.abort();
-    this.subscriptions.unsubscribe();
-  }
-
-  get uid(): string {
-    return this.#uid;
-  }
-  set uid(value: string) {
-    if (this.#uid === value) return;
-    this.#uid = value;
-    if (this.#uid) {
-      this.#ref = ref(Firebase.db, `${this.#uid}/SHOPPING-LISTS/`);
-      this.#loadAllResources();
-    }
-  }
-  get hideAddListForm(): boolean {
-    return this.#hideAddListForm;
-  }
-  set hideAddListForm(value: boolean) {
-    const oldValue = this.hideAddListForm;
-    this.#hideAddListForm = Boolean(value);
-    this.requestUpdate("hideAddListForm", oldValue);
-  }
-  get shoppingListsData(): ListGroups | null {
-    return this.#shoppingListsData;
-  }
-  set shoppingListsData(value: ListGroups | null) {
-    const oldValue = this.shoppingListsData;
-    this.#shoppingListsData = value;
-    this.requestUpdate("shoppingListsData", oldValue);
-    if (!this.shoppingListsData) {
-      this.hideAddListForm = false;
-    }
-  }
-
-  #refreshList() {
-    this.dispatchEvent(new Event("loading"));
-    this.#ref = ref(Firebase.db, `${this.uid}/SHOPPING-LISTS/`);
-    return get(this.#ref)
-      .then((result) => {
-        const data = result.val() as ListGroups | null;
-        this.shoppingListsData = data;
-      })
-      .finally(() => {
-        const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
-        this.dispatchEvent(loadedEvent);
-      });
-  }
-
-  #loadAllResources() {
-    const allLoadingPromises: Promise<any>[] = [this.#refreshList()];
-    if (!customElements.get("shopping-list")) {
-      allLoadingPromises.push(
-        import("@web-components/all-shopping-lists/shopping-list").then((imports) =>
-          customElements.define("shopping-list", imports.default)
-        )
-      );
-    }
-    if (!customElements.get("shopping-item-details")) {
-      allLoadingPromises.push(
-        import("@web-components/all-shopping-lists/shopping-item-details").then((imports) =>
-          customElements.define("shopping-item-details", imports.default)
-        )
-      );
-    }
-    return Promise.all(allLoadingPromises).then(() => {
-      const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
-      this.dispatchEvent(loadedEvent);
-    });
-  }
-
-  #handleVisibilityChange: EventListener = () => {
-    const visibilityState = document.visibilityState;
-    if (visibilityState === "visible" && this.#ref) this.#refreshList();
-  };
-
-  #handleOpenAddListClick: EventListener = () => {
-    this.hideAddListForm = false;
-    this.updateComplete.then((result) => {
-      const input = this.shadowRoot!.querySelector<HTMLInputElement>("input#list-name")!;
-      input.focus();
-    });
-  };
-  #handleCloseAddList = () => {
-    this.hideAddListForm = true;
-  };
-  #handleAddList: EventListener = (event) => {
-    event.preventDefault();
-    if (this._adding) return;
-    const form = event.currentTarget;
-    if (!(form instanceof HTMLFormElement)) throw Error("This listener can only be called on a form.");
-    const formData = new FormData(form);
-    const listName = String(formData.get("list-name")!).trim();
-    if (listName.length > 32) return;
-    this._adding = true;
-    push(this.#ref, { listName, data: {} })
-      .then(() => {
-        form.reset();
-        return this.#refreshList();
-      })
-      .catch((error) => alert(error))
-      .finally(() => {
-        this._adding = false;
-        this.#handleCloseAddList();
-      });
-  };
-
-  #handleInput: EventListener = (event) => {
-    const input = event.currentTarget;
-    if (!(input instanceof HTMLInputElement)) throw Error("Event target not input.");
-    if (input.value.length === input.maxLength) {
-      input.setAttribute("class", "invalid");
-    } else {
-      input.removeAttribute("class");
-    }
-  };
-
-  #handleDragOver: EventListener = (event) => {
-    if (!(event instanceof DragEvent && event.dataTransfer)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-  #handleDrop: EventListener = (event) => {
-    if (!(event instanceof DragEvent && event.dataTransfer)) return;
-    const target = event.currentTarget;
-    if (!(target instanceof ShoppingList)) return;
-    const listId = target.getAttribute("list-id")!;
-    const draggedItemListId = event.dataTransfer.getData("listId");
-    if (listId === draggedItemListId) return;
-    const draggedItemId = event.dataTransfer.getData("id");
-    get(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`))
-      .then((result) => {
-        const data = result.val() as ShoppingListItem | null;
-        if (!data) throw Error("invalid Item ID or List ID; No data to move.");
-        return remove(child(this.#ref, `${draggedItemListId}/data/${draggedItemId}`)).then(() => Promise.resolve(data));
-      })
-      .then((data) => {
-        push(child(this.#ref, `${listId}/data`), data);
-      });
-  };
-
   render() {
     return html`
-      ${this.shoppingListsData
-        ? Object.keys(this.shoppingListsData).map(
-            (key) =>
-              html`<shopping-list
-                @deleted=${() => this.#refreshList()}
-                @dragover=${this.#handleDragOver}
-                @drop=${this.#handleDrop}
-                list-id=${key}
-                uid=${this.#uid}
-              ></shopping-list>`
-          )
-        : ""}
+      ${Object.entries(this.shoppingListsData).map(
+        ([key, value]) =>
+          html`<shopping-list
+            @deleted=${() => this.refreshSubject.next()}
+            @dragover=${this.#handleDragOver}
+            @drop=${this.#handleDrop}
+            list-id=${key}
+            list-name=${value.listName}
+          ></shopping-list>`
+      )}
       <div ?show=${this.hideAddListForm} id="open-add-list" @click=${this.#handleOpenAddListClick}>
         <plus-icon color="white"></plus-icon>
       </div>
