@@ -3,7 +3,7 @@ import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { child, Database, DatabaseReference, get, getDatabase, ref, remove, set } from "firebase/database";
 import { css, html, LitElement } from "lit";
-import { query, state } from "lit/decorators.js";
+import { property, query, state } from "lit/decorators.js";
 import { Chore } from "./";
 
 export default class ChoreDetails extends LitElement {
@@ -21,6 +21,8 @@ export default class ChoreDetails extends LitElement {
   private _modal!: BaseModal;
   @query("base-modal#delete-modal")
   private _deleteModal!: BaseModal;
+  @property({ attribute: true })
+  uid = "";
 
   static styles = [
     sharedCss,
@@ -42,15 +44,13 @@ export default class ChoreDetails extends LitElement {
     return ["uid", "chore-key"];
   }
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
+    super.attributeChangedCallback(name, _old, value);
     if (_old === value || !value) return;
-    if (name === "uid") {
-      this.#ref = ref(this.#db, `${value}/CHORES/`);
-    }
     if (name === "chore-key") {
       this.#choreKey = value;
     }
-    if (!(this.#ref && this.#choreKey)) return;
-    get(child(this.#ref, this.#choreKey)).then((snapshot) => {
+    if (!(this.uid && this.#choreKey)) return;
+    get(child(ref(Firebase.db, `${this.uid}/CHORES/`), this.#choreKey)).then((snapshot) => {
       snapshot.exists() ? (this._data = snapshot.val()) : (this._data = null);
       const modalContainer = this._modal.shadowRoot!.querySelector("#modal-container")!;
       modalContainer.scrollTo({ top: 0 });
@@ -70,7 +70,7 @@ export default class ChoreDetails extends LitElement {
     const lastCompleted = new Date(formData.get("lastCompleted")!.toString()).getTime();
     const memo = formData.get("memo")!.toString();
     this._editLoading = true;
-    set(child(this.#ref, this.#choreKey), { title, lastCompleted, memo })
+    set(child(ref(Firebase.db, `${this.uid}/CHORES/`), this.#choreKey), { title, lastCompleted, memo })
       .then(() => {
         this._modal.removeAttribute("show");
       })
@@ -109,14 +109,7 @@ export default class ChoreDetails extends LitElement {
           <label for="title">Name</label>
           <input type="text" id="title" name="title" maxlength="32" minlength="1" required value=${title} />
           <label for="last-completed">Last Completed</label>
-          <input
-            type="date"
-            id="last-completed"
-            name="lastCompleted"
-            required
-            value=${todaysDate}
-            max=${todaysDate}
-          />
+          <input type="date" id="last-completed" name="lastCompleted" required value=${todaysDate} max=${todaysDate} />
           <label for="memo">Memo</label>
           <textarea name="memo" id="memo" value=${memo}></textarea>
           <button type="submit">${this._editLoading ? loadingSpinner : "Save"}</button>

@@ -2,7 +2,7 @@ import { Firebase } from "@firebase-logic";
 import sharedCss, { formCss } from "@web-components/shared-css";
 import { Unsubscribe } from "firebase/auth";
 //prettier-ignore
-import { DatabaseReference, getDatabase, onValue, orderByChild, push, query as firebaseQuery, ref } from "firebase/database";
+import { DatabaseReference, onValue, orderByChild, push, query as firebaseQuery, ref } from "firebase/database";
 import { html, LitElement } from "lit";
 import { property, query, state } from "lit/decorators.js";
 import { first } from "rxjs";
@@ -52,15 +52,12 @@ export default class ChoresList extends LitElement {
     if (value === this.#uid) return;
     this.#uid = value;
     this.#unsubscribe();
-    if (this.#uid) {
-      this._choreDetails.setAttribute("uid", this.#uid);
-      this.#ref = ref(Firebase.db, `${this.#uid}/CHORES/`);
-      const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
-      this.#unsubscribe = onValue(query, (snapshot) => {
-        const value = snapshot.val();
-        this._choresData = value;
-      });
-    }
+    this.#ref = ref(Firebase.db, `${this.uid}/CHORES/`);
+    const query = firebaseQuery(this.#ref, orderByChild("lastCompleted"));
+    this.#unsubscribe = onValue(query, (snapshot) => {
+      const value = snapshot.val();
+      this._choresData = value;
+    });
   }
 
   #handleFormSubmit: EventListener = (event) => {
@@ -109,7 +106,7 @@ export default class ChoresList extends LitElement {
           ${choresList}
         </ul>
       </div>
-      <chore-details></chore-details>
+      <chore-details uid=${this.uid}></chore-details>
     `;
   }
 }
