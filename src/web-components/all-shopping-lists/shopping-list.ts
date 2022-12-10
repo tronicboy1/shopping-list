@@ -6,7 +6,7 @@
 //prettier-ignore
 import { ref, onValue, set, DatabaseReference, push, remove, child, DataSnapshot } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
-import { state, query, property } from "lit/decorators.js";
+import { state, query, property, customElement } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
 import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
@@ -33,6 +33,7 @@ import {
   tap,
 } from "rxjs";
 
+@customElement("shopping-list")
 export default class ShoppingList extends LitElement {
   #notificationRef!: DatabaseReference;
   #listData: ShoppingListData | null;
@@ -109,12 +110,15 @@ export default class ShoppingList extends LitElement {
             return isVisible ? this.getListData(uid, listId) : of({});
           })
         )
-        .subscribe((data) => {
-          this.#listData = data;
-          this._initLoading = false;
-          this.sortedData = Object.keys(this.#listData)
-            .map((key) => ({ key, ...this.#listData![key] }))
-            .sort((a, b) => (a.order < b.order ? -1 : 1));
+        .subscribe({
+          next: (data) => {
+            this.#listData = data;
+            this._initLoading = false;
+            this.sortedData = Object.keys(this.#listData)
+              .map((key) => ({ key, ...this.#listData![key] }))
+              .sort((a, b) => (a.order < b.order ? -1 : 1));
+          },
+          error: () => window.location.reload()
         })
     );
     this.subscriptions.add(this.tileDoubleClicks$.subscribe(this.#deleteItem));

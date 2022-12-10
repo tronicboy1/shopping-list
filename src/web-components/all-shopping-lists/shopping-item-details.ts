@@ -1,13 +1,13 @@
 import { Firebase } from "@firebase-logic";
 import BaseModal from "@web-components/base-modal";
 import sharedCss, { formCss } from "@web-components/shared-css";
-import { DatabaseReference, get, getDatabase, ref, set } from "firebase/database";
+import { DatabaseReference, get, ref, set } from "firebase/database";
 import { css, html, LitElement } from "lit";
-import { query, state } from "lit/decorators.js";
+import { customElement, query, state } from "lit/decorators.js";
 import { ShoppingListItem } from "./types";
-//prettier-ignore
-import { getStorage, ref as getStorageRef, uploadBytes, getBlob } from "firebase/storage";
+import { ref as getStorageRef, uploadBytes, getBlob } from "firebase/storage";
 
+@customElement("shopping-item-details")
 export default class ShoppingItemDetails extends LitElement {
   #uid: string | null = null;
   #key: string | null = null;

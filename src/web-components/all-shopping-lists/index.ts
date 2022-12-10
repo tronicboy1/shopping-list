@@ -7,9 +7,10 @@ import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
 import { first, map, mergeMap, Observable, ReplaySubject, shareReplay, Subscription, switchMap, tap } from "rxjs";
+import "./shopping-list";
+import "./shopping-item-details";
 
 export default class AllShoppingLists extends LitElement {
-  #controller: AbortController;
   @state()
   private _adding = false;
 
@@ -32,9 +33,7 @@ export default class AllShoppingLists extends LitElement {
 
   constructor() {
     super();
-    this.#controller = new AbortController();
     this.refreshSubject.next();
-    this.#loadAllResources();
   }
 
   connectedCallback(): void {
@@ -43,7 +42,7 @@ export default class AllShoppingLists extends LitElement {
       next: (listData) => {
         this.shoppingListsData = listData;
       },
-      error: console.error,
+      error: (error) => alert(JSON.stringify(error)),
     });
     document.addEventListener("visibilitychange", this.#handleVisibilityChange);
   }
@@ -51,30 +50,7 @@ export default class AllShoppingLists extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
-    this.#controller.abort();
     this.subscriptions.unsubscribe();
-  }
-
-  #loadAllResources() {
-    const allLoadingPromises: Promise<any>[] = [];
-    if (!customElements.get("shopping-list")) {
-      allLoadingPromises.push(
-        import("@web-components/all-shopping-lists/shopping-list").then((imports) =>
-          customElements.define("shopping-list", imports.default)
-        )
-      );
-    }
-    if (!customElements.get("shopping-item-details")) {
-      allLoadingPromises.push(
-        import("@web-components/all-shopping-lists/shopping-item-details").then((imports) =>
-          customElements.define("shopping-item-details", imports.default)
-        )
-      );
-    }
-    return Promise.all(allLoadingPromises).then(() => {
-      const loadedEvent = new Event("shopping-lists-loaded", { bubbles: true, composed: true });
-      this.dispatchEvent(loadedEvent);
-    });
   }
 
   #handleVisibilityChange: EventListener = () => {
