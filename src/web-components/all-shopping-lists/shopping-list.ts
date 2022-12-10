@@ -31,6 +31,7 @@ import {
   Subscription,
   switchMap,
   tap,
+  timeout,
 } from "rxjs";
 
 @customElement("shopping-list")
@@ -107,7 +108,7 @@ export default class ShoppingList extends LitElement {
         .pipe(
           switchMap(([uid, listId, isVisible]) => {
             this._initLoading = true;
-            return isVisible ? this.getListData(uid, listId) : of({});
+            return isVisible ? this.getListData(uid, listId).pipe(timeout({ first: 6000 })) : of({});
           })
         )
         .subscribe({
