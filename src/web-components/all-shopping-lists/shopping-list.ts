@@ -4,7 +4,7 @@
  */
 
 //prettier-ignore
-import { getDatabase, ref, onValue, set, DatabaseReference, push, remove, child, get, Unsubscribe, DataSnapshot } from "firebase/database";
+import { ref, onValue, set, DatabaseReference, push, remove, child, DataSnapshot } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query, property } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
@@ -12,10 +12,12 @@ import sharedStyles from "../shared-css";
 import ShoppingItemDetails from "./shopping-item-details";
 import { Firebase } from "@firebase-logic";
 import { ShoppingListData, ShoppingListItem } from "./types";
-import { getStorage, ref as getStorageRef, deleteObject } from "firebase/storage";
+import { ref as getStorageRef, deleteObject } from "firebase/storage";
 import {
   BehaviorSubject,
+  buffer,
   combineLatest,
+  debounceTime,
   filter,
   first,
   forkJoin,
@@ -25,6 +27,7 @@ import {
   Observable,
   of,
   OperatorFunction,
+  Subject,
   Subscription,
   switchMap,
   tap,
@@ -33,12 +36,17 @@ import {
 export default class ShoppingList extends LitElement {
   #notificationRef!: DatabaseReference;
   #listData: ShoppingListData | null;
-  #clickedItemId: string | null;
   private listIdSubject = new BehaviorSubject<string | null>(null);
   private listId$ = this.listIdSubject.pipe(filter((id) => Boolean(id)) as OperatorFunction<string | null, string>);
   private subscriptions = new Subscription();
   private uidAndListId$ = combineLatest([Firebase.uid$, this.listId$]);
   private isVisible$ = new BehaviorSubject(true);
+  private tileClick$ = new Subject<string>();
+  private tileDoubleClicks$ = this.tileClick$.pipe(
+    buffer(this.tileClick$.pipe(debounceTime(250))),
+    filter((clicks) => clicks.length > 1),
+    map(([id]) => id)
+  );
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
   hideList = false;
@@ -67,7 +75,6 @@ export default class ShoppingList extends LitElement {
   constructor() {
     super();
     this.#listData = null;
-    this.#clickedItemId = null;
   }
 
   connectedCallback() {
@@ -110,6 +117,7 @@ export default class ShoppingList extends LitElement {
             .sort((a, b) => (a.order < b.order ? -1 : 1));
         })
     );
+    this.subscriptions.add(this.tileDoubleClicks$.subscribe(this.#deleteItem));
   }
 
   disconnectedCallback(): void {
@@ -153,23 +161,6 @@ export default class ShoppingList extends LitElement {
       input.setAttribute("class", "invalid");
     } else {
       input.hasAttribute("class") && input.removeAttribute("class");
-    }
-  };
-
-  #handleItemClick: EventListener = (event) => {
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLLIElement || target instanceof HTMLButtonElement)) return;
-    const id = target.id;
-    if (event instanceof MouseEvent || event instanceof TouchEvent) {
-      if (this.#clickedItemId === id) {
-        this.#deleteItem(id); // only delete on mouse events
-        this.#clickedItemId = null;
-      } else {
-        this.#clickedItemId = id;
-        setTimeout(() => {
-          this.#clickedItemId = null;
-        }, 400);
-      }
     }
   };
 
@@ -300,10 +291,10 @@ export default class ShoppingList extends LitElement {
     const list = this.sortedData?.length
       ? this.sortedData.map(
           (item) => html`<li
-            id=${item.key!}
+            id=${item.key}
             draggable="true"
             ?priority=${item.priority}
-            @click=${this.#handleItemClick}
+            @click=${() => this.tileClick$.next(item.key)}
             @dragstart=${this.#handleDragStart}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
