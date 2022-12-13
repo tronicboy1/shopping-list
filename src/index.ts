@@ -7,8 +7,9 @@ import PlusIcon from "@web-components/plus-icon";
 import CameraPlusIcon from "@web-components/icons/camera-plus-icon";
 import ImageIcon from "@web-components/icons/image-icon";
 import GoogleIcon from "@web-components/icons/google-icon";
+import { isDev } from "./environment";
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && !isDev) {
   navigator.serviceWorker.register("/firebase-messaging-sw.js");
 }
 

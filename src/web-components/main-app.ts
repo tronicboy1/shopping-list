@@ -7,7 +7,7 @@ import { state, query } from "lit/decorators.js";
 import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
-import { first, mergeMap } from "rxjs";
+import { first, mergeMap, Observable, ReplaySubject } from "rxjs";
 
 type Modes = "SHOPPING" | "CHORES";
 
@@ -31,6 +31,7 @@ export default class MainApp extends LitElement {
   private _logoutLoading = false;
   @query("base-modal")
   private _modal!: BaseModal;
+  private elementsToObserve$ = new ReplaySubject<Parameters<InstanceType<typeof IntersectionObserver>["observe"]>[0]>();
 
   static styles = [
     sharedCss,
@@ -52,27 +53,13 @@ export default class MainApp extends LitElement {
   constructor() {
     super();
     this.#controller = new AbortController();
-    if (!("serviceWorker" in navigator)) alert("This site requires the Service Worker API");
     Firebase.uid$.subscribe((uid) => (this.uid = uid));
   }
 
   connectedCallback(): void {
     super.connectedCallback();
     document.addEventListener("visibilitychange", this.#handleVisibilityChange, { signal: this.#controller.signal });
-    this.#observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const target = entry.target;
-          const tagName = target.tagName.toLowerCase();
-          if (customElements.get(tagName)) return;
-          import(`@web-components/${tagName}`).then((imports) => {
-            customElements.define(tagName, imports.default); // import web components when brought into view
-          });
-        });
-      },
-      { root: document, rootMargin: "0px", threshold: 1.0 }
-    );
+
     Firebase.authState$
       .pipe(
         mergeMap((user) => {
@@ -93,9 +80,12 @@ export default class MainApp extends LitElement {
     const allShoppingLists = this.shadowRoot!.querySelector("all-shopping-lists")!;
     const choresList = this.shadowRoot!.querySelector("chores-list")!;
     const authHandler = this.shadowRoot!.querySelector("auth-handler")!;
-    this.#observer.observe(allShoppingLists);
-    this.#observer.observe(choresList);
-    this.#observer.observe(authHandler);
+    this.observeElementTagNames$([allShoppingLists, choresList, authHandler]).subscribe((tagName) => {
+      if (customElements.get(tagName)) return;
+      import(`@web-components/${tagName}`).then((imports) => {
+        customElements.define(tagName, imports.default); // import web components when brought into view
+      });
+    });
   }
 
   disconnectedCallback(): void {
@@ -211,6 +201,24 @@ export default class MainApp extends LitElement {
     remove(ref(Firebase.db, `${this.#uid}/SHOPPING-LISTS/`)).then(() => {
       this.shadowRoot!.querySelector<AllShoppingLists>("all-shopping-lists")!.requestUpdate();
     });
+
+  private observeElementTagNames$(elements: Element[]) {
+    return new Observable<string>((observer) => {
+      const intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const target = entry.target;
+            const tagName = target.tagName.toLowerCase();
+            observer.next(tagName);
+          });
+        },
+        { root: document, rootMargin: "0px", threshold: 1.0 }
+      );
+      elements.forEach((element) => intersectionObserver.observe(element));
+      return () => intersectionObserver.disconnect();
+    });
+  }
 
   render() {
     return html`
