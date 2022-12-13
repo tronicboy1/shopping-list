@@ -40,7 +40,6 @@ export default class AllShoppingLists extends LitElement {
       )
       .subscribe({
         next: (listData) => {
-          console.log(listData)
           this.dispatchEvent(new Event("shopping-lists-loaded"));
           this.shoppingListsData = listData;
         },
