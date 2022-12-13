@@ -8,6 +8,7 @@ import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
 import { first, mergeMap, Observable, ReplaySubject } from "rxjs";
+import "./all-shopping-lists/index"
 
 type Modes = "SHOPPING" | "CHORES";
 
@@ -15,7 +16,6 @@ export default class MainApp extends LitElement {
   #settingsRef!: DatabaseReference;
   #controller: AbortController;
   #uid?: string;
-  #observer!: IntersectionObserver;
 
   @state()
   private _mode: Modes = "SHOPPING";
@@ -77,10 +77,9 @@ export default class MainApp extends LitElement {
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
-    const allShoppingLists = this.shadowRoot!.querySelector("all-shopping-lists")!;
     const choresList = this.shadowRoot!.querySelector("chores-list")!;
     const authHandler = this.shadowRoot!.querySelector("auth-handler")!;
-    this.observeElementTagNames$([allShoppingLists, choresList, authHandler]).subscribe((tagName) => {
+    this.observeElementTagNames$([choresList, authHandler]).subscribe((tagName) => {
       if (customElements.get(tagName)) return;
       import(`@web-components/${tagName}`).then((imports) => {
         customElements.define(tagName, imports.default); // import web components when brought into view

@@ -1,5 +1,5 @@
 import { css, html, LitElement } from "lit";
-import { state } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 import { Firebase } from "@firebase-logic";
 import { child, get, push, ref, remove } from "firebase/database";
 import baseCss from "./css";
@@ -10,6 +10,9 @@ import { first, map, mergeMap, Observable, ReplaySubject, shareReplay, Subscript
 import "./shopping-list";
 import "./shopping-item-details";
 
+export const tagName = "all-shopping-lists";
+
+@customElement(tagName)
 export default class AllShoppingLists extends LitElement {
   @state()
   private _adding = false;
