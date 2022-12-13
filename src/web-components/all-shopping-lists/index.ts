@@ -6,9 +6,25 @@ import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
-import { first, map, mergeMap, Observable, ReplaySubject, shareReplay, Subscription, switchMap, tap } from "rxjs";
+import {
+  first,
+  fromEvent,
+  map,
+  mergeMap,
+  Observable,
+  of,
+  ReplaySubject,
+  shareReplay,
+  startWith,
+  Subscription,
+  switchMap,
+  tap,
+  timeout,
+  withLatestFrom,
+} from "rxjs";
 import "./shopping-list";
 import "./shopping-item-details";
+import { ListService } from "../../app/list.service";
 
 export const tagName = "all-shopping-lists";
 
@@ -17,18 +33,11 @@ export default class AllShoppingLists extends LitElement {
   @state()
   private _adding = false;
 
+  private isVisible$ = fromEvent(document, "visibilitychange").pipe(
+    map(() => document.visibilityState === "visible"),
+    startWith(true)
+  );
   private subscriptions = new Subscription();
-  private refreshSubject = new ReplaySubject<void>(1);
-  private shoppingListsCache$?: Observable<ListGroups>;
-  get shoppingLists$() {
-    return (this.shoppingListsCache$ ||= this.refreshSubject.pipe(
-      switchMap(() => Firebase.uid$),
-      switchMap((uid) => get(ref(Firebase.db, `${uid}/SHOPPING-LISTS/`))),
-      tap(() => this.dispatchEvent(new Event("shopping-lists-loaded"))),
-      map((result) => result.val() ?? {}),
-      shareReplay(1)
-    ));
-  }
   @state()
   hideAddListForm = true;
   @state()
@@ -36,30 +45,29 @@ export default class AllShoppingLists extends LitElement {
 
   constructor() {
     super();
-    this.refreshSubject.next();
   }
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.shoppingLists$.subscribe({
-      next: (listData) => {
-        this.shoppingListsData = listData;
-      },
-      error: (error) => alert(JSON.stringify(error)),
-    });
-    document.addEventListener("visibilitychange", this.#handleVisibilityChange);
+    Firebase.uid$
+      .pipe(
+        withLatestFrom(this.isVisible$),
+        switchMap(([uid, isVisible]) => (isVisible ? ListService.getLists(uid).pipe(timeout({ first: 6000 })) : of({})))
+      )
+      .subscribe({
+        next: (listData) => {
+          console.log(listData);
+          this.dispatchEvent(new Event("shopping-lists-loaded"));
+          this.shoppingListsData = listData;
+        },
+        error: () => window.location.reload(),
+      });
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    document.removeEventListener("visibilitychange", this.#handleVisibilityChange);
     this.subscriptions.unsubscribe();
   }
-
-  #handleVisibilityChange: EventListener = () => {
-    const visibilityState = document.visibilityState;
-    if (visibilityState === "visible") this.refreshSubject.next();
-  };
 
   #handleOpenAddListClick: EventListener = () => {
     this.hideAddListForm = false;
@@ -86,10 +94,7 @@ export default class AllShoppingLists extends LitElement {
         mergeMap((uid) => push(ref(Firebase.db, `${uid}/SHOPPING-LISTS/`), { listName, data: {} }))
       )
       .subscribe({
-        next: () => {
-          form.reset();
-          this.refreshSubject.next();
-        },
+        next: () => form.reset(),
         error: (error) => alert(error),
         complete: () => {
           this._adding = false;
@@ -186,9 +191,9 @@ export default class AllShoppingLists extends LitElement {
       ${Object.entries(this.shoppingListsData).map(
         ([key, value]) =>
           html`<shopping-list
-            @deleted=${() => this.refreshSubject.next()}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
+            list-data=${JSON.stringify(value.data)}
             list-id=${key}
             list-name=${value.listName}
           ></shopping-list>`

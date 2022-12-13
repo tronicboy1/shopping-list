@@ -1,10 +1,4 @@
-/**
- * I tested using web workers for onValue listeners but the result was much slower
- * than simply running the listeners in the main thread.
- */
-
-//prettier-ignore
-import { ref, onValue, set, DatabaseReference, push, remove, child, DataSnapshot } from "firebase/database";
+import { ref, set, DatabaseReference, push, remove, child } from "firebase/database";
 import { html, LitElement, PropertyValueMap } from "lit";
 import { state, query, property, customElement } from "lit/decorators.js";
 import styles, { listCss, stickyTitles } from "./css";
@@ -21,17 +15,12 @@ import {
   filter,
   first,
   forkJoin,
-  fromEvent,
   map,
   mergeMap,
-  Observable,
-  of,
   OperatorFunction,
   Subject,
   Subscription,
-  switchMap,
   tap,
-  timeout,
 } from "rxjs";
 
 @customElement("shopping-list")
@@ -42,7 +31,6 @@ export default class ShoppingList extends LitElement {
   private listId$ = this.listIdSubject.pipe(filter((id) => Boolean(id)) as OperatorFunction<string | null, string>);
   private subscriptions = new Subscription();
   private uidAndListId$ = combineLatest([Firebase.uid$, this.listId$]);
-  private isVisible$ = new BehaviorSubject(true);
   private tileClick$ = new Subject<string>();
   private tileDoubleClicks$ = this.tileClick$.pipe(
     buffer(this.tileClick$.pipe(debounceTime(250))),
@@ -54,19 +42,22 @@ export default class ShoppingList extends LitElement {
   hideList = false;
   @property({ type: String, attribute: "list-name" })
   listName = "";
-  set listId(val: string) {
-    this.listIdSubject.next(val);
+  private _listData?: ShoppingListItem;
+  @property({ type: Object, converter: (val) => JSON.parse(val ?? "{}"), attribute: "list-data" })
+  get listData(): ShoppingListItem | undefined {
+    return this._listData;
   }
-  @property({ attribute: "list-id", type: String })
-  get listId() {
-    return this.listIdSubject.getValue() ?? "";
+  set listData(data: ShoppingListItem | undefined) {
+    this._listData = data;
+    if (!data) return;
+    this.sortedData = Object.entries(data)
+      .map(([key, value]) => ({ key, ...value }))
+      .sort((a, b) => (a.order < b.order ? -1 : 1));
   }
   @state()
   sortedData: (ShoppingListItem & { key: string })[] | null = null;
   @state()
   private _adding = false;
-  @state()
-  private _initLoading = true;
   @query("form")
   form!: HTMLFormElement;
   @query("shopping-item-details")
@@ -81,47 +72,6 @@ export default class ShoppingList extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    fromEvent(document, "visibilitychange")
-      .pipe(
-        map(() => {
-          const visibilityState = document.visibilityState;
-          return visibilityState === "visible";
-        })
-      )
-      .subscribe((val) => this.isVisible$.next(val));
-    this.uidAndListId$
-      .pipe(
-        first(),
-        mergeMap(([uid, listId]) => forkJoin([of(uid), of(listId), this.getListData(uid, listId).pipe(first())])),
-        mergeMap(([uid, listId, data]) => {
-          const keys = Object.keys(data);
-          if (Object.values(data).some((value) => isNaN(Number(value.order)))) {
-            keys.forEach((key, index) => (data[key].order = index)); // Reset order if order not present any children
-            return set(this.getDatabaseRef(uid, listId), data);
-          }
-          return of();
-        })
-      )
-      .subscribe();
-    this.subscriptions.add(
-      combineLatest([Firebase.uid$, this.listId$, this.isVisible$])
-        .pipe(
-          switchMap(([uid, listId, isVisible]) => {
-            this._initLoading = true;
-            return isVisible ? this.getListData(uid, listId).pipe(timeout({ first: 6000 })) : of({});
-          })
-        )
-        .subscribe({
-          next: (data) => {
-            this.#listData = data;
-            this._initLoading = false;
-            this.sortedData = Object.keys(this.#listData)
-              .map((key) => ({ key, ...this.#listData![key] }))
-              .sort((a, b) => (a.order < b.order ? -1 : 1));
-          },
-          error: () => window.location.reload()
-        })
-    );
     this.subscriptions.add(this.tileDoubleClicks$.subscribe(this.#deleteItem));
   }
 
@@ -140,34 +90,6 @@ export default class ShoppingList extends LitElement {
       this._shoppingItemDetails.setAttribute("list-id", listId);
     });
   }
-
-  private getListData(uid: string, listId: string) {
-    return new Observable<DataSnapshot>((observer) => {
-      return onValue(
-        this.getDatabaseRef(uid, listId),
-        (snapshot) => observer.next(snapshot),
-        (err) => observer.error(err)
-      );
-    }).pipe(
-      map((snapshot) => {
-        const data = snapshot.val() as ShoppingListData | null;
-        if (!data || Object.keys(data).length === 0) {
-          return {};
-        }
-        return data;
-      })
-    );
-  }
-
-  #handleNewItemInput: EventListener = (event) => {
-    const input = event.currentTarget;
-    if (!(input instanceof HTMLInputElement)) throw Error("Event target not input.");
-    if (input.value.length === input.maxLength) {
-      input.setAttribute("class", "invalid");
-    } else {
-      input.hasAttribute("class") && input.removeAttribute("class");
-    }
-  };
 
   #toggleHideListOnClick: EventListener = () => {
     this.hideList = !this.hideList;
@@ -319,21 +241,13 @@ export default class ShoppingList extends LitElement {
         </div>
         <div id="contents">
           <form @submit=${this.#handleAddItem} autocomplete="off">
-            <input
-              @input=${this.#handleNewItemInput}
-              id="item"
-              name="item"
-              minlength="1"
-              type="text"
-              maxlength="33"
-              required
-            />
+            <input id="item" name="item" minlength="1" type="text" maxlength="33" required />
             <button id="add" type="submit">
               ${this._adding ? html`<loading-spinner color="white" />` : html`<plus-icon color="white" />`}
             </button>
           </form>
           <ul>
-            ${this._initLoading ? html`<loading-spinner />` : list}
+            ${list}
           </ul>
         </div>
         <shopping-item-details @delete-item=${this.#handleDeleteEvent}></shopping-item-details>
