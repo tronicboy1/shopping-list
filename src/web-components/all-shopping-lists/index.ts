@@ -7,20 +7,17 @@ import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
 import {
+  combineLatest,
   first,
   fromEvent,
   map,
   mergeMap,
-  Observable,
   of,
-  ReplaySubject,
-  shareReplay,
   startWith,
   Subscription,
   switchMap,
   tap,
   timeout,
-  withLatestFrom,
 } from "rxjs";
 import "./shopping-list";
 import "./shopping-item-details";
@@ -32,11 +29,6 @@ export const tagName = "all-shopping-lists";
 export default class AllShoppingLists extends LitElement {
   @state()
   private _adding = false;
-
-  private isVisible$ = fromEvent(document, "visibilitychange").pipe(
-    map(() => document.visibilityState === "visible"),
-    startWith(true)
-  );
   private subscriptions = new Subscription();
   @state()
   hideAddListForm = true;
@@ -49,18 +41,13 @@ export default class AllShoppingLists extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    Firebase.uid$
-      .pipe(
-        withLatestFrom(this.isVisible$),
-        switchMap(([uid, isVisible]) => (isVisible ? ListService.getLists(uid).pipe(timeout({ first: 6000 })) : of({})))
-      )
-      .subscribe({
-        next: (listData) => {
-          this.dispatchEvent(new Event("shopping-lists-loaded"));
-          this.shoppingListsData = listData;
-        },
-        error: () => window.location.reload(),
-      });
+    Firebase.uid$.pipe(switchMap((uid) => ListService.getLists(uid).pipe(timeout({ first: 6000 })))).subscribe({
+      next: (listData) => {
+        this.dispatchEvent(new Event("shopping-lists-loaded"));
+        this.shoppingListsData = listData;
+      },
+      error: () => window.location.reload(),
+    });
   }
 
   disconnectedCallback(): void {
