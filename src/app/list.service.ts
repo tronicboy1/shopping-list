@@ -1,7 +1,7 @@
 import { Firebase } from "@firebase-logic";
 import { ListGroups } from "@web-components/all-shopping-lists/types";
 import { DataSnapshot, onValue, ref } from "firebase/database";
-import { fromEvent, map, Observable, of, shareReplay, startWith, switchMap } from "rxjs";
+import { fromEvent, map, Observable, of, shareReplay, startWith, switchMap, timeout } from "rxjs";
 
 export class ListService {
   private static _listsCache$?: Observable<ListGroups>;
@@ -26,6 +26,9 @@ export class ListService {
         (snapshot) => observer.next(snapshot),
         (err) => observer.error(err)
       )
-    ).pipe(map((result) => result.val() ?? {}));
+    ).pipe(
+      timeout({ first: 4000 }),
+      map((result) => result.val() ?? {})
+    );
   }
 }

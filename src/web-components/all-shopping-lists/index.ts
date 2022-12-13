@@ -6,19 +6,7 @@ import baseCss from "./css";
 import sharedCss from "../shared-css";
 import { ListGroups, ShoppingListItem } from "./types";
 import ShoppingList from "./shopping-list";
-import {
-  combineLatest,
-  first,
-  fromEvent,
-  map,
-  mergeMap,
-  of,
-  startWith,
-  Subscription,
-  switchMap,
-  tap,
-  timeout,
-} from "rxjs";
+import { first, map, mergeMap, Subscription, switchMap } from "rxjs";
 import "./shopping-list";
 import "./shopping-item-details";
 import { ListService } from "../../app/list.service";
@@ -41,7 +29,7 @@ export default class AllShoppingLists extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    Firebase.uid$.pipe(switchMap((uid) => ListService.getLists(uid).pipe(timeout({ first: 6000 })))).subscribe({
+    Firebase.uid$.pipe(switchMap((uid) => ListService.getLists(uid))).subscribe({
       next: (listData) => {
         this.dispatchEvent(new Event("shopping-lists-loaded"));
         this.shoppingListsData = listData;
