@@ -42,6 +42,13 @@ export default class ShoppingList extends LitElement {
   hideList = false;
   @property({ type: String, attribute: "list-name" })
   listName = "";
+  @property({ attribute: "list-id", type: String })
+  get listId() {
+    return this.listIdSubject.getValue();
+  }
+  set listId(id: string | null) {
+    this.listIdSubject.next(id);
+  }
   private _listData?: ShoppingListItem;
   @property({ type: Object, converter: (val) => JSON.parse(val ?? "{}"), attribute: "list-data" })
   get listData(): ShoppingListItem | undefined {

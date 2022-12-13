@@ -56,7 +56,6 @@ export default class AllShoppingLists extends LitElement {
       )
       .subscribe({
         next: (listData) => {
-          console.log(listData);
           this.dispatchEvent(new Event("shopping-lists-loaded"));
           this.shoppingListsData = listData;
         },
@@ -189,14 +188,13 @@ export default class AllShoppingLists extends LitElement {
   render() {
     return html`
       ${Object.entries(this.shoppingListsData).map(
-        ([key, value]) =>
-          html`<shopping-list
-            @dragover=${this.#handleDragOver}
-            @drop=${this.#handleDrop}
-            list-data=${JSON.stringify(value.data)}
-            list-id=${key}
-            list-name=${value.listName}
-          ></shopping-list>`
+        ([key, value]) => html`<shopping-list
+          @dragover=${this.#handleDragOver}
+          @drop=${this.#handleDrop}
+          list-data=${JSON.stringify(value.data ?? {})}
+          list-id=${key}
+          list-name=${value.listName}
+        ></shopping-list>`
       )}
       <div ?show=${this.hideAddListForm} id="open-add-list" @click=${this.#handleOpenAddListClick}>
         <plus-icon color="white"></plus-icon>
