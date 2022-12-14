@@ -8,7 +8,7 @@ import { query } from "lit/decorators/query.js";
 import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
-import { first, mergeMap, Observable, ReplaySubject } from "rxjs";
+import { mergeMap, Observable } from "rxjs";
 import "./all-shopping-lists/index"
 
 type Modes = "SHOPPING" | "CHORES";
