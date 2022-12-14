@@ -12,7 +12,8 @@
     "build": "webpack --config webpack.sw.config.js && webpack --config webpack.prod.config.js",
     "mkcert": "mkcert -key-file key.pem -cert-file cert.pem example.com *.example.com localhost",
     "build-sw": "webpack --config webpack.sw.config.js",
-    "dev-sw": "webpack --config webpack.sw-dev.config.js"
+    "dev-sw": "webpack --config webpack.sw-dev.config.js",
+    "deploy": "yarn build && firebase deploy --only hosting"
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
