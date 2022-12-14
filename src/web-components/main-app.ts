@@ -3,7 +3,8 @@ import { getAuth } from "firebase/auth";
 import { DatabaseReference, get, ref, remove, set } from "firebase/database";
 import { getMessaging, getToken, isSupported } from "firebase/messaging";
 import { html, LitElement, css, PropertyValueMap } from "lit";
-import { state, query } from "lit/decorators.js";
+import { state } from "lit/decorators.js";
+import { query } from "lit/decorators/query.js";
 import AllShoppingLists from "./all-shopping-lists";
 import BaseModal from "./base-modal";
 import sharedCss, { formCss } from "./shared-css";
@@ -30,8 +31,7 @@ export default class MainApp extends LitElement {
   @state()
   private _logoutLoading = false;
   @query("base-modal")
-  private _modal!: BaseModal;
-  private elementsToObserve$ = new ReplaySubject<Parameters<InstanceType<typeof IntersectionObserver>["observe"]>[0]>();
+  _modal!: BaseModal;
 
   static styles = [
     sharedCss,

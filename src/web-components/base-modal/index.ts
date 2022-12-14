@@ -1,7 +1,10 @@
 import sharedCss from "@web-components/shared-css";
 import { css, html, LitElement } from "lit";
-import { property } from "lit/decorators.js";
+import { property, customElement } from "lit/decorators.js";
 
+export const tagName = "base-modal";
+
+@customElement(tagName)
 export default class BaseModal extends LitElement {
   @property({ attribute: true })
   title: string = "";
@@ -113,4 +116,11 @@ export default class BaseModal extends LitElement {
       </div>
     `;
   }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    [tagName]: BaseModal;
+  }
+  interface HTMLElementEventMap {}
 }
