@@ -16,8 +16,10 @@ import {
   map,
   mergeMap,
   OperatorFunction,
+  sample,
   Subject,
   Subscription,
+  takeUntil,
   tap,
 } from "rxjs";
 import { ListService } from "../../app/list.service";
@@ -33,6 +35,14 @@ export default class ShoppingList extends LitElement {
   private tileDoubleClicks$ = this.tileClick$.pipe(
     buffer(this.tileClick$.pipe(debounceTime(250))),
     filter((clicks) => clicks.length > 1),
+    map(([id]) => id)
+  );
+  private tileTouchStart$ = new Subject<string>();
+  private tileTouchEnd$ = new Subject<string>();
+  private touchHold$ = this.tileTouchStart$.pipe(
+    buffer(this.tileTouchStart$.pipe(debounceTime(500))),
+    sample(this.tileTouchEnd$),
+    takeUntil(this.tileTouchStart$.pipe(debounceTime(1500))),
     map(([id]) => id)
   );
 
@@ -73,6 +83,7 @@ export default class ShoppingList extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.subscriptions.add(this.tileDoubleClicks$.subscribe(this.#deleteItem));
+    this.subscriptions.add(this.touchHold$.subscribe(this.openShoppingItemDetails));
   }
 
   disconnectedCallback(): void {
@@ -171,6 +182,10 @@ export default class ShoppingList extends LitElement {
     event.dataTransfer.dropEffect = "move";
   };
 
+  private openShoppingItemDetails = (id: string) => {
+    this._shoppingItemDetails.setAttribute("key", id);
+  };
+
   #handleDragOver: EventListener = (event) => {
     if (!(event instanceof DragEvent && event.dataTransfer)) return;
     event.preventDefault();
@@ -184,7 +199,7 @@ export default class ShoppingList extends LitElement {
     const droppedLocationId = target.id;
     const draggedId = event.dataTransfer.getData("id");
     if (droppedLocationId === draggedId) {
-      this._shoppingItemDetails.setAttribute("key", draggedId);
+      this.openShoppingItemDetails(draggedId);
       return;
     }
     if (!this.listData) return;
@@ -219,6 +234,8 @@ export default class ShoppingList extends LitElement {
             @dragstart=${this.#handleDragStart}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
+            @touchstart=${() => this.tileTouchStart$.next(item.key)}
+            @touchend=${() => this.tileTouchEnd$.next(item.key)}
           >
             ${item.imagePath ? html`<div id="has-image"><image-icon></image-icon></div>` : ""}
             <span>${item.item}</span>
