@@ -13,12 +13,14 @@ import {
   debounceTime,
   filter,
   first,
+  interval,
   map,
   mergeMap,
   OperatorFunction,
-  sample,
+  ReplaySubject,
   Subject,
   Subscription,
+  switchMap,
   takeUntil,
   tap,
 } from "rxjs";
@@ -37,16 +39,14 @@ export default class ShoppingList extends LitElement {
     filter((clicks) => clicks.length > 1),
     map(([id]) => id)
   );
-  private tileTouchStart$ = new Subject<[string, Event]>();
-  private tileTouchEnd$ = new Subject<void>();
-  private touchHold$ = this.tileTouchStart$.pipe(
-    buffer(this.tileTouchStart$.pipe(debounceTime(500))),
-    sample(this.tileTouchEnd$),
-    takeUntil(this.tileTouchStart$.pipe(debounceTime(1500))),
-    map(([[id, event]]) => {
-      event.preventDefault();
-      return id;
-    })
+  private tileTouchStart$ = new ReplaySubject<string>();
+  private tileTouchEnd$ = new Subject<string>();
+  private tileTouchLong$ = this.tileTouchStart$.pipe(
+    switchMap(() => interval(100).pipe(takeUntil(this.tileTouchEnd$), buffer(this.tileTouchEnd$)))
+  );
+  private touchHold$ = this.tileTouchLong$.pipe(
+    filter((interval) => interval.length >= 5 && interval.length <= 10),
+    switchMap(() => this.tileTouchStart$.pipe(first()))
   );
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
@@ -92,10 +92,6 @@ export default class ShoppingList extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.subscriptions.unsubscribe();
-  }
-
-  private getDatabaseRef(uid: string, listId: string, data = true) {
-    return ref(Firebase.db, `${uid}/SHOPPING-LISTS/${listId}/${data ? "data" : ""}`);
   }
 
   protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -237,8 +233,11 @@ export default class ShoppingList extends LitElement {
             @dragstart=${this.#handleDragStart}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
-            @touchstart=${(event: Event) => this.tileTouchStart$.next([item.key, event])}
-            @touchend=${() => this.tileTouchEnd$.next()}
+            @touchstart=${() => {
+              console.log("touch event");
+              this.tileTouchStart$.next(item.key);
+            }}
+            @touchend=${() => this.tileTouchEnd$.next(item.key)}
           >
             ${item.imagePath ? html`<div id="has-image"><image-icon></image-icon></div>` : ""}
             <span>${item.item}</span>
