@@ -37,13 +37,16 @@ export default class ShoppingList extends LitElement {
     filter((clicks) => clicks.length > 1),
     map(([id]) => id)
   );
-  private tileTouchStart$ = new Subject<string>();
-  private tileTouchEnd$ = new Subject<string>();
+  private tileTouchStart$ = new Subject<[string, Event]>();
+  private tileTouchEnd$ = new Subject<void>();
   private touchHold$ = this.tileTouchStart$.pipe(
     buffer(this.tileTouchStart$.pipe(debounceTime(500))),
     sample(this.tileTouchEnd$),
     takeUntil(this.tileTouchStart$.pipe(debounceTime(1500))),
-    map(([id]) => id)
+    map(([[id, event]]) => {
+      event.preventDefault();
+      return id;
+    })
   );
 
   @property({ reflect: true, attribute: "hide-list", type: Boolean })
@@ -234,8 +237,8 @@ export default class ShoppingList extends LitElement {
             @dragstart=${this.#handleDragStart}
             @dragover=${this.#handleDragOver}
             @drop=${this.#handleDrop}
-            @touchstart=${() => this.tileTouchStart$.next(item.key)}
-            @touchend=${() => this.tileTouchEnd$.next(item.key)}
+            @touchstart=${(event: Event) => this.tileTouchStart$.next([item.key, event])}
+            @touchend=${() => this.tileTouchEnd$.next()}
           >
             ${item.imagePath ? html`<div id="has-image"><image-icon></image-icon></div>` : ""}
             <span>${item.item}</span>
